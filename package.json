@@ -1,0 +1,153 @@
+{
+  "name": "rn-calendar-time-picker",
+  "version": "0.1.0",
+  "description": "A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.",
+  "main": "./lib/commonjs/index.js",
+  "module": "./lib/module/index.js",
+  "types": "./lib/typescript/commonjs/src/index.d.ts",
+  "exports": {
+    ".": {
+      "rn-calendar-time-picker-source": "./src/index.tsx",
+      "import": {
+        "types": "./lib/typescript/module/src/index.d.ts",
+        "default": "./lib/module/index.js"
+      },
+      "require": {
+        "types": "./lib/typescript/commonjs/src/index.d.ts",
+        "default": "./lib/commonjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "src",
+    "lib",
+    "CHANGELOG.md",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "scripts": {
+    "example": "yarn workspace rn-calendar-time-picker-example",
+    "clean": "del-cli lib",
+    "prepare": "bob build",
+    "typecheck": "tsc",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "test": "jest",
+    "test:tz": "TZ=UTC jest && TZ=Asia/Kolkata jest && TZ=America/Los_Angeles jest && TZ=Pacific/Auckland jest"
+  },
+  "keywords": [
+    "react-native",
+    "date-picker",
+    "time-picker",
+    "datetime",
+    "calendar",
+    "range",
+    "hijri",
+    "expo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bhairavi-ancy/rn-calendar-time-picker.git"
+  },
+  "author": "Bhairavi M <ancybhairavi@gmail.com> (https://github.com/Bhairavi-ancy)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Bhairavi-ancy/rn-calendar-time-picker/issues"
+  },
+  "homepage": "https://github.com/Bhairavi-ancy/rn-calendar-time-picker#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^2.1.1",
+    "@eslint/eslintrc": "^3.3.7",
+    "@eslint/js": "^9.39.5",
+    "@jest/globals": "^29.7.0",
+    "@react-native/babel-preset": "0.88.0",
+    "@react-native/eslint-config": "0.88.0",
+    "@react-native/jest-preset": "0.88.0",
+    "@types/luxon": "^3.7.6",
+    "@types/react": "^19.2.0",
+    "@types/react-test-renderer": "^19",
+    "del-cli": "^8.0.1",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-ft-flow": "^3.0.11",
+    "eslint-plugin-prettier": "^5.5.7",
+    "jest": "^29.7.0",
+    "prettier": "^3.9.10",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-builder-bob": "^0.44.1",
+    "react-test-renderer": "19.3.0",
+    "turbo": "^2.11.10",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "luxon": "^3.7.2"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "workspaces": [
+    "example"
+  ],
+  "packageManager": "yarn@4.18.1",
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  },
+  "prettier": {
+    "quoteProps": "consistent",
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5",
+    "useTabs": false
+  },
+  "jest": {
+    "preset": "@react-native/jest-preset",
+    "testEnvironmentOptions": {
+      "customExportConditions": [
+        "require",
+        "react-native",
+        "rn-calendar-time-picker-source"
+      ]
+    },
+    "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
+      "<rootDir>/lib/"
+    ]
+  },
+  "create-react-native-library": {
+    "type": "library",
+    "languages": "js",
+    "tools": [
+      "eslint",
+      "jest"
+    ],
+    "version": "0.64.0"
+  }
+}
