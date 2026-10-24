@@ -1,0 +1,44 @@
+name: Release
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Writes an .npmrc that reads the token from NODE_AUTH_TOKEN.
+      - name: Point npm at the registry
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - name: Lint, typecheck and test
+        run: |
+          yarn lint
+          yarn typecheck
+          yarn test:tz
+
+      - name: Check for internal references
+        env:
+          SCRUB_PATTERNS: ${{ secrets.SCRUB_PATTERNS }}
+        run: bash scripts/scrub-check.sh
+
+      # `prepare` (the bob build) runs as part of publish.
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
