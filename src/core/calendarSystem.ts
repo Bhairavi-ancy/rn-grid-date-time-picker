@@ -45,13 +45,34 @@ const getHijriFormat = (): Intl.DateTimeFormat | null => {
   return hijriFormat;
 };
 
+/** A UTC Date for any year: `Date.UTC` reads years 0–99 as 1900–1999. */
+const utcDate = (
+  year: number,
+  monthIndex: number,
+  day: number,
+  hour = 0
+): Date => {
+  const d = new Date(Date.UTC(2000, 0, 1, hour));
+  d.setUTCFullYear(year, monthIndex, day);
+  return d;
+};
+
+/**
+ * The locale with the Umm al-Qura calendar, keeping any Unicode extension it
+ * already has ('ar-SA-u-nu-arab' → 'ar-SA-u-ca-islamic-umalqura-nu-arab').
+ */
+const withHijriCalendar = (locale: string): string => {
+  const [base, ext] = locale.split(/-u-/i);
+  if (ext === undefined) return `${locale}-u-ca-islamic-umalqura`;
+  const rest = ext.replace(/(^|-)ca(-[a-z0-9]{3,8})+/i, '').replace(/^-/, '');
+  return `${base}-u-ca-islamic-umalqura${rest ? `-${rest}` : ''}`;
+};
+
 const readParts = (
   f: Intl.DateTimeFormat,
   d: CalendarDate
 ): CalendarDate | null => {
-  const parts = f.formatToParts(
-    new Date(Date.UTC(d.year, d.month - 1, d.day, 12))
-  );
+  const parts = f.formatToParts(utcDate(d.year, d.month - 1, d.day, 12));
   const num = (type: string) =>
     Number(parts.find((p) => p.type === type)?.value);
   const out = { year: num('year'), month: num('month'), day: num('day') };
@@ -112,8 +133,8 @@ export const hijriMonthLength = (year: number, month: number): number => {
   const a = hijriMonthStart(year, month);
   const b = hijriMonthStart(next.year, next.month);
   return Math.round(
-    (Date.UTC(b.year, b.month - 1, b.day) -
-      Date.UTC(a.year, a.month - 1, a.day)) /
+    (utcDate(b.year, b.month - 1, b.day).getTime() -
+      utcDate(a.year, a.month - 1, a.day).getTime()) /
       86400000
   );
 };
@@ -136,14 +157,14 @@ export const HIJRI_MONTHS_EN = [
 /** Hijri month names in the user's language (Intl), English otherwise. */
 export const hijriMonthNames = (locale: string): string[] => {
   try {
-    const f = new Intl.DateTimeFormat(`${locale}-u-ca-islamic-umalqura`, {
+    const f = new Intl.DateTimeFormat(withHijriCalendar(locale), {
       timeZone: 'UTC',
       month: 'long',
     });
     return HIJRI_MONTHS_EN.map((fallback, i) => {
       const start = hijriMonthStart(1448, i + 1);
       const name = f.format(
-        new Date(Date.UTC(start.year, start.month - 1, start.day + 10, 12))
+        utcDate(start.year, start.month - 1, start.day + 10, 12)
       );
       return name && !/^\d+$/.test(name) ? name : fallback;
     });

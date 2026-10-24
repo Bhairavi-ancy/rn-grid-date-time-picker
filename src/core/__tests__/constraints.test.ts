@@ -274,3 +274,34 @@ describe('constraints: months, years, first selectable day, nothing selectable',
     ).toBe(true);
   });
 });
+
+describe('firstSelectable with a maxDate long ago', () => {
+  it('finds the latest allowed day even 18 years back (a date-of-birth limit)', () => {
+    const c = createConstraints({
+      type: 'date',
+      timeZone: 'UTC',
+      now: new Date(Date.UTC(2026, 9, 25)),
+      maxDate: { year: 2008, month: 10, day: 25 },
+    });
+    expect(c.firstSelectable({ year: 2026, month: 10, day: 25 })).toEqual({
+      year: 2008,
+      month: 10,
+      day: 25,
+    });
+  });
+
+  it('skips back past disabled days before the maxDate', () => {
+    const c = createConstraints({
+      type: 'date',
+      timeZone: 'UTC',
+      now: new Date(Date.UTC(2026, 9, 25)),
+      maxDate: { year: 2000, month: 1, day: 2 }, // a Sunday
+      disabledWeekdays: [6, 7],
+    });
+    expect(c.firstSelectable({ year: 2026, month: 10, day: 25 })).toEqual({
+      year: 1999,
+      month: 12,
+      day: 31,
+    });
+  });
+});

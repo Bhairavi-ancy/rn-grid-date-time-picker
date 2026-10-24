@@ -190,7 +190,10 @@ export const parseSegments = (
   }
 ): ParsedSegments => {
   const layout = segmentLayout('dd-MM-yyyy', options.type, options.timeFormat);
-  const isEmpty = layout.segments.every((s) => !values[s.key]);
+  // AM/PM alone isn't content: a field with every digit deleted is empty.
+  const isEmpty = layout.segments.every(
+    (s) => s.key === 'period' || !values[s.key]
+  );
   if (isEmpty) return { value: null, errors: [], isEmpty: true };
 
   const errors: SegmentError[] = [];

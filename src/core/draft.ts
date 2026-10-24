@@ -162,7 +162,10 @@ const pickRangeDay = (
 ): Draft => {
   const from = draft.from.value?.date;
   const to = draft.to.value?.date;
-  const allowSameDay = opts.type === 'datetime' || !!opts.range?.allowSameDay;
+  // A same-day range is 1 day long, so it's only an end when minDays allows it.
+  const allowSameDay =
+    (opts.type === 'datetime' || !!opts.range?.allowSameDay) &&
+    (opts.range?.minDays ?? 1) <= 1;
 
   if (!from) return { ...draft, from: withDay(draft.from, day, opts, eq) };
 
@@ -375,11 +378,12 @@ export const validateDraft = (
       if (order < 0 || (order === 0 && !opts.range?.allowSameDay))
         return 'RANGE_ORDER';
     }
-    const span = daysBetween(from.date, to.date);
+    // Calendar days with both ends included: a same-day range is 1 day.
+    const length = daysBetween(from.date, to.date) + 1;
     const { minDays, maxDays } = opts.range ?? {};
     if (
-      (minDays !== undefined && span < minDays) ||
-      (maxDays !== undefined && span > maxDays)
+      (minDays !== undefined && length < minDays) ||
+      (maxDays !== undefined && length > maxDays)
     )
       return 'RANGE_LENGTH';
     return null;

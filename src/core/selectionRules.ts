@@ -5,7 +5,8 @@ import type { CalendarDate } from './types';
 /**
  * Greying that depends on what is already picked, on top of the picker's limits:
  * - range: once a start is picked and the end is being chosen, days closer than
- *   `minDays` or further than `maxDays` are greyed; in the From/To layout, days
+ *   `minDays` or further than `maxDays` are greyed (lengths count calendar
+ *   days with both ends included, so a same-day range is 1 day); in the From/To layout, days
  *   before the start are greyed too (in the single field a tap there restarts);
  * - multiple: once `maxSelections` is reached, only selected days can be tapped.
  * Validation on Confirm (validateDraft) still checks the same rules.
@@ -29,8 +30,9 @@ export const isRangeEndAllowed = (
 ): boolean => {
   const span = daysBetween(start, day);
   if (span < 0) return !rules.blockBeforeStart;
-  if (rules.minDays !== undefined && span < rules.minDays) return false;
-  if (rules.maxDays !== undefined && span > rules.maxDays) return false;
+  const length = span + 1;
+  if (rules.minDays !== undefined && length < rules.minDays) return false;
+  if (rules.maxDays !== undefined && length > rules.maxDays) return false;
   return true;
 };
 

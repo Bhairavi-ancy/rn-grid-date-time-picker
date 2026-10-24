@@ -30,14 +30,17 @@ const mountAndOpen = (props: Partial<DateTimePickerProps>) => {
 };
 
 describe('bad props fall back instead of crashing', () => {
-  it.each([0, -5, 90, 2.5])('minuteStep %p uses 1, with a warning', (step) => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(() =>
-      mountAndOpen({ minuteStep: step, timeInput: 'wheel' })
-    ).not.toThrow();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('minuteStep'));
-    warn.mockRestore();
-  });
+  it.each([0, -5, 7, 90, 2.5])(
+    'minuteStep %p uses 1, with a warning',
+    (step) => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      expect(() =>
+        mountAndOpen({ minuteStep: step, timeInput: 'wheel' })
+      ).not.toThrow();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('minuteStep'));
+      warn.mockRestore();
+    }
+  );
 
   it('an unknown timeZone uses the device zone, with a warning', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});

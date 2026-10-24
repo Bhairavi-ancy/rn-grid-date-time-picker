@@ -59,6 +59,9 @@ import {
   type PickerState,
 } from './types';
 
+/** Minute steps that divide the hour. */
+const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
+
 /**
  * A date & time picker: a value field that opens a sheet (or an inline panel)
  * with a calendar and, for date-time values, a time row. Single, range and
@@ -68,6 +71,7 @@ import {
  * onChange (then onBlur) fires exactly once per Confirm, and once with '' on clear;
  * closing, the backdrop and Android back fire nothing.
  */
+
 const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const {
     type,
@@ -129,7 +133,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     onVisibleMonthChange,
     onError,
     validate,
-    yearRange = DEFAULT_YEAR_RANGE,
+    yearRange: yearRangeProp = DEFAULT_YEAR_RANGE,
     locale,
     timeZone,
     now,
@@ -180,12 +184,18 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   );
   const zone =
     (zoneValid ? timeZone : undefined) ?? DateTime.local().zoneName ?? 'UTC';
-  // Minutes come in steps of 1 to 60; anything else would break the wheel.
-  const stepValid =
-    Number.isInteger(minuteStepProp) &&
-    minuteStepProp >= 1 &&
-    minuteStepProp <= 60;
+  // Minute steps divide the hour, so every hour starts on a step; anything
+  // else would break the wheel and the rounding of a new day's time.
+  const stepValid = MINUTE_STEPS.includes(minuteStepProp);
   const minuteStep = stepValid ? minuteStepProp : 1;
+  // Years stay within 1–9999, the range dates can be written and read in.
+  const yearRange = useMemo(
+    () => ({
+      first: Math.max(1, Math.min(yearRangeProp.first, yearRangeProp.last)),
+      last: Math.min(9999, Math.max(yearRangeProp.first, yearRangeProp.last)),
+    }),
+    [yearRangeProp.first, yearRangeProp.last]
+  );
   useEffect(() => {
     if (!__DEV__) return;
     if (!zoneValid)
@@ -194,7 +204,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       );
     if (!stepValid)
       console.warn(
-        `rn-calendar-time-picker: minuteStep ${minuteStepProp} isn't a whole number from 1 to 60; using 1.`
+        `rn-calendar-time-picker: minuteStep ${minuteStepProp} doesn't divide 60 (${MINUTE_STEPS.join(', ')}); using 1.`
       );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- warns once per bad prop value
   }, [timeZone, minuteStepProp]);
@@ -762,7 +772,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   let rangeError = '';
   if (d.mode === 'range' && d.from.value && d.to.value) {
-    const span = daysBetween(d.from.value.date, d.to.value.date);
+    const length = daysBetween(d.from.value.date, d.to.value.date) + 1;
     if (
       constraints.dayStatus(d.from.value.date).disabled ||
       constraints.dayStatus(d.to.value.date).disabled
@@ -772,9 +782,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       rangeError = strings.errorRangeOrder;
     else if (previewIssue === 'RANGE_LENGTH')
       rangeError =
-        range?.minDays !== undefined && span < range.minDays
+        range?.minDays !== undefined && length < range.minDays
           ? strings.errorRangeTooShort(range.minDays)
-          : strings.errorRangeTooLong(range?.maxDays ?? span);
+          : strings.errorRangeTooLong(range?.maxDays ?? length);
   }
 
   const fieldCommon = {

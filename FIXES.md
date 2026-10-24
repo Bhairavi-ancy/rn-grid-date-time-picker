@@ -14,7 +14,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 
 ## Blockers
 
-- [ ] **B1. A `maxDate` far in the past leaves nothing selectable.** ✅
+- [x] **B1. A `maxDate` far in the past leaves nothing selectable.** ✅
   - **What happens:** with `maxDate` more than about 10 years ago (a "must be 18 or older" date-of-birth rule), the calendar shows "No dates are available" and `onError('NOTHING_SELECTABLE')` fires.
   - **Where:** `src/core/constraints.ts`, `firstSelectable` (~line 209). The backward search starts from today, not from `maxDate`, and stops after 3660 days.
   - **Fix:** start the backward loop from the earlier of `from` and `range.max`, the same way the forward loop already clamps to `range.min`.
@@ -79,7 +79,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** for dates, read the calendar date as written (`setZone: true`, or the first 10 characters).
   - **Test:** offsets +05:30, −05:00 and Z all give 24 Oct, and an unchanged Confirm returns the input.
 
-- [ ] **F2. A 12-hour typed field can't be emptied by deleting its digits.** ✅
+- [x] **F2. A 12-hour typed field can't be emptied by deleting its digits.** ✅
   - **What happens:** after deleting every digit, `period` still holds AM or PM, so the field isn't treated as empty. Confirm stays off and errors show. Tapping AM/PM on an empty field does the same.
   - **Where:** `src/core/segments.ts`, `parseSegments`, the `isEmpty` check (~line 193).
   - **Fix:** leave `period` out of the `isEmpty` check.
@@ -162,14 +162,14 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 
 ## Minor
 
-- [ ] **M1. Range length.** Apply Q3 to `src/core/draft.ts` and `src/core/selectionRules.ts`. Also grey out the start day as an end when `minDays ≥ 1`, so tapping it again can't create a range that's too short.
+- [x] **M1. Range length.** Apply Q3 to `src/core/draft.ts` and `src/core/selectionRules.ts`. Also grey out the start day as an end when `minDays ≥ 1`, so tapping it again can't create a range that's too short.
 - [ ] **M2. Peer dependencies.** Set `react: ">=18"` and `react-native: ">=0.71"` (the code uses `gap` and `columnGap`) in `package.json`, and in the README's Install section.
-- [ ] **M3. Hijri month names with an extended locale.** `src/core/calendarSystem.ts` (~line 139) appends `-u-ca-islamic-umalqura` even to locales that already have `-u-…`, such as `'ar-SA-u-nu-arab'`, and falls back to English. Merge it into the existing extension instead.
-- [ ] **M4. Years below 100 and above 9999.**
+- [x] **M3. Hijri month names with an extended locale.** `src/core/calendarSystem.ts` (~line 139) appends `-u-ca-islamic-umalqura` even to locales that already have `-u-…`, such as `'ar-SA-u-nu-arab'`, and falls back to English. Merge it into the existing extension instead.
+- [x] **M4. Years below 100 and above 9999.**
   - In `calendarSystem.ts`, `Date.UTC` treats two-digit years as 19xx.
   - In `calendarDate.ts` and `src/adapters/iso.ts`, years above 9999 don't round-trip.
   - Fix: use `setUTCFullYear`, and clamp `yearRange` to 1–9999.
-- [ ] **M5. `normalizeDateFormat` accepts any separator.** `src/core/locale.ts` allows newlines, tabs and letters; allow only `/`, `-`, `.`, space and `,`. A `dateFormat` that isn't a string throws; treat it as missing.
+- [x] **M5. `normalizeDateFormat` accepts any separator.** `src/core/locale.ts` allows newlines, tabs and letters; allow only `/`, `-`, `.`, space and `,`. A `dateFormat` that isn't a string throws; treat it as missing.
 - [ ] **M6. The selected month chip can scroll out of view.** `src/components/calendar/CalendarHeader.tsx` assumes 60 pt chips; Hijri names and large text are wider, and RTL offsets are wrong. Measure the chips with `onLayout`.
 - [ ] **M7. README says the time boxes use `fontSizeLarge`.** The code uses `fontSizeMedium` (`src/components/time/timeStyles.ts`). Fix the README.
 - [ ] **M8. `wheelRowSelected` / `wheelRowDisabled` style the text, not the row.** `src/components/time/Wheel.tsx`. Apply them to the row View, and add `wheelTextSelected` / `wheelTextDisabled` for the text.
@@ -179,7 +179,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - The AM/PM switch has no disabled state.
   - The AM/PM options use `selected` rather than `checked` (`TypedTime.tsx`).
 - [ ] **M10. Android: one Backspace could delete twice.** `SegmentedInput.tsx` `onKeyPress` checks the latest state; if `onChangeText` arrived first, it also deletes in the previous box. Check the box's own rendered text instead. Low likelihood on number pads.
-- [ ] **M11. A new day's time can be off-step with a step that doesn't divide 60.** `DateTimePicker.tsx` `nowTime`: step 7 at 10:57 gives 11:03. Round within the hour, or accept only steps that divide 60 (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60).
+- [x] **M11. A new day's time can be off-step with a step that doesn't divide 60.** `DateTimePicker.tsx` `nowTime`: step 7 at 10:57 gives 11:03. Round within the hour, or accept only steps that divide 60 (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60).
 - [ ] **M12. Doc comments that no longer match.** `DateTimePicker.tsx` (~line 68) and `types.ts` (`onChange`) say `onChange` fires only on Confirm or clear; it also fires on instant saves and on-screen typing. The README says `onClose` fires for Close, the backdrop and Back; it also fires after Confirm.
 - [ ] **M13. Template files in the example.** `example/.claude/settings.json` and `example/AGENTS.md` came from the Expo template; remove them if you don't want them in the repo.
 

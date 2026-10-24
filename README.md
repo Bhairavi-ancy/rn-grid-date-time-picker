@@ -140,7 +140,7 @@ const epochMs: ValueAdapter = {
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
 | `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
-| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. |
+| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. `minDays` / `maxDays` count calendar days with both ends included (the 1st to the 3rd is 3 days; a same-day range is 1). |
 
 ### Presentation
 
@@ -209,7 +209,7 @@ const epochMs: ValueAdapter = {
 |---|---|---|---|
 | `timeInput` | `'typed' \| 'wheel'` | `'typed'` | |
 | `timeFormat` | `'12h' \| '24h'` | from `locale`, else `'12h'` | |
-| `minuteStep` | `number` | `1` | A whole number from 1 to 60. Off-step minutes are flagged on Confirm, never rounded silently. |
+| `minuteStep` | `number` | `1` | A step that divides the hour: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. Off-step minutes are flagged on Confirm, never rounded silently. |
 | `newDayTime` | `Time` | – | Every newly picked day gets this time. It wins over a time typed before the day and over the current time. |
 
 ### Limits
@@ -663,7 +663,7 @@ For Jest, no transform changes are needed: `main` points to the CommonJS build. 
 - The keyboard **Done bar** is iOS-only. It uses `InputAccessoryView`, which React Native 0.88 marks as deprecated.
 - **Hijri** needs `Intl` support for `islamic-umalqura` and falls back to Gregorian without it (see above).
 - The built-in sheet doesn't add a safe-area inset; use `styles.sheet.paddingBottom` or `renderSheet`.
-- A `minuteStep` outside 1–60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.
+- A `minuteStep` that doesn't divide 60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.
 - Only one runtime dependency: `luxon`. Exported types don't reference Luxon, so you don't need `@types/luxon`.
 
 ## Contributing
