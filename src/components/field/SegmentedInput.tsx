@@ -1,0 +1,289 @@
+import React, { useEffect, useMemo, useRef } from 'react';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import type { KeyPressEvent, TextInputRef } from '../nativeTypes';
+import type {
+  SegmentEditorAction,
+  SegmentEditorState,
+} from '../../core/segmentEditor';
+import type { Period, SegmentKey, SegmentSpec } from '../../core/segments';
+import type { PickerStrings } from '../theme/defaultStrings';
+import type { PickerStyles } from '../theme/styleKeys';
+import { MAX_FONT_SCALE } from '../theme/a11y';
+import type { ThemeTokens } from '../theme/tokens';
+import { buildFieldStyles } from './fieldStyles';
+import KeyboardDoneBar from './KeyboardDoneBar';
+
+interface Props {
+  state: SegmentEditorState;
+  dispatch: (action: SegmentEditorAction) => void;
+  /** The latest state, ahead of `state` while fast input waits for a render. */
+  getState?: () => SegmentEditorState;
+  disabled?: boolean;
+  tokens: ThemeTokens;
+  styles?: PickerStyles;
+  strings: PickerStrings;
+  testID?: string;
+}
+
+/** The hour segment of a 24-hour layout counts to 23. */
+const PLACEHOLDER = (
+  strings: PickerStrings,
+  hour24: boolean
+): Record<SegmentKey, string> => {
+  return {
+    day: strings.placeholderDay,
+    month: strings.placeholderMonth,
+    year: strings.placeholderYear,
+    hour: hour24 ? strings.placeholderHour24 : strings.placeholderHour,
+    minute: strings.placeholderMinute,
+    period: strings.am,
+  };
+};
+
+const A11Y_LABEL = (strings: PickerStrings): Record<SegmentKey, string> => {
+  return {
+    day: strings.a11yDay,
+    month: strings.a11yMonth,
+    year: strings.a11yYear,
+    hour: strings.a11yHour,
+    minute: strings.a11yMinute,
+    period: strings.a11yPeriod,
+  };
+};
+
+const DONE_BAR_ID = 'dateTimePickerDoneBar';
+
+/** Turns a controlled TextInput change into editor actions (typed digits, paste, delete). */
+export const changeToActions = (
+  current: string,
+  next: string
+): ({ type: 'digit'; digit: string } | { type: 'backspace' })[] => {
+  if (next.startsWith(current)) {
+    return next
+      .slice(current.length)
+      .split('')
+      .map((digit) => {
+        return { type: 'digit', digit };
+      });
+  }
+  if (current.startsWith(next)) {
+    return Array.from({ length: current.length - next.length }, () => {
+      return { type: 'backspace' };
+    });
+  }
+  const clear: { type: 'backspace' }[] = Array.from(
+    { length: current.length },
+    () => {
+      return { type: 'backspace' };
+    }
+  );
+  return [
+    ...clear,
+    ...next.split('').map((digit) => ({ type: 'digit', digit }) as const),
+  ];
+};
+
+/**
+ * The typed field: one box per segment in locale order, plus an AM/PM switch for
+ * 12-hour date-times. Number pad, with a "Done" bar on iOS (its number pad has no
+ * return key).
+ */
+const SegmentedInput: React.FC<Props> = ({
+  state,
+  dispatch,
+  getState,
+  disabled,
+  tokens,
+  styles,
+  strings,
+  testID,
+}) => {
+  // Text each box reported since the last render. Fast input (a hardware
+  // keyboard, autofill) sends the next character before React re-renders,
+  // and a full box keeps receiving characters until focus moves on.
+  const sinceRender = useRef<Partial<Record<SegmentKey, string>>>({});
+  sinceRender.current = {};
+  const refs = useRef<Partial<Record<SegmentKey, TextInputRef | null>>>({});
+  const s = buildFieldStyles(tokens);
+  const labels = A11Y_LABEL(strings);
+  // Segment boxes fit their digits at the font size in use and the phone's
+  // text size (up to the picker's cap), so nothing clips at large sizes.
+  const { fontScale } = useWindowDimensions();
+  const fontSize =
+    (StyleSheet.flatten(styles?.fieldSegment) as { fontSize?: number } | null)
+      ?.fontSize ?? tokens.fontSizeMedium;
+  const widths = useMemo(() => {
+    const em = fontSize * Math.min(fontScale || 1, MAX_FONT_SCALE);
+    return {
+      short: { width: Math.ceil(em * 1.75) + 2 },
+      long: { width: Math.ceil(em * 3) + 2 },
+    };
+  }, [fontSize, fontScale]);
+  const placeholders = PLACEHOLDER(
+    strings,
+    state.layout.segments.some((seg) => seg.key === 'hour' && seg.max === 23)
+  );
+
+  useEffect(() => {
+    if (state.focused) refs.current[state.focused]?.focus();
+  }, [state.focused]);
+
+  const renderNumeric = (spec: SegmentSpec, index: number) => {
+    const text = state.values[spec.key] ?? '';
+    const isFocused = state.focused === spec.key;
+    // After the last box fills, no segment is focused but the cursor stays in
+    // that box: input there (a correction, Backspace) focuses it first.
+    const claimFocus = () => {
+      if (!(getState?.() ?? state).focused)
+        dispatch({ type: 'focus', key: spec.key });
+    };
+    const onKeyPress = (e: KeyPressEvent) => {
+      claimFocus();
+      if (
+        e.nativeEvent.key === 'Backspace' &&
+        !(getState?.() ?? state).values[spec.key]
+      )
+        dispatch({ type: 'backspace' });
+    };
+    const separator =
+      index > 0
+        ? spec.key === 'hour'
+          ? ' '
+          : spec.key === 'minute'
+            ? ':'
+            : state.layout.dateSeparator
+        : '';
+    return (
+      <React.Fragment key={spec.key}>
+        {separator ? (
+          <Text
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            style={[s.separator, styles?.fieldSeparator]}
+          >
+            {separator}
+          </Text>
+        ) : null}
+        <TextInput
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          ref={(r) => {
+            refs.current[spec.key] = r;
+          }}
+          testID={testID ? `${testID}-segment-${spec.key}` : undefined}
+          accessibilityLabel={labels[spec.key]}
+          value={text}
+          placeholder={placeholders[spec.key]}
+          placeholderTextColor={tokens.placeholder}
+          keyboardType="number-pad"
+          editable={!disabled}
+          contextMenuHidden
+          inputAccessoryViewID={Platform.OS === 'ios' ? DONE_BAR_ID : undefined}
+          onFocus={() => dispatch({ type: 'focus', key: spec.key })}
+          onBlur={() => {
+            if ((getState?.() ?? state).focused === spec.key)
+              dispatch({ type: 'blur' });
+          }}
+          onKeyPress={onKeyPress}
+          onChangeText={(next) => {
+            // What was added since this box last showed something: its last
+            // reported text, or the value rendered into it since.
+            claimFocus();
+            const before = sinceRender.current[spec.key] ?? text;
+            sinceRender.current[spec.key] = next;
+            changeToActions(before, next).forEach(dispatch);
+          }}
+          style={[
+            s.segment,
+            spec.maxLength === 4 ? widths.long : widths.short,
+            styles?.fieldSegment,
+            isFocused && [s.segmentFocused, styles?.fieldSegmentFocused],
+          ]}
+        />
+      </React.Fragment>
+    );
+  };
+
+  const renderPeriod = () => {
+    // With a time typed and no AM/PM chosen, the time reads as AM (as in the
+    // time row), so the switch shows AM as chosen.
+    const typedTime = !!(state.values.hour || state.values.minute);
+    const current = state.values.period ?? (typedTime ? 'AM' : undefined);
+    const toggle = () =>
+      dispatch({
+        type: 'period',
+        period: (current === 'AM' ? 'PM' : 'AM') as Period,
+      });
+    return (
+      <Pressable
+        key="period"
+        testID={testID ? `${testID}-segment-period` : undefined}
+        accessibilityRole="button"
+        accessibilityLabel={labels.period}
+        accessibilityValue={{ text: current ?? '' }}
+        disabled={disabled}
+        onPress={toggle}
+        hitSlop={8}
+        style={[
+          s.period,
+          styles?.fieldPeriod,
+          current && [s.periodSelected, styles?.fieldPeriodSelected],
+        ]}
+      >
+        <Text
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          style={[
+            s.periodText,
+            styles?.fieldPeriodText,
+            !current && { color: tokens.placeholder },
+          ]}
+        >
+          {current === 'PM'
+            ? strings.pm
+            : current === 'AM'
+              ? strings.am
+              : placeholders.period}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  // The date and the time are each kept on one line; when the field is too
+  // narrow (large text, a small phone) the time moves to a second line
+  // instead of running under the icons.
+  const isDateKey = (key: SegmentKey) =>
+    key === 'day' || key === 'month' || key === 'year';
+  const dateSpecs = state.layout.segments.filter((spec) => isDateKey(spec.key));
+  const timeSpecs = state.layout.segments.filter(
+    (spec) => !isDateKey(spec.key)
+  );
+  return (
+    <View style={s.segmentRow}>
+      <View style={s.segmentGroup}>
+        {dateSpecs.map((spec, i) => renderNumeric(spec, i))}
+      </View>
+      {timeSpecs.length ? (
+        <View style={s.segmentGroup}>
+          {timeSpecs.map((spec, i) =>
+            spec.key === 'period' ? renderPeriod() : renderNumeric(spec, i)
+          )}
+        </View>
+      ) : null}
+      <KeyboardDoneBar
+        nativeID={DONE_BAR_ID}
+        onDone={() => dispatch({ type: 'blur' })}
+        tokens={tokens}
+        styles={styles}
+        strings={strings}
+      />
+    </View>
+  );
+};
+
+export default SegmentedInput;

@@ -1,0 +1,185 @@
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  AccessibilityInfo,
+  I18nManager,
+  StyleSheet,
+  Text,
+  TextInput,
+} from 'react-native';
+import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
+import { createConstraints } from '../../core/constraints';
+import { ChevronLeftIcon } from '../../icons';
+import Calendar, { type CalendarProps } from '../calendar/Calendar';
+import { buildCalendarStyles } from '../calendar/calendarStyles';
+import { useReduceMotion } from '../hooks/useReduceMotion';
+import { DAY_HIT_SLOP, MAX_FONT_SCALE } from '../theme/a11y';
+import { DEFAULT_STRINGS } from '../theme/defaultStrings';
+import { buildTokens } from '../theme/tokens';
+import TimeRow from '../time/TimeRow';
+
+const NOW = new Date(Date.UTC(2026, 9, 21, 6, 30));
+const tokens = buildTokens();
+const strings = DEFAULT_STRINGS;
+
+const mountCalendar = (
+  props: Partial<CalendarProps> = {}
+): ReactTestRenderer => {
+  let tree!: ReactTestRenderer;
+  act(() => {
+    tree = renderer.create(
+      <Calendar
+        constraints={createConstraints({
+          type: 'date',
+          timeZone: 'Asia/Kolkata',
+          now: NOW,
+        })}
+        today={{ year: 2026, month: 10, day: 21 }}
+        selection={{
+          kind: 'range',
+          from: { year: 2026, month: 10, day: 20 },
+          to: { year: 2026, month: 10, day: 23 },
+        }}
+        onSelectDay={() => {}}
+        firstDayOfWeek={7}
+        showOutsideDays
+        showHolidays
+        yearRange={{ first: 1900, last: 2200 }}
+        locale="en-IN"
+        tokens={tokens}
+        strings={strings}
+        testID="cal"
+        {...props}
+      />
+    );
+  });
+  return tree;
+};
+const find = (tree: ReactTestRenderer, id: string) =>
+  tree.root.findAll(
+    (n) => n.props.testID === id && typeof n.type !== 'string'
+  )[0];
+const dayButton = (tree: ReactTestRenderer, d: number) =>
+  tree.root.findAll(
+    (n) =>
+      n.props.testID === `cal-day-2026-10-${d}` &&
+      n.props.accessibilityRole === 'button' &&
+      typeof n.type !== 'string'
+  )[0];
+
+// AccessibilityInfo is already a jest mock (react-native preset); its fns are used as-is.
+const a11y = AccessibilityInfo as unknown as Record<
+  string,
+  jest.Mock<(...args: unknown[]) => Promise<boolean>>
+>;
+
+describe('accessibility', () => {
+  it('day cells reach a 48 pt target and cap font scaling', () => {
+    const tree = mountCalendar();
+    expect(dayButton(tree, 21).props.hitSlop).toBe(DAY_HIT_SLOP);
+    expect(40 + 2 * DAY_HIT_SLOP).toBeGreaterThanOrEqual(48);
+    const scaled = tree.root
+      .findAllByType(Text)
+      .filter((t) => t.props.maxFontSizeMultiplier === MAX_FONT_SCALE);
+    expect(scaled.length).toBeGreaterThan(40);
+  });
+
+  it('range ends are read out', () => {
+    const tree = mountCalendar();
+    expect(dayButton(tree, 20).props.accessibilityLabel).toContain(
+      DEFAULT_STRINGS.a11yRangeStart
+    );
+    expect(dayButton(tree, 23).props.accessibilityLabel).toContain(
+      DEFAULT_STRINGS.a11yRangeEnd
+    );
+  });
+
+  it('announces the new month when it changes', () => {
+    const tree = mountCalendar();
+    act(() => find(tree, 'cal-next').props.onPress());
+    expect(a11y.announceForAccessibility).toHaveBeenCalledWith('October 2027');
+  });
+
+  it('time boxes are labelled and cap font scaling', () => {
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(
+        <TimeRow
+          time={{ hour: 9, minute: 30 }}
+          onTime={() => {}}
+          timeFormat="12h"
+          label="Time"
+          tokens={tokens}
+          strings={strings}
+          testID="t"
+        />
+      );
+    });
+    const inputs = tree.root.findAllByType(TextInput);
+    expect(inputs.map((i) => i.props.accessibilityLabel)).toEqual([
+      DEFAULT_STRINGS.a11yHour,
+      DEFAULT_STRINGS.a11yMinute,
+    ]);
+    expect(
+      inputs.every((i) => i.props.maxFontSizeMultiplier === MAX_FONT_SCALE)
+    ).toBe(true);
+    const am = find(tree, 't-am');
+    expect(am.props.accessibilityRole).toBe('radio');
+    expect(am.props.accessibilityState.selected).toBe(true);
+  });
+
+  it('useReduceMotion follows the system setting', async () => {
+    a11y.isReduceMotionEnabled.mockResolvedValueOnce(true);
+    let value = false;
+    const Probe = () => {
+      value = useReduceMotion();
+      return null;
+    };
+    await act(async () => {
+      renderer.create(<Probe />);
+    });
+    expect(value).toBe(true);
+  });
+});
+
+describe('right-to-left', () => {
+  const original = I18nManager.isRTL;
+  afterEach(() => {
+    Object.defineProperty(I18nManager, 'isRTL', {
+      value: original,
+      configurable: true,
+    });
+  });
+
+  it('the range band uses start / end, so it flips', () => {
+    const s = buildCalendarStyles(tokens);
+    expect(StyleSheet.flatten(s.fillStart)).toMatchObject({
+      start: '50%',
+      end: 0,
+    });
+    expect(StyleSheet.flatten(s.fillEnd)).toMatchObject({
+      start: 0,
+      end: '50%',
+    });
+  });
+
+  it('chevrons are 24 pt icons and point the other way in RTL', () => {
+    const icon = (tree: ReactTestRenderer, id: string) =>
+      tree.root.findAll((n) => n.props.testID === id).length > 0;
+    const ltr = mountCalendar();
+    expect(icon(ltr, 'cal-prev-left')).toBe(true);
+    expect(icon(ltr, 'cal-next-right')).toBe(true);
+    // The built-in chevron, 24 pt, in the muted colour.
+    const prev = ltr.root.findAll((n) => n.props.testID === 'cal-prev-left')[0];
+    expect(prev.findByType(ChevronLeftIcon).props).toMatchObject({
+      size: 24,
+      color: buildTokens().mutedText,
+    });
+    Object.defineProperty(I18nManager, 'isRTL', {
+      value: true,
+      configurable: true,
+    });
+    const rtl = mountCalendar();
+    expect(icon(rtl, 'cal-prev-right')).toBe(true);
+    expect(icon(rtl, 'cal-next-left')).toBe(true);
+  });
+});

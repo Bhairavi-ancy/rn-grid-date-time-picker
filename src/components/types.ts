@@ -1,0 +1,277 @@
+import type React from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
+import type { Constraints, TimeBounds } from '../core/constraints';
+import type {
+  CalendarDate,
+  PickerType,
+  PickerValue,
+  SelectionMode,
+  Time,
+  TimeFormat,
+  ValueFormat,
+  Weekday,
+} from '../core/types';
+import type { IconComponent, IconName, IconOptions } from '../icons';
+import type { DayCellState } from './calendar/DayCell';
+import type { PeriodItem } from './calendar/PeriodGrid';
+import type { PickerStrings } from './theme/defaultStrings';
+import type { PickerStyles } from './theme/styleKeys';
+import type { ThemeTokens } from './theme/tokens';
+
+/**
+ * Public props of the date & time picker. Values are strings in the
+ * `valueFormat` (by default 'YYYY-MM-DD' for dates and a UTC ISO instant for
+ * date-times), '' = empty.
+ */
+
+/** What render props receive. */
+export interface PickerState {
+  type: PickerType;
+  mode: SelectionMode;
+  /** The saved value (not the draft). */
+  value: PickerValue;
+  /** The saved value as the built-in field shows it, in `dateFormat` / `timeFormat`; '' when empty. */
+  displayText: string;
+  disabled: boolean;
+  readOnly: boolean;
+  isOpen: boolean;
+  /** The keyboard is up inside the picker; the calendar folds away. */
+  folded: boolean;
+  /**
+   * Confirm can be pressed: the dates are complete and allowed. A time with a
+   * problem doesn't block it; pressing Confirm then shows the time's error.
+   */
+  canConfirm: boolean;
+  open: () => void;
+  close: () => void;
+  confirm: () => void;
+  /** Clears the saved value: calls `onChange('')` right away, as the built-in × does. */
+  clear: () => void;
+  tokens: ThemeTokens;
+  strings: PickerStrings;
+}
+
+export type Slot = React.ReactNode | ((state: PickerState) => React.ReactNode);
+
+/** What `renderSheet` receives. Render `body` above `footer`. */
+export interface SheetRenderProps {
+  onRequestClose: () => void;
+  body: React.ReactNode;
+  footer: React.ReactNode;
+  testID?: string;
+}
+
+/** A size in points, or a percentage of the screen height ('60%'). */
+export type SheetSize = number | `${number}%`;
+
+/** Layout of the picker's sheet: its size, what scrolls, and the field above the calendar. */
+export interface SheetOptions {
+  /** A fixed height. Default: as tall as the content, up to `maxHeight`. Built-in sheet only. */
+  height?: SheetSize;
+  /** Default '90%'. Built-in sheet only. */
+  maxHeight?: SheetSize;
+  /** The header stays put while the body scrolls. false: it scrolls with the body. Default true. */
+  fixedHeader?: boolean;
+  /** The footer (Confirm) stays pinned below the body. false: it scrolls at the end of the body. Default true. */
+  fixedFooter?: boolean;
+  /**
+   * The field above the calendar, which shows the picked date (and takes typing
+   * with `allowTyping`). Its errors still show when it's hidden. Default true;
+   * applies inline too.
+   */
+  showField?: boolean;
+  /** Placeholder of that field when it shows text. Default: from `dateFormat`, e.g. 'DD/MM/YYYY'. */
+  fieldPlaceholder?: string;
+}
+
+/** What `renderLabel` receives. */
+export interface LabelRenderProps {
+  label?: string;
+  isMandatory?: boolean;
+  helperText?: string;
+  style?: StyleProp<TextStyle>;
+  /** `${testID}-label` */
+  testID?: string;
+  /** The picker's testID. */
+  fieldTestID?: string;
+}
+
+/** What `renderInstruction` receives. */
+export interface InstructionRenderProps {
+  instruction: string;
+  /** The picker's testID. */
+  fieldTestID?: string;
+}
+
+/** What `getConstraints` receives. */
+export interface ConstraintContext {
+  type: PickerType;
+  timeZone: string;
+  now: Date;
+  today: CalendarDate;
+  /** The `holidays` prop plus every year loaded so far. */
+  holidays: string[];
+  /** The limit props, to merge into your own constraints. */
+  limits: {
+    minDate?: CalendarDate;
+    maxDate?: CalendarDate;
+    disabledDates?: (d: CalendarDate) => boolean;
+    enabledDates?: (d: CalendarDate) => boolean;
+    timeBounds?: (d: CalendarDate) => TimeBounds | null;
+    disabledWeekdays?: Weekday[];
+    disableHolidays?: boolean;
+  };
+}
+
+export interface DateTimePickerProps {
+  // what it picks
+  type: PickerType;
+  mode?: SelectionMode;
+  value: PickerValue;
+  /** On Confirm (once), or on clear (with ''). */
+  onChange: (value: PickerValue) => void;
+  /** On Confirm only, right after onChange (like a form field losing focus). */
+  onBlur?: () => void;
+  commitMode?: 'confirm' | 'instant';
+  /** How values are stored. Default 'iso'. */
+  valueFormat?: ValueFormat;
+  multiple?: {
+    timeMode?: 'shared' | 'perDate';
+    maxSelections?: number;
+    joinConsecutive?: boolean;
+  };
+  range?: {
+    layout?: 'singleField' | 'fromTo';
+    allowSameDay?: boolean;
+    minDays?: number;
+    maxDays?: number;
+    reselect?: 'newRange' | 'moveNearestEnd';
+  };
+
+  // presentation
+  presentation?: 'sheet' | 'inline';
+  visible?: boolean;
+  onOpen?: () => void;
+  onClose?: () => void;
+  showField?: boolean;
+  /** Height, scrolling and the field above the calendar. See `SheetOptions`. */
+  sheet?: SheetOptions;
+  /** Replaces the built-in sheet. Called only while open, rendered in place (no portal). */
+  renderSheet?: (p: SheetRenderProps) => React.ReactNode;
+  /** Called just before opening, e.g. to close the app's own dropdowns. */
+  onBeforeOpen?: () => void;
+
+  // value field
+  label?: string;
+  placeholder?: string;
+  helperText?: string;
+  instruction?: string;
+  isMandatory?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  /** Type date and time as segments in the field inside the sheet. */
+  allowTyping?: boolean;
+  /**
+   * The on-screen field is typeable too. A complete, allowed value is saved
+   * once, when focus leaves the field or its last box fills. Default false.
+   */
+  allowTriggerTyping?: boolean;
+  allowClear?: boolean;
+  errorMessage?: string;
+  /** Order of the typed segments and the display: 'dd', 'MM', 'yyyy' with one separator. Default: from `locale`. */
+  dateFormat?: string;
+  /** Replaces the built-in label (and helper text). */
+  renderLabel?: (p: LabelRenderProps) => React.ReactNode;
+  /** Replaces the built-in instruction text. */
+  renderInstruction?: (p: InstructionRenderProps) => React.ReactNode;
+  /**
+   * Replaces any of the built-in icons with a component that takes
+   * `{ color, size, width, height }`; null hides that icon.
+   */
+  icons?: Partial<Record<IconName, IconComponent | null>>;
+  /** Colour and size per icon, for the built-in icons and the replacements alike. */
+  iconProps?: Partial<Record<IconName, IconOptions>>;
+
+  // slots and overrides
+  header?: Slot;
+  title?: string;
+  onReset?: () => void;
+  bodyTop?: Slot;
+  bodyBottom?: Slot;
+  footer?: Slot;
+  onConfirm?: (value: PickerValue) => void;
+  confirmDisabled?: boolean;
+  renderField?: (state: PickerState) => React.ReactNode;
+  renderDay?: (state: DayCellState, onPress: () => void) => React.ReactNode;
+  renderWeekday?: (weekday: Weekday, name: string) => React.ReactNode;
+  renderMonthChip?: (
+    month: number,
+    state: { selected: boolean; disabled: boolean }
+  ) => React.ReactNode;
+  renderYearCell?: (item: PeriodItem) => React.ReactNode;
+  renderMonthCell?: (item: PeriodItem) => React.ReactNode;
+  renderEmptyState?: () => React.ReactNode;
+  renderTimeRow?: (state: PickerState) => React.ReactNode;
+
+  // calendar
+  firstDayOfWeek?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  showOutsideDays?: boolean;
+  yearRange?: { first: number; last: number };
+  initialView?: 'day' | 'month' | 'year';
+  enableMonthSwipe?: boolean;
+  showToday?: boolean;
+  /** Default 'gregory'. Falls back to 'gregory' when the platform has no Hijri calendar. */
+  calendarSystem?: 'gregory' | 'dual' | 'hijri';
+  /** Any BCP-47 tag; decides names, the date order and the clock. Default: the device locale. */
+  locale?: string;
+  /** IANA zone for date-time values and "today". Default: the device zone. */
+  timeZone?: string;
+  /** The current time, for "today" and a new day's time. Default `() => new Date()`. */
+  now?: () => Date;
+
+  // time
+  timeInput?: 'typed' | 'wheel';
+  /** Default: from `locale`, else '12h'. */
+  timeFormat?: TimeFormat;
+  minuteStep?: number;
+  /** A newly picked day always gets this time (over a time typed first and over the current time). */
+  newDayTime?: Time;
+
+  // limits → greyed days and errors
+  showHolidays?: boolean;
+  /** Holidays as 'YYYY-MM-DD' (ISO strings are cut to the date). Marked, not disabled, unless `disableHolidays`. */
+  holidays?: string[];
+  /** Loads a year's holidays lazily, once per year. */
+  loadHolidays?: (year: number) => Promise<string[]>;
+  /** Holidays can't be picked (reason 'HOLIDAY'). Default false. */
+  disableHolidays?: boolean;
+  /** Weekdays that can't be picked (1 = Monday … 7 = Sunday; reason 'WEEKDAY'). */
+  disabledWeekdays?: Weekday[];
+  minDate?: CalendarDate;
+  maxDate?: CalendarDate;
+  disabledDates?: (day: CalendarDate) => boolean;
+  enabledDates?: (day: CalendarDate) => boolean;
+  timeBounds?: (day: CalendarDate) => TimeBounds | null;
+  /** Full control over greying: the result is used as is (the limit props arrive in `ctx.limits`). */
+  getConstraints?: (ctx: ConstraintContext) => Constraints;
+
+  // look and text
+  theme?: Partial<ThemeTokens>;
+  styles?: PickerStyles;
+  strings?: Partial<PickerStrings>;
+  testID?: string;
+
+  // events
+  onVisibleMonthChange?: (year: number, month: number) => void;
+  onError?: (code: string, value: PickerValue) => void;
+  /**
+   * Your own check, run when Confirm is pressed (or, with commitMode 'instant',
+   * before each save) once the built-in checks pass. It gets the value about to
+   * be saved. Return a message to show it inside the picker and save nothing
+   * (`onError('VALIDATION', value)` is called too); return null, undefined or
+   * '' to save. The message clears when the user changes the selection.
+   */
+  validate?: (value: PickerValue) => string | null | undefined;
+}
+
+export const DEFAULT_YEAR_RANGE = { first: 1900, last: 2200 };
