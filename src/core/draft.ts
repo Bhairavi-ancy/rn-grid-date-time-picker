@@ -1,0 +1,441 @@
+import { compareCalendarDates, daysBetween, isSameDay } from './calendarDate';
+import type {
+  AdapterContext,
+  CalendarDate,
+  DateTimeValue,
+  PickerType,
+  PickerValue,
+  RangeValue,
+  SelectionMode,
+  Time,
+  ValueAdapter,
+} from './types';
+import { toZonedDateTime } from './zoned';
+
+/**
+ * The in-progress value while the sheet is open. It is rebuilt from the saved
+ * value on every open, and turned back into saved strings only on Confirm.
+ *
+ * Each slot remembers the saved string it opened with, so confirming without a
+ * change emits the adapter's `formatUnchanged` of it (by default, the string
+ * itself) rather than a re-formatted copy.
+ */
+
+/**
+ * Fallback time for a newly picked day on a date-time field when the caller gives
+ * none (12:00 AM). The picker passes the current time instead, so this only
+ * applies to direct callers.
+ */
+export const DEFAULT_TIME: Time = { hour: 0, minute: 0 };
+
+export interface DraftSlot {
+  value: DateTimeValue | null;
+  /** The saved string this slot opened with ('' when it was empty). */
+  initialWire: string;
+}
+
+export type Draft =
+  | { mode: 'single'; slot: DraftSlot }
+  | { mode: 'range'; from: DraftSlot; to: DraftSlot }
+  | { mode: 'multiple'; slots: DraftSlot[]; sharedTime: Time | null };
+
+export interface DraftOptions {
+  type: PickerType;
+  /** IANA zone date-time values are read and written in. */
+  zone: string;
+  /** Turns saved strings into values and back. */
+  adapter: ValueAdapter;
+  defaultTime?: Time;
+  multiple?: {
+    timeMode?: 'shared' | 'perDate';
+    maxSelections?: number;
+  };
+  range?: {
+    /** Date fields only: allow start and end on the same day. Default false (filters reject it). */
+    allowSameDay?: boolean;
+    /** A tap after the range is complete: start a new range (default) or move the nearest end. */
+    reselect?: 'newRange' | 'moveNearestEnd';
+    /** Fewest / most days from start to end (end − start). */
+    minDays?: number;
+    maxDays?: number;
+  };
+}
+
+export type DraftTarget =
+  'single' | 'from' | 'to' | 'shared' | { index: number };
+
+export type DraftIssue =
+  'INCOMPLETE' | 'RANGE_ORDER' | 'RANGE_LENGTH' | 'MAX_SELECTIONS';
+
+const contextOf = (opts: DraftOptions): AdapterContext => {
+  return { type: opts.type, timeZone: opts.zone };
+};
+
+const parseWire = (wire: string, opts: DraftOptions): DateTimeValue | null =>
+  wire ? opts.adapter.parse(wire, contextOf(opts)) : null;
+
+const slotFrom = (wire: string, opts: DraftOptions): DraftSlot => {
+  return {
+    value: parseWire(wire, opts),
+    initialWire: parseWire(wire, opts) ? wire : '',
+  };
+};
+
+const emptySlot = (): DraftSlot => {
+  return { value: null, initialWire: '' };
+};
+
+const splitMultiple = (value: PickerValue): string[] => {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string' && value) return [value];
+  return [];
+};
+
+const readRange = (value: PickerValue): RangeValue => {
+  if (Array.isArray(value)) return { from: value[0] ?? '', to: value[1] ?? '' };
+  if (value && typeof value === 'object')
+    return { from: value.from ?? '', to: value.to ?? '' };
+  return { from: typeof value === 'string' ? value : '', to: '' };
+};
+
+const sortSlots = (slots: DraftSlot[]): DraftSlot[] =>
+  [...slots].sort((a, b) =>
+    a.value && b.value ? compareCalendarDates(a.value.date, b.value.date) : 0
+  );
+
+/** Builds a fresh draft from the saved value. */
+export const createDraft = (
+  mode: SelectionMode,
+  value: PickerValue | null | undefined,
+  opts: DraftOptions
+): Draft => {
+  const safe: PickerValue = value ?? '';
+  if (mode === 'range') {
+    const { from, to } = readRange(safe);
+    return { mode, from: slotFrom(from, opts), to: slotFrom(to, opts) };
+  }
+  if (mode === 'multiple') {
+    const slots = sortSlots(
+      splitMultiple(safe)
+        .map((w) => slotFrom(w, opts))
+        .filter((s) => s.value)
+    );
+    const sharedTime =
+      opts.type === 'datetime' ? (slots[0]?.value?.time ?? null) : null;
+    return { mode, slots, sharedTime };
+  }
+  return {
+    mode: 'single',
+    slot: slotFrom(typeof safe === 'string' ? safe : '', opts),
+  };
+};
+
+const timeForNewDay = (
+  existing: Time | null | undefined,
+  opts: DraftOptions,
+  newDayTime?: Time | null
+): Time | null => {
+  if (opts.type !== 'datetime') return null;
+  return existing ?? newDayTime ?? opts.defaultTime ?? DEFAULT_TIME;
+};
+
+const withDay = (
+  slot: DraftSlot,
+  day: CalendarDate,
+  opts: DraftOptions,
+  newDayTime?: Time | null
+): DraftSlot => {
+  return {
+    ...slot,
+    value: {
+      date: day,
+      time: timeForNewDay(slot.value?.time, opts, newDayTime),
+    },
+  };
+};
+
+const pickRangeDay = (
+  draft: Extract<Draft, { mode: 'range' }>,
+  day: CalendarDate,
+  opts: DraftOptions,
+  eq?: Time | null
+): Draft => {
+  const from = draft.from.value?.date;
+  const to = draft.to.value?.date;
+  const allowSameDay = opts.type === 'datetime' || !!opts.range?.allowSameDay;
+
+  if (!from) return { ...draft, from: withDay(draft.from, day, opts, eq) };
+
+  if (!to) {
+    const order = compareCalendarDates(day, from);
+    if (order < 0)
+      return { ...draft, from: withDay(draft.from, day, opts, eq) };
+    if (order === 0 && !allowSameDay)
+      return { ...draft, from: { ...draft.from, value: null } };
+    return { ...draft, to: withDay(draft.to, day, opts, eq) };
+  }
+
+  if (opts.range?.reselect === 'moveNearestEnd') {
+    return Math.abs(daysBetween(from, day)) < Math.abs(daysBetween(to, day))
+      ? { ...draft, from: withDay(draft.from, day, opts, eq) }
+      : { ...draft, to: withDay(draft.to, day, opts, eq) };
+  }
+  return {
+    ...draft,
+    from: withDay(draft.from, day, opts, eq),
+    to: { ...draft.to, value: null },
+  };
+};
+
+/**
+ * A day was tapped (or typed).
+ * - single: sets the day and keeps the time (or the given time for a new day, e.g. the
+ *   caller's fixed time or the current time; DEFAULT_TIME if none);
+ * - range: first tap = start, second = end, later taps follow `range.reselect`;
+ * - multiple: toggles the day; adding past `maxSelections` is ignored.
+ */
+export const selectDay = (
+  draft: Draft,
+  day: CalendarDate,
+  opts: DraftOptions,
+  newDayTime?: Time | null
+): Draft => {
+  if (draft.mode === 'single')
+    return { ...draft, slot: withDay(draft.slot, day, opts, newDayTime) };
+  if (draft.mode === 'range') return pickRangeDay(draft, day, opts, newDayTime);
+
+  const existing = draft.slots.findIndex((s) => isSameDay(s.value?.date, day));
+  if (existing > -1)
+    return { ...draft, slots: draft.slots.filter((_, i) => i !== existing) };
+  const max = opts.multiple?.maxSelections;
+  if (max !== undefined && draft.slots.length >= max) return draft;
+  const perDate = opts.multiple?.timeMode === 'perDate';
+  const time = timeForNewDay(
+    perDate ? null : draft.sharedTime,
+    opts,
+    newDayTime
+  );
+  return {
+    ...draft,
+    slots: sortSlots([
+      ...draft.slots,
+      { value: { date: day, time }, initialWire: '' },
+    ]),
+    sharedTime:
+      opts.type === 'datetime' && !perDate
+        ? (draft.sharedTime ?? time)
+        : draft.sharedTime,
+  };
+};
+
+/**
+ * From/To layout: a tap fills the end being edited. An end that would come
+ * before the start (or after the end) clears the other one.
+ */
+export const setRangeEnd = (
+  draft: Draft,
+  day: CalendarDate,
+  end: 'from' | 'to',
+  opts: DraftOptions,
+  newDayTime?: Time | null
+): Draft => {
+  if (draft.mode !== 'range') return draft;
+  const sameDayOk = opts.type === 'datetime' || !!opts.range?.allowSameDay;
+  const fits = (from?: CalendarDate, to?: CalendarDate) => {
+    if (!from || !to) return true;
+    const order = compareCalendarDates(to, from);
+    return order > 0 || (order === 0 && sameDayOk);
+  };
+  if (end === 'from') {
+    const from = withDay(draft.from, day, opts, newDayTime);
+    const keepTo = fits(day, draft.to.value?.date);
+    return {
+      ...draft,
+      from,
+      to: keepTo ? draft.to : { ...draft.to, value: null },
+    };
+  }
+  const to = withDay(draft.to, day, opts, newDayTime);
+  const keepFrom = fits(draft.from.value?.date, day);
+  return {
+    ...draft,
+    to,
+    from: keepFrom ? draft.from : { ...draft.from, value: null },
+  };
+};
+
+const setSlotTime = (slot: DraftSlot, time: Time): DraftSlot =>
+  slot.value ? { ...slot, value: { ...slot.value, time } } : slot;
+
+/** A time was typed or picked for one slot (or for all dates when `shared`). */
+export const setTime = (
+  draft: Draft,
+  time: Time,
+  target: DraftTarget
+): Draft => {
+  if (draft.mode === 'single')
+    return { ...draft, slot: setSlotTime(draft.slot, time) };
+  if (draft.mode === 'range') {
+    if (target === 'from')
+      return { ...draft, from: setSlotTime(draft.from, time) };
+    if (target === 'to') return { ...draft, to: setSlotTime(draft.to, time) };
+    return draft;
+  }
+  if (target === 'shared') return { ...draft, sharedTime: time };
+  if (typeof target === 'object') {
+    return {
+      ...draft,
+      slots: draft.slots.map((s, i) =>
+        i === target.index ? setSlotTime(s, time) : s
+      ),
+    };
+  }
+  return draft;
+};
+
+/** Replaces one slot's whole value, e.g. after the typed field is parsed. */
+export const setSlotValue = (
+  draft: Draft,
+  value: DateTimeValue | null,
+  target: DraftTarget
+): Draft => {
+  if (draft.mode === 'single')
+    return { ...draft, slot: { ...draft.slot, value } };
+  if (draft.mode === 'range') {
+    if (target === 'from') return { ...draft, from: { ...draft.from, value } };
+    if (target === 'to') return { ...draft, to: { ...draft.to, value } };
+    return draft;
+  }
+  if (typeof target === 'object') {
+    const slots = draft.slots
+      .map((s, i) => (i === target.index ? { ...s, value } : s))
+      .filter((s) => s.value);
+    return { ...draft, slots: sortSlots(slots) };
+  }
+  return draft;
+};
+
+/** Empties the draft (the sheet's own clear; the field's × calls onChange('') directly). */
+export const clearDraft = (draft: Draft): Draft => {
+  if (draft.mode === 'single')
+    return { ...draft, slot: { ...draft.slot, value: null } };
+  if (draft.mode === 'range')
+    return {
+      ...draft,
+      from: { ...draft.from, value: null },
+      to: { ...draft.to, value: null },
+    };
+  return { ...draft, slots: [], sharedTime: null };
+};
+
+const effectiveValue = (
+  slot: DraftSlot,
+  draft: Draft,
+  opts: DraftOptions
+): DateTimeValue | null => {
+  if (!slot.value) return null;
+  if (
+    draft.mode === 'multiple' &&
+    opts.type === 'datetime' &&
+    opts.multiple?.timeMode !== 'perDate'
+  ) {
+    return { ...slot.value, time: draft.sharedTime };
+  }
+  return slot.value;
+};
+
+const isComplete = (value: DateTimeValue | null, type: PickerType): boolean =>
+  !!value && (type === 'date' || !!value.time);
+
+/** Why Confirm must stay disabled, or null when the draft can be saved. Limits (Constraints) are checked separately. */
+export const validateDraft = (
+  draft: Draft,
+  opts: DraftOptions
+): DraftIssue | null => {
+  if (draft.mode === 'single')
+    return isComplete(draft.slot.value, opts.type) ? null : 'INCOMPLETE';
+
+  if (draft.mode === 'range') {
+    const from = draft.from.value;
+    const to = draft.to.value;
+    if (
+      !isComplete(from, opts.type) ||
+      !isComplete(to, opts.type) ||
+      !from ||
+      !to
+    )
+      return 'INCOMPLETE';
+    if (
+      opts.type === 'datetime' &&
+      toZonedDateTime(to, opts.zone) <= toZonedDateTime(from, opts.zone)
+    )
+      return 'RANGE_ORDER';
+    if (opts.type !== 'datetime') {
+      const order = compareCalendarDates(to.date, from.date);
+      if (order < 0 || (order === 0 && !opts.range?.allowSameDay))
+        return 'RANGE_ORDER';
+    }
+    const span = daysBetween(from.date, to.date);
+    const { minDays, maxDays } = opts.range ?? {};
+    if (
+      (minDays !== undefined && span < minDays) ||
+      (maxDays !== undefined && span > maxDays)
+    )
+      return 'RANGE_LENGTH';
+    return null;
+  }
+
+  if (draft.slots.length === 0) return 'INCOMPLETE';
+  const max = opts.multiple?.maxSelections;
+  if (max !== undefined && draft.slots.length > max) return 'MAX_SELECTIONS';
+  return draft.slots.every((s) =>
+    isComplete(effectiveValue(s, draft, opts), opts.type)
+  )
+    ? null
+    : 'INCOMPLETE';
+};
+
+const sameValue = (
+  a: DateTimeValue | null,
+  b: DateTimeValue | null
+): boolean => {
+  if (!a || !b) return a === b;
+  if (!isSameDay(a.date, b.date)) return false;
+  if (!a.time || !b.time) return a.time === b.time;
+  return a.time.hour === b.time.hour && a.time.minute === b.time.minute;
+};
+
+const slotToWire = (
+  slot: DraftSlot,
+  draft: Draft,
+  opts: DraftOptions
+): string => {
+  const value = effectiveValue(slot, draft, opts);
+  if (!value) return '';
+  if (slot.initialWire && sameValue(value, parseWire(slot.initialWire, opts))) {
+    return opts.adapter.formatUnchanged
+      ? opts.adapter.formatUnchanged(slot.initialWire, contextOf(opts))
+      : slot.initialWire;
+  }
+  return opts.adapter.format(value, contextOf(opts));
+};
+
+/**
+ * The value to send in onChange on Confirm, in the adapter's format:
+ * single → string; range → {from, to}; multiple → string[], sorted by date.
+ */
+export const draftToWire = (draft: Draft, opts: DraftOptions): PickerValue => {
+  if (draft.mode === 'single') return slotToWire(draft.slot, draft, opts);
+  if (draft.mode === 'range')
+    return {
+      from: slotToWire(draft.from, draft, opts),
+      to: slotToWire(draft.to, draft, opts),
+    };
+  return draft.slots.map((s) => slotToWire(s, draft, opts)).filter(Boolean);
+};
+
+export const emptyDraft = (mode: SelectionMode): Draft => {
+  if (mode === 'range') return { mode, from: emptySlot(), to: emptySlot() };
+  if (mode === 'multiple') return { mode, slots: [], sharedTime: null };
+  return { mode: 'single', slot: emptySlot() };
+};

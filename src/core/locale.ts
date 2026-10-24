@@ -1,0 +1,82 @@
+import type { TimeFormat } from './types';
+
+/**
+ * Locale defaults, read from the platform's Intl. Each helper falls back to a
+ * fixed value when Intl is missing or doesn't know the locale.
+ */
+
+const FALLBACK_LOCALE = 'en-US';
+const FALLBACK_DATE_FORMAT = 'yyyy-MM-dd';
+const SEPARATORS = ['/', '-', '.'];
+const DATE_TOKENS: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {
+  day: 'dd',
+  month: 'MM',
+  year: 'yyyy',
+};
+
+/** The device locale (a BCP-47 tag), or 'en-US'. */
+export const defaultLocale = (): string => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().locale || FALLBACK_LOCALE;
+  } catch {
+    return FALLBACK_LOCALE;
+  }
+};
+
+/**
+ * The locale's numeric date order as a `dateFormat`: 'MM/dd/yyyy' for en-US,
+ * 'dd/MM/yyyy' for en-GB, 'dd.MM.yyyy' for de-DE. The first separator is kept
+ * when it is exactly '/', '-' or '.'; anything longer (ko-KR's '. ') or
+ * different becomes '/'. Trailing text is dropped. Falls back to 'yyyy-MM-dd'.
+ */
+export const deriveDateFormat = (locale: string): string => {
+  try {
+    const parts = new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(Date.UTC(2006, 10, 22)));
+    const tokens = parts.flatMap((p) => DATE_TOKENS[p.type] ?? []);
+    if (
+      tokens.length !== 3 ||
+      !['dd', 'MM', 'yyyy'].every((t) => tokens.includes(t))
+    )
+      return FALLBACK_DATE_FORMAT;
+    const first = parts.find((p) => p.type === 'literal')?.value ?? '';
+    const separator = SEPARATORS.includes(first) ? first : '/';
+    return tokens.join(separator);
+  } catch {
+    return FALLBACK_DATE_FORMAT;
+  }
+};
+
+const DATE_FORMAT_PATTERN =
+  /^(dd|mm|yyyy)([^a-z0-9])(dd|mm|yyyy)\2(dd|mm|yyyy)$/i;
+
+/**
+ * A `dateFormat` written in any case ('dd/mm/yyyy', 'DD-MM-YYYY') in the form
+ * the picker uses ('dd/MM/yyyy'). Null unless it is a two-digit day, a
+ * two-digit month and a four-digit year, each once, with the same single
+ * separator character between them.
+ */
+export const normalizeDateFormat = (format: string): string | null => {
+  const m = DATE_FORMAT_PATTERN.exec(format.trim());
+  if (!m) return null;
+  const tokens = [m[1], m[3], m[4]].map((t) => (t ?? '').toLowerCase());
+  if (new Set(tokens).size !== 3) return null;
+  return tokens.map((t) => (t === 'mm' ? 'MM' : t)).join(m[2]);
+};
+
+/** Whether the locale writes times on a 12- or 24-hour clock. Falls back to '12h'. */
+export const deriveTimeFormat = (locale: string): TimeFormat => {
+  try {
+    const format = new Intl.DateTimeFormat(locale, { hour: 'numeric' });
+    const cycle = format.resolvedOptions().hourCycle;
+    if (cycle === 'h23' || cycle === 'h24') return '24h';
+    if (cycle === 'h11' || cycle === 'h12') return '12h';
+    const parts = format.formatToParts(new Date(Date.UTC(2006, 10, 22, 13)));
+    return parts.some((p) => p.type === 'dayPeriod') ? '12h' : '24h';
+  } catch {
+    return '12h';
+  }
+};
