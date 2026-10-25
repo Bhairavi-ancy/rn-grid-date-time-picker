@@ -181,7 +181,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 - [x] **M10. Android: one Backspace could delete twice.** `SegmentedInput.tsx` `onKeyPress` checks the latest state; if `onChangeText` arrived first, it also deletes in the previous box. Check the box's own rendered text instead. Low likelihood on number pads.
 - [x] **M11. A new day's time can be off-step with a step that doesn't divide 60.** `DateTimePicker.tsx` `nowTime`: step 7 at 10:57 gives 11:03. Round within the hour, or accept only steps that divide 60 (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60).
 - [x] **M12. Doc comments that no longer match.** `DateTimePicker.tsx` (~line 68) and `types.ts` (`onChange`) say `onChange` fires only on Confirm or clear; it also fires on instant saves and on-screen typing. The README says `onClose` fires for Close, the backdrop and Back; it also fires after Confirm.
-- [ ] **M13. Template files in the example.** `example/.claude/settings.json` and `example/AGENTS.md` came from the Expo template; remove them if you don't want them in the repo.
+- [x] **M13. Template files in the example.** `example/.claude/settings.json` and `example/AGENTS.md` came from the Expo template; remove them if you don't want them in the repo.
 
 ## Commit plan
 
