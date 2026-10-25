@@ -97,3 +97,22 @@ describe('iso: unchanged Confirm', () => {
     expect(draftToWire(createDraft('single', raw, opts), opts)).toBe(raw);
   });
 });
+
+describe('isoAdapter: years it can write', () => {
+  const ctx = { type: 'date' as const, timeZone: 'UTC' };
+  it('round-trips years 1–9999 and saves nothing outside them', () => {
+    for (const year of [1, 50, 999, 2026, 9999]) {
+      const raw = isoAdapter.format(
+        { date: { year, month: 6, day: 1 }, time: null },
+        ctx
+      );
+      expect(isoAdapter.parse(raw, ctx)?.date.year).toBe(year);
+    }
+    expect(
+      isoAdapter.format(
+        { date: { year: 10000, month: 1, day: 1 }, time: null },
+        ctx
+      )
+    ).toBe('');
+  });
+});

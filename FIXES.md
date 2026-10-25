@@ -73,7 +73,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 
 ## Should fix
 
-- [ ] **F1. `'utc-midnight'` dates with an offset move to another day.** ✅
+- [x] **F1. `'utc-midnight'` dates with an offset move to another day.** ✅
   - **What happens:** `'2026-10-24T00:00:00+05:30'` reads as 23 Oct, and an untouched Confirm saves `'2026-10-23T00:00:00.000Z'`. The README says this format is never shifted by a zone.
   - **Where:** `src/adapters/utcMidnight.ts`, `fromWire` for the date type (~line 69), and `formatUnchanged` (~line 108).
   - **Fix:** for dates, read the calendar date as written (`setZone: true`, or the first 10 characters).
