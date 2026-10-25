@@ -270,6 +270,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
         state={state}
         dispatch={dispatchTyped}
         getState={getState}
+        fieldLabel={label}
         disabled={!editable}
         tokens={tokens}
         styles={styles}

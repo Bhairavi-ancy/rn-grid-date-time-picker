@@ -170,10 +170,10 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - In `calendarDate.ts` and `src/adapters/iso.ts`, years above 9999 don't round-trip.
   - Fix: use `setUTCFullYear`, and clamp `yearRange` to 1–9999.
 - [x] **M5. `normalizeDateFormat` accepts any separator.** `src/core/locale.ts` allows newlines, tabs and letters; allow only `/`, `-`, `.`, space and `,`. A `dateFormat` that isn't a string throws; treat it as missing.
-- [ ] **M6. The selected month chip can scroll out of view.** `src/components/calendar/CalendarHeader.tsx` assumes 60 pt chips; Hijri names and large text are wider, and RTL offsets are wrong. Measure the chips with `onLayout`.
+- [x] **M6. The selected month chip can scroll out of view.** `src/components/calendar/CalendarHeader.tsx` assumes 60 pt chips; Hijri names and large text are wider, and RTL offsets are wrong. Measure the chips with `onLayout`.
 - [ ] **M7. README says the time boxes use `fontSizeLarge`.** The code uses `fontSizeMedium` (`src/components/time/timeStyles.ts`). Fix the README.
 - [x] **M8. `wheelRowSelected` / `wheelRowDisabled` style the text, not the row.** `src/components/time/Wheel.tsx`. Apply them to the row View, and add `wheelTextSelected` / `wheelTextDisabled` for the text.
-- [ ] **M9. Screen-reader details.**
+- [x] **M9. Screen-reader details.**
   - Day cells announce "selected" / "unavailable" twice (`DayGrid.tsx`, `DayCell.tsx`).
   - From and To segments read the same; add the end to the label (`SegmentedInput.tsx`).
   - The AM/PM switch has no disabled state.

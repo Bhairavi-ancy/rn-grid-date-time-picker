@@ -625,10 +625,10 @@ Memoise `strings` (and `theme`) so they aren't rebuilt on every render.
 
 ## Accessibility
 
-- Every control has a role, a label and state. Day cells are read as full dates with "today", "selected", "unavailable", "holiday", "start of range" and "end of range". Month changes are announced.
+- Every control has a role, a label and state. Day cells are read as full dates with "today", "holiday", "start of range" or "end of range"; selected and unavailable come from their state, so they aren't said twice. Typed segments include the field's label ("From, Day"). AM/PM in the time row are radio buttons. Month changes are announced.
 - Day cells reach a 48 pt touch target. Text grows with the system font size up to 1.4×, then stops so fixed-size parts don't clip.
 - Reduce motion is respected: scrolls and snaps jump instead of animating.
-- Errors are live regions. The wheel supports increment / decrement actions.
+- Errors are announced: a live region on Android, an announcement on iOS. The wheel supports increment / decrement actions.
 
 ## Testing
 

@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { I18nManager, Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  I18nManager,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 import type { ScrollViewRef } from '../nativeTypes';
 import {
   renderIcon,
@@ -137,8 +144,6 @@ interface ChipsProps {
   testID?: string;
 }
 
-const CHIP_STEP = 60;
-
 /** Scrolling row of month chips; months with no selectable day are greyed. */
 export const MonthChips: React.FC<ChipsProps> = ({
   names,
@@ -155,13 +160,27 @@ export const MonthChips: React.FC<ChipsProps> = ({
   const s = buildCalendarStyles(tokens);
   const ref = useRef<ScrollViewRef>(null);
   const reduceMotion = useReduceMotion();
-  useEffect(() => {
+  // Chips are measured (long Hijri names and large text make them wider), and
+  // the selected one is scrolled to the middle of the row.
+  const chips = useRef<Record<number, { x: number; width: number }>>({});
+  const viewport = useRef(0);
+  const scrollToSelected = (animated: boolean) => {
+    const chip = chips.current[selectedMonth];
+    if (!chip || !viewport.current) return;
     ref.current?.scrollTo({
-      x: Math.max(0, (selectedMonth - 2) * CHIP_STEP),
-      animated: !reduceMotion,
+      x: Math.max(0, chip.x - (viewport.current - chip.width) / 2),
+      animated,
     });
+  };
+  useEffect(() => {
+    scrollToSelected(!reduceMotion);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- scrolls only when the month changes
   }, [selectedMonth]);
+  const onChipLayout = (month: number) => (e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    chips.current[month] = { x, width };
+    if (month === selectedMonth) scrollToSelected(false);
+  };
 
   return (
     <ScrollView
@@ -171,6 +190,10 @@ export const MonthChips: React.FC<ChipsProps> = ({
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={[s.chipRow, styles?.monthChipRow]}
       accessibilityLabel={strings.a11yChooseMonth}
+      onLayout={(e) => {
+        viewport.current = e.nativeEvent.layout.width;
+        scrollToSelected(false);
+      }}
     >
       {names.map((name, i) => {
         const month = i + 1;
@@ -182,6 +205,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
               key={month}
               disabled={disabled}
               onPress={() => onSelect(month)}
+              onLayout={onChipLayout(month)}
             >
               {renderMonthChip(month, { selected, disabled })}
             </Pressable>
@@ -196,6 +220,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
             accessibilityState={{ selected, disabled }}
             disabled={disabled}
             onPress={() => onSelect(month)}
+            onLayout={onChipLayout(month)}
             style={[
               s.chip,
               styles?.monthChip,

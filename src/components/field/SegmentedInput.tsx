@@ -28,6 +28,8 @@ interface Props {
   tokens: ThemeTokens;
   styles?: PickerStyles;
   strings: PickerStrings;
+  /** The field's label, spoken before each segment's own name. */
+  fieldLabel?: string;
   testID?: string;
 }
 
@@ -100,6 +102,7 @@ const SegmentedInput: React.FC<Props> = ({
   tokens,
   styles,
   strings,
+  fieldLabel,
   testID,
 }) => {
   // Each box's text as last rendered, and as it last reported. Fast input (a
@@ -111,7 +114,13 @@ const SegmentedInput: React.FC<Props> = ({
   >({});
   const refs = useRef<Partial<Record<SegmentKey, TextInputRef | null>>>({});
   const s = buildFieldStyles(tokens);
-  const labels = A11Y_LABEL(strings);
+  // 'From, Day' and 'To, Day' read differently when the field has a label.
+  const own = A11Y_LABEL(strings);
+  const labels = fieldLabel
+    ? (Object.fromEntries(
+        Object.entries(own).map(([k, v]) => [k, `${fieldLabel}, ${v}`])
+      ) as Record<SegmentKey, string>)
+    : own;
   // Segment boxes fit their digits at the font size in use and the phone's
   // text size (up to the picker's cap), so nothing clips at large sizes.
   const { fontScale } = useWindowDimensions();
@@ -235,6 +244,7 @@ const SegmentedInput: React.FC<Props> = ({
         accessibilityRole="button"
         accessibilityLabel={labels.period}
         accessibilityValue={{ text: current ?? '' }}
+        accessibilityState={{ disabled }}
         disabled={disabled}
         onPress={toggle}
         hitSlop={8}

@@ -144,7 +144,7 @@ const TypedTime: React.FC<Props> = ({
                 }
                 accessibilityRole="radio"
                 accessibilityState={{
-                  selected,
+                  checked: selected,
                   disabled: !allowed || disabled,
                 }}
                 disabled={!allowed || disabled}
