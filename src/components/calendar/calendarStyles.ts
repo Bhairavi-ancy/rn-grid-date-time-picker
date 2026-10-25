@@ -139,12 +139,6 @@ const create = (t: ThemeTokens) =>
       fontSize: t.fontSizeMedium,
       color: t.accent,
     },
-    notice: {
-      marginTop: 8,
-      ...fontStyle(t, 'regular'),
-      fontSize: t.fontSizeSmall,
-      color: t.mutedText,
-    },
   });
 
 /** Calendar styles for a theme, created once per tokens object. */

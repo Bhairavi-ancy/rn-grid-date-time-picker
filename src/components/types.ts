@@ -145,7 +145,10 @@ export interface DateTimePickerProps {
   type: PickerType;
   mode?: SelectionMode;
   value: PickerValue;
-  /** On Confirm (once), or on clear (with ''). */
+  /**
+   * A value was saved: on Confirm; as it's edited with commitMode 'instant';
+   * when typing in the on-screen field pauses; or '' on clear. Never on close.
+   */
   onChange: (value: PickerValue) => void;
   /** On Confirm only, right after onChange (like a form field losing focus). */
   onBlur?: () => void;

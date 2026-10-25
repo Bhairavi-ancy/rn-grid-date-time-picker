@@ -110,8 +110,6 @@ export const STYLE_KEYS = [
   'todayButtonText',
   'emptyState',
   'emptyStateText',
-  'holidayNotice',
-  'dstNotice',
 ] as const;
 
 export type StyleKey = (typeof STYLE_KEYS)[number];

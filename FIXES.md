@@ -8,7 +8,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 
 ## Decisions (settle these first)
 
-- [x] **Q1. Daylight-saving and holiday notices.** **Decided (2026-10-25): remove for 0.1.0.** The README promises them, but nothing renders them. Default: remove them from the README, CHANGELOG and the `dstNotice` / `holidayNotice` style keys for 0.1.0, and add them in a later release.
+- [x] **Q1. Daylight-saving and holiday notices.** **Decided (2026-10-25): remove for 0.1.0. Done.** The README promises them, but nothing renders them. Default: remove them from the README, CHANGELOG and the `dstNotice` / `holidayNotice` style keys for 0.1.0, and add them in a later release.
 - [x] **Q2. `renderTimeRow`.** **Decided (2026-10-25): add the draft time and `setTime`. Done: `state.time`, `state.rangeTimes`, `state.setTime(time, end?)`.** It can only show a time today. Default: add the draft time and a `setTime(time)` to `PickerState` so a custom row can change it.
 - [x] **Q3. `range.minDays` / `maxDays`.** **Decided (2026-10-25): count calendar days, inclusive.** These currently count nights (`maxDays: 14` allows 15 calendar days). Default: count calendar days, inclusive, and say so in the README.
 
@@ -148,7 +148,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Where:** `README.md`, the `getConstraints` example (Limits & greying). `ctx.now.getHours()` is device-zone time, while `ctx.today` is in `timeZone`. Also, `CreateConstraintsOptions.timeZone` and `now` are accepted but never read.
   - **Fix:** add `nowTime` (the time in `timeZone`) to `ConstraintContext` and use it in the example. Either use or remove the unused options.
 
-- [ ] **F14. The notices from Q1.** Whichever way Q1 is decided, make the README, CHANGELOG and style keys match what renders.
+- [x] **F14. The notices from Q1.** Whichever way Q1 is decided, make the README, CHANGELOG and style keys match what renders.
 
 - [x] **F15. On-screen typing outside the limits.** Check first: the two reviews disagree.
   - **What one review found:** typing 22-10-2026 with `minDate` 23 Oct saves nothing and shows no error, so the field looks saved. The other says an error does show.
@@ -163,7 +163,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 ## Minor
 
 - [x] **M1. Range length.** Apply Q3 to `src/core/draft.ts` and `src/core/selectionRules.ts`. Also grey out the start day as an end when `minDays ≥ 1`, so tapping it again can't create a range that's too short.
-- [ ] **M2. Peer dependencies.** Set `react: ">=18"` and `react-native: ">=0.71"` (the code uses `gap` and `columnGap`) in `package.json`, and in the README's Install section.
+- [x] **M2. Peer dependencies.** Set `react: ">=18"` and `react-native: ">=0.71"` (the code uses `gap` and `columnGap`) in `package.json`, and in the README's Install section.
 - [x] **M3. Hijri month names with an extended locale.** `src/core/calendarSystem.ts` (~line 139) appends `-u-ca-islamic-umalqura` even to locales that already have `-u-…`, such as `'ar-SA-u-nu-arab'`, and falls back to English. Merge it into the existing extension instead.
 - [x] **M4. Years below 100 and above 9999.**
   - In `calendarSystem.ts`, `Date.UTC` treats two-digit years as 19xx.
@@ -171,7 +171,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - Fix: use `setUTCFullYear`, and clamp `yearRange` to 1–9999.
 - [x] **M5. `normalizeDateFormat` accepts any separator.** `src/core/locale.ts` allows newlines, tabs and letters; allow only `/`, `-`, `.`, space and `,`. A `dateFormat` that isn't a string throws; treat it as missing.
 - [x] **M6. The selected month chip can scroll out of view.** `src/components/calendar/CalendarHeader.tsx` assumes 60 pt chips; Hijri names and large text are wider, and RTL offsets are wrong. Measure the chips with `onLayout`.
-- [ ] **M7. README says the time boxes use `fontSizeLarge`.** The code uses `fontSizeMedium` (`src/components/time/timeStyles.ts`). Fix the README.
+- [x] **M7. README says the time boxes use `fontSizeLarge`.** The code uses `fontSizeMedium` (`src/components/time/timeStyles.ts`). Fix the README.
 - [x] **M8. `wheelRowSelected` / `wheelRowDisabled` style the text, not the row.** `src/components/time/Wheel.tsx`. Apply them to the row View, and add `wheelTextSelected` / `wheelTextDisabled` for the text.
 - [x] **M9. Screen-reader details.**
   - Day cells announce "selected" / "unavailable" twice (`DayGrid.tsx`, `DayCell.tsx`).
@@ -180,7 +180,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - The AM/PM options use `selected` rather than `checked` (`TypedTime.tsx`).
 - [x] **M10. Android: one Backspace could delete twice.** `SegmentedInput.tsx` `onKeyPress` checks the latest state; if `onChangeText` arrived first, it also deletes in the previous box. Check the box's own rendered text instead. Low likelihood on number pads.
 - [x] **M11. A new day's time can be off-step with a step that doesn't divide 60.** `DateTimePicker.tsx` `nowTime`: step 7 at 10:57 gives 11:03. Round within the hour, or accept only steps that divide 60 (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60).
-- [ ] **M12. Doc comments that no longer match.** `DateTimePicker.tsx` (~line 68) and `types.ts` (`onChange`) say `onChange` fires only on Confirm or clear; it also fires on instant saves and on-screen typing. The README says `onClose` fires for Close, the backdrop and Back; it also fires after Confirm.
+- [x] **M12. Doc comments that no longer match.** `DateTimePicker.tsx` (~line 68) and `types.ts` (`onChange`) say `onChange` fires only on Confirm or clear; it also fires on instant saves and on-screen typing. The README says `onClose` fires for Close, the backdrop and Back; it also fires after Confirm.
 - [ ] **M13. Template files in the example.** `example/.claude/settings.json` and `example/AGENTS.md` came from the Expo template; remove them if you don't want them in the repo.
 
 ## Commit plan

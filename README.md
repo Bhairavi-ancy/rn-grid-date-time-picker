@@ -22,7 +22,7 @@ npm i rn-calendar-time-picker
 yarn add rn-calendar-time-picker
 ```
 
-There are no native steps. It works in Expo Go and in bare React Native apps. `react` and `react-native` are peer dependencies.
+There are no native steps. It works in Expo Go and in bare React Native apps. `react` (18 or later) and `react-native` (0.71 or later) are peer dependencies.
 
 ## Quick start
 
@@ -124,7 +124,7 @@ const epochMs: ValueAdapter = {
 
 **Unchanged Confirm.** If the user confirms without changing a value, the stored string comes back as it came in (`'iso'`), so a value with seconds or an offset isn't rewritten. `'utc-midnight'` re-serialises the stored instant or day as UTC (`formatUnchanged`).
 
-**Time zones.** Date-time values are read and written in `timeZone` (an IANA name; default: the device zone). "Today" uses the same zone. Dates have no zone. A wall time skipped by a daylight-saving change moves forward, and a repeated one uses its first occurrence; the sheet shows a notice for both.
+**Time zones.** Date-time values are read and written in `timeZone` (an IANA name; default: the device zone). "Today" uses the same zone. Dates have no zone. A wall time skipped by a daylight-saving change moves forward, and a repeated one uses its first occurrence.
 
 ## Props
 
@@ -148,7 +148,7 @@ const epochMs: ValueAdapter = {
 |---|---|---|---|
 | `presentation` | `'sheet' \| 'inline'` | `'sheet'` | |
 | `visible` | `boolean` | – | Controls the sheet; without it the picker opens itself. |
-| `onOpen` / `onClose` | `() => void` | – | `onClose` fires for Close, the backdrop and Android back. |
+| `onOpen` / `onClose` | `() => void` | – | `onClose` fires whenever the sheet closes: Close, the backdrop, Android back, and after Confirm. |
 | `onBeforeOpen` | `() => void` | – | Just before opening, e.g. to close your own dropdowns. |
 | `showField` | `boolean` | `true` | Hide the on-screen field (for example with `visible`). |
 | `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`. See [Sheet layout](#sheet-layout). |
@@ -429,8 +429,8 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `fontFamily` | `undefined` | One family for all text, at weight 400 / 500 / 600 as each part needs. Setting it replaces the default Inter files |
 | `fontRegular`, `fontMedium`, `fontSemiBold` | `'Inter-Regular'`, `'Inter-Medium'`, `'Inter-SemiBold'` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `SYSTEM_FONTS` clears all four for the system font |
 | `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field (the Hijri day under a dual cell is 75% of it) |
-| `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, AM / PM toggle |
-| `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time boxes, wheel, Done |
+| `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, time boxes, AM / PM toggle |
+| `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time label, wheel |
 | `radius` | `8` | Field and button corners (the sheet uses `radius * 2`) |
 | `fieldHeight` | `44` | Field minimum height |
 | `touchTarget` | `44` | Minimum button size |
@@ -489,7 +489,7 @@ To change a single part, pass a text style through `styles` (for example `styles
 - **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (the Hijri day in a dual cell).
 - **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`.
 - **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
-- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`, `holidayNotice`, `dstNotice`.
+- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`.
 
 ## Icons
 

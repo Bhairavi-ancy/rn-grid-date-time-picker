@@ -75,8 +75,9 @@ const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
  * multiple selection.
  * Everything comes in through props; the picker keeps no state of its own beyond
  * the draft being edited, and loads data only through `loadHolidays`.
- * onChange (then onBlur) fires exactly once per Confirm, and once with '' on clear;
- * closing, the backdrop and Android back fire nothing.
+ * onChange (then onBlur) fires once per Confirm, once per saved edit with
+ * commitMode 'instant' or on-screen typing, and once with '' on clear; closing,
+ * the backdrop and Android back fire nothing (onClose only).
  */
 
 const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
