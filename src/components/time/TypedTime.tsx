@@ -98,6 +98,9 @@ const TypedTime: React.FC<Props> = ({
             placeholderTextColor={tokens.placeholder}
             keyboardType="number-pad"
             maxLength={2}
+            // A digit typed into a full box replaces it rather than being
+            // dropped (the row jumps into the minutes after the hour).
+            selectTextOnFocus
             textAlign="center"
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             contextMenuHidden

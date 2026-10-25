@@ -227,6 +227,38 @@ describe('Confirm', () => {
   });
 });
 
+describe('time row editing', () => {
+  it('Backspace from the empty minutes back to the hour saves nothing and leaves the minutes empty', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen
+        log={log}
+        type="datetime"
+        commitMode="instant"
+        initial="2026-10-25T09:30:00.000Z"
+      />
+    );
+    open(tree);
+    type(tree, 'dp-time-minute', '');
+    act(() =>
+      box(tree, 'dp-time-minute').props.onKeyPress({
+        nativeEvent: { key: 'Backspace' },
+      })
+    );
+    // Focus moves to the hour: the minute box blurs.
+    blur(tree, 'dp-time-minute');
+    expect(box(tree, 'dp-time-minute').props.value).toBe('');
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  it('both boxes select their text on focus, so a typed digit replaces a full box', () => {
+    const tree = mount(<Screen log={jest.fn()} type="datetime" />);
+    open(tree);
+    expect(box(tree, 'dp-time-hour').props.selectTextOnFocus).toBe(true);
+    expect(box(tree, 'dp-time-minute').props.selectTextOnFocus).toBe(true);
+  });
+});
+
 describe('keyboard folding inline', () => {
   const listeners: Record<string, () => void> = {};
   afterEach(() => {

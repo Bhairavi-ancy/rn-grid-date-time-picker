@@ -102,6 +102,8 @@ export const STYLE_KEYS = [
   'wheelRowSelected',
   'wheelRowDisabled',
   'wheelText',
+  'wheelTextSelected',
+  'wheelTextDisabled',
   'wheelHighlight',
   // other
   'todayButton',

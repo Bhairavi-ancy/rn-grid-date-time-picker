@@ -111,6 +111,9 @@ const TimeRow: React.FC<TimeRowProps> = ({
   const refs = useRef<Partial<Record<TimeKey, TextInputRef | null>>>({});
   // Set while we move focus hour → minute ourselves (the minutes aren't filled then).
   const jumping = useRef(false);
+  // Set while Backspace moves focus from an empty minute box back to the hour:
+  // nothing is saved then, so the minutes don't fill in as '00'.
+  const backingUp = useRef(false);
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
   const boxFocused = focused !== null;
@@ -163,6 +166,10 @@ const TimeRow: React.FC<TimeRowProps> = ({
   const onBlurBox = (key: TimeKey) => {
     setFocused((f) => (f === key ? null : f));
     const current = valuesRef.current;
+    if (key === 'minute' && backingUp.current) {
+      backingUp.current = false;
+      return;
+    }
     if (key === 'hour' && jumping.current) {
       // Moving on to the minutes: save the hour (minutes count as 00), keep mm empty.
       jumping.current = false;
@@ -181,8 +188,10 @@ const TimeRow: React.FC<TimeRowProps> = ({
   };
 
   const onBackspace = (key: TimeKey) => {
-    if (key === 'minute' && !valuesRef.current.minute)
+    if (key === 'minute' && !valuesRef.current.minute) {
+      backingUp.current = true;
       refs.current.hour?.focus();
+    }
   };
 
   // What Confirm would save, and why it can't (same rules as saving on leave).

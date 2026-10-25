@@ -488,7 +488,7 @@ To change a single part, pass a text style through `styles` (for example `styles
 - **Calendar header**: `calendarHeader`, `navArrow`, `navArrowDisabled`, `yearButton`, `yearButtonText`, `monthChipRow`, `monthChip`, `monthChipText`, `monthChipSelected`, `monthChipDisabled`.
 - **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (the Hijri day in a dual cell).
 - **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`.
-- **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled`, `wheelText`, `wheelHighlight`.
+- **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
 - **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`, `holidayNotice`, `dstNotice`, `keyboardDoneBar`, `keyboardDoneText`.
 
 ## Icons

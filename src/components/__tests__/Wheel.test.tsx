@@ -158,3 +158,34 @@ describe('TimeWheel', () => {
     expect(onTime).toHaveBeenCalledWith({ hour: 10, minute: 30 });
   });
 });
+
+describe('wheel style keys', () => {
+  it('wheelRowSelected styles the row, wheelTextSelected its text', () => {
+    const tree = mount({
+      styles: {
+        wheelRowSelected: { backgroundColor: '#ABCDEF' },
+        wheelTextSelected: { color: '#123456' },
+      },
+    });
+    const flat = (st: unknown) =>
+      [st].flat(Infinity) as ({ [k: string]: unknown } | undefined)[];
+    const rows = tree.root.findAll(
+      (n) =>
+        typeof n.type === 'string' &&
+        flat(n.props.style).some((x) => x?.backgroundColor === '#ABCDEF')
+    );
+    const labels = tree.root
+      .findAllByType(Text)
+      .filter((t) => flat(t.props.style).some((x) => x?.color === '#123456'));
+    expect(rows.length).toBeGreaterThan(0);
+    expect(labels.length).toBeGreaterThan(0);
+    // The row key no longer lands on the text.
+    expect(
+      tree.root
+        .findAllByType(Text)
+        .some((t) =>
+          flat(t.props.style).some((x) => x?.backgroundColor === '#ABCDEF')
+        )
+    ).toBe(false);
+  });
+});

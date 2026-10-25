@@ -192,7 +192,15 @@ const WheelColumnBase: React.FC<ColumnProps> = ({
         onMomentumScrollEnd={(e) => settle(e.nativeEvent.contentOffset.y)}
       >
         {items.map((item, i) => (
-          <View key={item.value} style={[s.wheelRow, styles?.wheelRow]}>
+          <View
+            key={item.value}
+            style={[
+              s.wheelRow,
+              styles?.wheelRow,
+              i === centered && styles?.wheelRowSelected,
+              item.disabled && styles?.wheelRowDisabled,
+            ]}
+          >
             <Text
               maxFontSizeMultiplier={MAX_FONT_SCALE}
               style={[
@@ -200,11 +208,11 @@ const WheelColumnBase: React.FC<ColumnProps> = ({
                 styles?.wheelText,
                 i === centered && [
                   s.wheelTextSelected,
-                  styles?.wheelRowSelected,
+                  styles?.wheelTextSelected,
                 ],
                 item.disabled && [
                   s.wheelTextDisabled,
-                  styles?.wheelRowDisabled,
+                  styles?.wheelTextDisabled,
                 ],
               ]}
             >
