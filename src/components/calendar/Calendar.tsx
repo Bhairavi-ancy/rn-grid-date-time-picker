@@ -30,6 +30,8 @@ export type CalendarView = 'day' | 'month' | 'year';
 export interface CalendarProps {
   constraints: Constraints;
   today: CalendarDate;
+  /** With nothing selected, the calendar opens on this day's month instead of today's. */
+  initialVisibleDate?: CalendarDate;
   selection: CalendarSelection;
   onSelectDay: (day: CalendarDate) => void;
   firstDayOfWeek: Weekday;
@@ -119,15 +121,19 @@ const isYearOpen = (
   return false;
 };
 
-/** Where the calendar opens: the value's month, else today's, else the first month with a selectable day. */
+/**
+ * Where the calendar opens: the value's month, else `initialVisibleDate`'s,
+ * else today's; when that month has nothing selectable, the nearest one that does.
+ */
 const initialMonth = (props: CalendarProps, sys: MonthSystem): VisibleMonth => {
   const limits = monthLimits(sys, props.yearRange);
   const picked = firstSelectedDay(props.selection);
-  const start = sys.monthOf(picked ?? props.today);
+  const anchor = props.initialVisibleDate ?? props.today;
+  const start = sys.monthOf(picked ?? anchor);
   if (picked || isMonthOpen(sys, props.constraints, start)) {
     return clampMonth(start, limits);
   }
-  const first = props.constraints.firstSelectable(props.today);
+  const first = props.constraints.firstSelectable(anchor);
   return clampMonth(first ? sys.monthOf(first) : start, limits);
 };
 

@@ -40,6 +40,8 @@ export interface TimeRowProps {
    * typing. undefined: errors show as soon as they appear (instant commit).
    */
   issueCheck?: number;
+  /** One of its boxes gained or lost focus. */
+  onFocusChange?: (focused: boolean) => void;
   /** Wheel only: true while a column is still moving (Confirm waits). */
   onSpinChange?: (spinning: boolean) => void;
   /** Typed boxes (default) or the custom wheel. */
@@ -82,6 +84,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
   onPendingChange,
   onIssueChange,
   issueCheck,
+  onFocusChange,
   onSpinChange,
   input = 'typed',
   timeFormat,
@@ -108,6 +111,14 @@ const TimeRow: React.FC<TimeRowProps> = ({
   const refs = useRef<Partial<Record<TimeKey, TextInputRef | null>>>({});
   // Set while we move focus hour → minute ourselves (the minutes aren't filled then).
   const jumping = useRef(false);
+  const onFocusChangeRef = useRef(onFocusChange);
+  onFocusChangeRef.current = onFocusChange;
+  const boxFocused = focused !== null;
+  useEffect(() => {
+    onFocusChangeRef.current?.(boxFocused);
+  }, [boxFocused]);
+  useEffect(() => () => onFocusChangeRef.current?.(false), []);
+
   // The Confirm check the user has edited past: its error is hidden again.
   const [editedAt, setEditedAt] = useState(-1);
   const markEdited = () => setEditedAt(issueCheck ?? 0);

@@ -42,6 +42,8 @@ export interface ValueFieldProps {
    * the last box filled). Gets what the field holds then.
    */
   onTypingDone?: (parsed: ParsedSegments) => void;
+  /** One of its typed boxes gained or lost focus. */
+  onFocusChange?: (focused: boolean) => void;
   /** Tap on a display-only field, or on its calendar icon. */
   onPress?: () => void;
   allowClear?: boolean;
@@ -130,6 +132,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     allowTyping,
     onTyped,
     onTypingDone,
+    onFocusChange,
     onPress,
     allowClear,
     onClear,
@@ -163,6 +166,14 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
       onTyped?.(parsed);
     }
   );
+
+  const onFocusChangeRef = useRef(onFocusChange);
+  onFocusChangeRef.current = onFocusChange;
+  const hasFocus = !!state.focused;
+  useEffect(() => {
+    onFocusChangeRef.current?.(hasFocus);
+  }, [hasFocus]);
+  useEffect(() => () => onFocusChangeRef.current?.(false), []);
 
   const wasFocused = useRef(false);
   const onTypingDoneRef = useRef(onTypingDone);

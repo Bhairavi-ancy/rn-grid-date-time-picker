@@ -196,6 +196,7 @@ const epochMs: ValueAdapter = {
 | `showOutsideDays` | `boolean` | `true` |
 | `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
+| `initialVisibleDate` | `CalendarDate` | today: with no value, the calendar opens on this day's month without selecting it (e.g. `{ year: 2000, month: 1, day: 1 }` for a date of birth); a value's month always wins |
 | `enableMonthSwipe` | `boolean` | `true` |
 | `showToday` | `boolean` | `false` |
 | `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'` |
@@ -295,7 +296,7 @@ For full control, pass `getConstraints`. Its result is used as is, and the limit
       now: ctx.now,
       maxDate: ctx.limits.maxDate,
       // From now on, to the minute; refreshed while the sheet is open.
-      min: { date: ctx.today, time: { hour: ctx.now.getHours(), minute: ctx.now.getMinutes() } },
+      min: { date: ctx.today, time: ctx.nowTime },
       dependsOnNow: true,
       holidays: ctx.holidays,
       timeBounds: () => ({ min: { hour: 9, minute: 0 }, max: { hour: 17, minute: 30 } }),
@@ -304,7 +305,7 @@ For full control, pass `getConstraints`. Its result is used as is, and the limit
 />
 ```
 
-`ctx` also holds `today` (in `timeZone`) and `holidays` (the prop plus every year loaded so far). This example reads `ctx.now.getHours()` in the device zone; for another `timeZone`, convert `ctx.now` first.
+`ctx` also holds `today` and `nowTime` (the current day and time in `timeZone`) and `holidays` (the prop plus every year loaded so far).
 
 ## Presentation
 

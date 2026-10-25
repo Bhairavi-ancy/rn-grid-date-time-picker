@@ -61,8 +61,12 @@ export interface DraftOptions {
   };
 }
 
+/**
+ * Which part of the draft an edit goes to. Multiple dates are targeted by
+ * their day, not their position, since the list re-sorts as days are added.
+ */
 export type DraftTarget =
-  'single' | 'from' | 'to' | 'shared' | { index: number };
+  'single' | 'from' | 'to' | 'shared' | { day: CalendarDate };
 
 export type DraftIssue =
   'INCOMPLETE' | 'RANGE_ORDER' | 'RANGE_LENGTH' | 'MAX_SELECTIONS';
@@ -288,8 +292,8 @@ export const setTime = (
   if (typeof target === 'object') {
     return {
       ...draft,
-      slots: draft.slots.map((s, i) =>
-        i === target.index ? setSlotTime(s, time) : s
+      slots: draft.slots.map((s) =>
+        isSameDay(s.value?.date, target.day) ? setSlotTime(s, time) : s
       ),
     };
   }
@@ -311,7 +315,7 @@ export const setSlotValue = (
   }
   if (typeof target === 'object') {
     const slots = draft.slots
-      .map((s, i) => (i === target.index ? { ...s, value } : s))
+      .map((s) => (isSameDay(s.value?.date, target.day) ? { ...s, value } : s))
       .filter((s) => s.value);
     return { ...draft, slots: sortSlots(slots) };
   }

@@ -109,6 +109,8 @@ export interface ConstraintContext {
   timeZone: string;
   now: Date;
   today: CalendarDate;
+  /** The current time in `timeZone`, e.g. for "no earlier than now" limits. */
+  nowTime: Time;
   /** The `holidays` prop plus every year loaded so far. */
   holidays: string[];
   /** The limit props, to merge into your own constraints. */
@@ -218,6 +220,11 @@ export interface DateTimePickerProps {
   showOutsideDays?: boolean;
   yearRange?: { first: number; last: number };
   initialView?: 'day' | 'month' | 'year';
+  /**
+   * With no value, the calendar opens on this day's month (e.g. 2000 for a
+   * date of birth) without selecting anything. Default: today.
+   */
+  initialVisibleDate?: CalendarDate;
   enableMonthSwipe?: boolean;
   showToday?: boolean;
   /** Default 'gregory'. Falls back to 'gregory' when the platform has no Hijri calendar. */

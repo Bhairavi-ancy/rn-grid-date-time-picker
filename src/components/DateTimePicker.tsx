@@ -15,6 +15,7 @@ import {
   draftToWire,
   setTime as applyTime,
   validateDraft,
+  type Draft,
   type DraftOptions,
   type DraftTarget,
 } from '../core/draft';
@@ -27,7 +28,7 @@ import {
 } from '../core/locale';
 import { withSelectionRules } from '../core/selectionRules';
 import type { ParsedSegments } from '../core/segments';
-import type { TimeEntryIssue } from '../core/timeEntry';
+import { checkTime, type TimeEntryIssue } from '../core/timeEntry';
 import type {
   CalendarDate,
   DateTimeValue,
@@ -126,6 +127,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     firstDayOfWeek = 7,
     showOutsideDays = true,
     initialView,
+    initialVisibleDate,
     enableMonthSwipe = true,
     calendarSystem,
     showToday = false,
@@ -257,7 +259,19 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     onClose,
   });
   const isOpen = isInline || sheetOpen;
-  const folded = useKeyboardFold(isOpen);
+  const keyboardUp = useKeyboardFold(isOpen);
+  // The picker's own boxes that have focus. Inline, another field on the
+  // screen can raise the keyboard, so the calendar folds only for these.
+  const [focusedParts, setFocusedParts] = useState<Record<string, boolean>>({});
+  const reportFocus = useCallback(
+    (part: string, focused: boolean) =>
+      setFocusedParts((prev) =>
+        !!prev[part] === focused ? prev : { ...prev, [part]: focused }
+      ),
+    []
+  );
+  const ownFocus = Object.values(focusedParts).some(Boolean);
+  const folded = keyboardUp && (!isInline || ownFocus);
 
   const rangeLayout = range?.layout ?? 'singleField';
   const multipleTimeMode = multiple?.timeMode ?? 'shared';
@@ -331,11 +345,13 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       disabledWeekdays,
       disableHolidays,
     };
+    const zonedNow = DateTime.fromJSDate(nowDate).setZone(zone);
     return getConstraints
       ? getConstraints({
           type,
           timeZone: zone,
           now: nowDate,
+          nowTime: { hour: zonedNow.hour, minute: zonedNow.minute },
           today,
           holidays,
           limits,
@@ -371,7 +387,19 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     getConstraints,
   ]);
 
-  const [typingBlocked, setTypingBlocked] = useState(false);
+  // A typed field that doesn't parse blocks Confirm, per field: one end of a
+  // range can't hide the other end's problem.
+  const [typingBlocks, setTypingBlocks] = useState<
+    Partial<Record<'single' | RangeEnd, boolean>>
+  >({});
+  const typingBlocked = Object.values(typingBlocks).some(Boolean);
+  const setTypingBlock = useCallback(
+    (key: 'single' | RangeEnd, blocked: boolean) =>
+      setTypingBlocks((prev) =>
+        !!prev[key] === blocked ? prev : { ...prev, [key]: blocked }
+      ),
+    []
+  );
   // Times typed before their day is picked; used when the day is tapped.
   const [pending, setPendingTimes] = useState<PendingTimes>({});
   const setPending = useCallback(
@@ -399,12 +427,17 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     setActiveEnd('from');
     setActiveDay(null);
   }, []);
+  // Opening or closing starts fresh: nothing edited, nothing blocked.
   useEffect(() => {
+    edited.current = false;
+    setTypingBlocks({});
+    setTimeCheck(0);
+    setFocusedParts({});
     if (!isOpen) return;
     resetSelectionUi();
     setWheelSpinning(false);
     setRowPending({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the picker opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the picker opens or closes
   }, [isOpen]);
 
   // Times still being typed in a row (focus hasn't left the box): Confirm checks
@@ -431,23 +464,19 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const previewIssue = validateDraft(preview, draftOptions);
 
   const d = draft.draft;
-  // A shared time applies to every picked date.
-  const sharedTime =
-    preview.mode === 'multiple' &&
-    type === 'datetime' &&
-    multipleTimeMode === 'shared'
-      ? preview.sharedTime
-      : null;
-  const draftValues: (DateTimeValue | null)[] =
-    preview.mode === 'single'
-      ? [preview.slot.value]
-      : preview.mode === 'range'
-        ? [preview.from.value, preview.to.value]
-        : preview.slots.map((slot) =>
-            slot.value && sharedTime
-              ? { ...slot.value, time: sharedTime }
-              : slot.value
-          );
+  /** The values a draft would save, with a shared time applied. */
+  const valuesOf = (dr: Draft): (DateTimeValue | null)[] => {
+    if (dr.mode === 'single') return [dr.slot.value];
+    if (dr.mode === 'range') return [dr.from.value, dr.to.value];
+    const shared =
+      type === 'datetime' && multipleTimeMode === 'shared'
+        ? dr.sharedTime
+        : null;
+    return dr.slots.map((slot) =>
+      slot.value && shared ? { ...slot.value, time: shared } : slot.value
+    );
+  };
+  const draftValues = valuesOf(preview);
   // Days that can't be picked block Confirm; a time outside the day's limits
   // is only checked when Confirm is pressed, like the other time problems.
   const datesAllowed = draftValues.every(
@@ -465,6 +494,35 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     !confirmDisabled;
 
   const edited = useRef(false);
+  // Read when Confirm is pressed or an edit is saved, so a new `validate` or
+  // `onError` passed on a later render is the one that runs.
+  const latest = useRef({ validate, onError, value });
+  latest.current = { validate, onError, value };
+  const valueKey = JSON.stringify(value ?? '');
+
+  /**
+   * Whether a draft can be saved as it stands: complete, every day allowed,
+   * every time allowed and on the minute step, and nothing being typed or
+   * spun that doesn't parse yet.
+   */
+  const canSave = (dr: Draft): boolean =>
+    !validateDraft(dr, draftOptions) &&
+    valuesOf(dr).every(
+      (v) =>
+        !v ||
+        (!constraints.dayStatus(v.date).disabled &&
+          constraints.isValueAllowed(v) &&
+          (type !== 'datetime' ||
+            !v.time ||
+            checkTime(v.time, {
+              minuteStep,
+              bounds: constraints.timeBounds(v.date),
+            }) === null))
+    ) &&
+    !typingBlocked &&
+    !wheelSpinning &&
+    !confirmDisabled;
+
   const commit = useCallback(
     (wire: PickerValue) => {
       onChange(wire);
@@ -476,23 +534,32 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const confirm = useCallback(() => {
     if (!canConfirm) return;
+    const { validate: check, onError: report, value: saved } = latest.current;
     if (timeBlocked) {
       setTimeCheck((n) => n + 1);
-      onError?.(timeIssue ?? 'TIME_NOT_ALLOWED', value);
+      report?.(timeIssue ?? 'TIME_NOT_ALLOWED', saved);
       return;
     }
     const wire = draftToWire(preview, draftOptions);
-    const message = validate?.(wire);
+    const message = check?.(wire);
     if (message) {
       setValidation({ message, key: JSON.stringify(wire) });
-      onError?.('VALIDATION', wire);
+      report?.('VALIDATION', wire);
       return;
     }
     commit(wire);
     edited.current = false;
     if (!isInline) close();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- onError, validate and value are read when Confirm is pressed
-  }, [canConfirm, timeBlocked, commit, preview, draftOptions, isInline, close]);
+  }, [
+    canConfirm,
+    timeBlocked,
+    timeIssue,
+    commit,
+    preview,
+    draftOptions,
+    isInline,
+    close,
+  ]);
 
   const clearValue = useCallback(() => {
     draft.clear();
@@ -510,29 +577,40 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // Opening or closing starts without the last `validate` message.
   useEffect(() => setValidation(null), [isOpen]);
 
-  // commitMode 'instant': every complete, allowed edit is saved without a Confirm press.
-  const lastInstant = useRef<string | null>(null);
+  // commitMode 'instant': every complete, allowed edit is saved without a
+  // Confirm press, but only while open (closing discards, as with Confirm),
+  // and only what the draft holds: a time still being typed isn't saved yet.
+  // An edit equal to the saved value isn't saved again; one `validate`
+  // rejected waits until the selection or the saved value changes.
+  const lastRejected = useRef<string | null>(null);
   useEffect(() => {
-    if (
-      commitMode !== 'instant' ||
-      !edited.current ||
-      !canConfirm ||
-      timeBlocked
-    )
-      return;
+    lastRejected.current = null;
+  }, [valueKey]);
+  useEffect(() => {
+    if (commitMode !== 'instant' || !isOpen || !edited.current) return;
+    if (timeIssue || !canSave(draft.draft)) return;
     const wire = draft.toWire();
     const key = JSON.stringify(wire);
-    if (key === lastInstant.current) return;
-    lastInstant.current = key;
-    const message = validate?.(wire);
+    if (key === valueKey || key === lastRejected.current) return;
+    const message = latest.current.validate?.(wire);
     if (message) {
+      lastRejected.current = key;
       setValidation({ message, key });
-      onError?.('VALIDATION', wire);
+      latest.current.onError?.('VALIDATION', wire);
       return;
     }
     commit(wire);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the draft or its validity changes, not when callbacks are re-created
-  }, [commitMode, canConfirm, timeBlocked, draft.draft]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- when the draft or what blocks it changes, not when callbacks are re-created
+  }, [
+    commitMode,
+    isOpen,
+    draft.draft,
+    timeIssue,
+    typingBlocked,
+    wheelSpinning,
+    confirmDisabled,
+    constraints,
+  ]);
 
   // A typed date with no time yet gets one the way a tapped day does: the fixed
   // newDayTime, else a time already typed in the time row, else now.
@@ -551,7 +629,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const onSheetTyped = (parsed: ParsedSegments) => {
     edited.current = true;
     const typed = withFilledTime(parsed, 'single');
-    setTypingBlocked(!parsed.isEmpty && !typed);
+    setTypingBlock('single', !parsed.isEmpty && !typed);
     if (typed) draft.setValue(typed, 'single');
     else if (parsed.isEmpty) draft.clear();
   };
@@ -559,7 +637,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const onRangeTyped = (end: RangeEnd, parsed: ParsedSegments) => {
     edited.current = true;
     const typed = withFilledTime(parsed, end);
-    setTypingBlocked(!parsed.isEmpty && !typed);
+    setTypingBlock(end, !parsed.isEmpty && !typed);
     if (typed || parsed.isEmpty) draft.setValue(typed, end);
   };
 
@@ -579,9 +657,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const onSelectDay = useCallback(
     (day: CalendarDate) => {
       edited.current = true;
-      setTypingBlocked(false);
       if (d.mode === 'range') {
         if (rangeLayout === 'fromTo') {
+          // The tapped day replaces whatever was typed in this end only.
+          setTypingBlock(activeEnd, false);
           draft.setRangeEnd(
             day,
             activeEnd,
@@ -595,6 +674,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           !d.from.value ||
           (!!d.to.value && range?.reselect !== 'moveNearestEnd');
         const end: RangeEnd = startsOver ? 'from' : 'to';
+        setTypingBlock('single', false);
         draft.selectDay(day, fixedTime ?? pending[end] ?? nowTime());
         return;
       }
@@ -610,6 +690,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         if (perDate) setActiveDay(picked ? null : day);
         return;
       }
+      setTypingBlock('single', false);
       draft.selectDay(day, fixedTime ?? pending.single ?? nowTime());
     },
     [
@@ -624,6 +705,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       range?.reselect,
       type,
       multipleTimeMode,
+      setTypingBlock,
     ]
   );
 
@@ -686,9 +768,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     }
     if (!reportedEmpty.current && constraints.firstSelectable(today) === null) {
       reportedEmpty.current = true;
-      onError?.('NOTHING_SELECTABLE', value);
+      latest.current.onError?.('NOTHING_SELECTABLE', latest.current.value);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- checked on open and when the limits change; `value` is only reported
   }, [isOpen, constraints, today]);
 
   const handleVisibleMonth = useCallback(
@@ -719,7 +800,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   );
 
   // What the on-screen field shows: the saved value, never the draft.
-  const savedKey = JSON.stringify(value ?? '');
+  const savedKey = valueKey;
   const saved = useMemo(
     () => createDraft(mode, value, draftOptions),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the value is compared by content (`savedKey`)
@@ -848,6 +929,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         placeholder={sheetOptions?.fieldPlaceholder}
         allowTyping={allowTyping}
         onTyped={onSheetTyped}
+        onFocusChange={(f) => reportFocus('value', f)}
         allowClear={allowClear}
         onClear={() => {
           edited.current = true;
@@ -869,6 +951,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onActivate={setActiveEnd}
         allowTyping={allowTyping}
         onTyped={onRangeTyped}
+        onFocusChange={(end, f) => reportFocus(`value-${end}`, f)}
         allowClear={allowClear}
         onClear={clearDraft}
         errorMessage={rangeError || (isInline ? errorMessage : undefined)}
@@ -899,6 +982,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     <Calendar
       constraints={calendarConstraints}
       today={today}
+      initialVisibleDate={initialVisibleDate}
       selection={selection}
       onSelectDay={onSelectDay}
       firstDayOfWeek={firstDayOfWeek}
@@ -951,6 +1035,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onIssueChange={setTimeIssue}
         issueCheck={commitMode === 'instant' ? undefined : timeCheck}
         onSpinChange={setWheelSpinning}
+        onFocusChange={(row, f) => reportFocus(`time-${row}`, f)}
         onPendingChange={onRowPending}
         tokens={tokens}
         styles={styles}

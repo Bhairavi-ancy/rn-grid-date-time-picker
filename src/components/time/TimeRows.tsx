@@ -35,6 +35,8 @@ interface Props {
   /** See `TimeRow.issueCheck`. */
   issueCheck?: number;
   onSpinChange: (spinning: boolean) => void;
+  /** A row's box gained or lost focus. */
+  onFocusChange?: (rowKey: string, focused: boolean) => void;
   /** A row's time that is typed but not saved yet (null once saved or gone). */
   onPendingChange?: (
     rowKey: string,
@@ -81,6 +83,7 @@ const TimeRows: React.FC<Props> = (props) => {
     onIssueChange,
     issueCheck,
     onSpinChange,
+    onFocusChange,
     onPendingChange,
     tokens,
     styles,
@@ -142,10 +145,10 @@ const TimeRows: React.FC<Props> = (props) => {
           label: `${strings.time} · ${formatDateText(slot, dateFormat)}`,
           time: slot.time,
           day: slot.date,
-          target: { index },
+          target: { day: slot.date },
           onTime: (time) => {
             onEdit();
-            setTime(time, { index });
+            setTime(time, { day: slot.date });
           },
         },
       ];
@@ -208,6 +211,7 @@ const TimeRows: React.FC<Props> = (props) => {
           onIssueChange={issueFor(row.key)}
           issueCheck={issueCheck}
           onSpinChange={spinFor(row.key)}
+          onFocusChange={(f) => onFocusChange?.(row.key, f)}
           onPendingChange={(t) => onPendingChange?.(row.key, row.target, t)}
           input={input}
           timeFormat={timeFormat}

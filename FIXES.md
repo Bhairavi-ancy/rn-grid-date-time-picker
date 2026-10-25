@@ -20,19 +20,19 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** start the backward loop from the earlier of `from` and `range.max`, the same way the forward loop already clamps to `range.min`.
   - **Test:** `maxDate` = today − 18 years → `firstSelectable(today)` returns `maxDate` (or the nearest selectable day before it), and the calendar renders days.
 
-- [ ] **B2. Instant mode: after a clear, picking the same value again isn't saved.** ✅
+- [x] **B2. Instant mode: after a clear, picking the same value again isn't saved.** ✅
   - **What happens:** with `commitMode="instant"`, the user picks 25 Oct (saved), clears with ×, opens the picker and picks 25 Oct again. Nothing is saved; the stored value stays `''`. The same happens when the screen sets the value to `''` itself.
   - **Where:** `src/components/DateTimePicker.tsx`, the instant-commit effect (`lastInstant`), around lines 500–520.
   - **Fix:** compare against the saved value, not the last commit, or reset `lastInstant` whenever `value` changes from outside.
   - **Test:** the sequence above ends with `onChange('2026-10-25')` as the last call.
 
-- [ ] **B3. Instant mode: closing the sheet calls `onChange` with the old value.** ✅
+- [x] **B3. Instant mode: closing the sheet calls `onChange` with the old value.** ✅
   - **What happens:** with a saved range of 22–24 Oct, the user taps 27 Oct (range now incomplete) and closes with the backdrop. `onChange`, `onBlur` and `onConfirm` fire with 22–24. A time typed but not yet saved when the sheet closes does the same, and the typed time is lost.
   - **Where:** `DateTimePicker.tsx` (`edited` is never reset), `src/components/hooks/usePickerDraft.ts` (the draft rebuild on open/close), `src/components/time/TimeRow.tsx` (the unmount flush).
   - **Fix:** reset `edited` when the picker opens or closes, and don't count a rebuild or the unmount flush as an edit.
   - **Test:** both scenarios end with no `onChange`, `onBlur` or `onConfirm` call after the close.
 
-- [ ] **B4. Instant mode: a time outside the limits can be saved.** 🔎 (the reviewer reproduced it)
+- [x] **B4. Instant mode: a time outside the limits can be saved.** 🔎 (the reviewer reproduced it)
   - **What happens:** with `timeBounds` max 10:30 and the current time 10:45, tapping a day sets the draft to 10:45 (blocked). While the user is typing 10:15 into the minutes, the check passes on the typed time, but the draft's 10:45 is what gets saved.
   - **Where:** `DateTimePicker.tsx`. The checks (`timesAllowed`, `timeBlocked`, `canConfirm`) run on `preview`, but the instant effect saves `draft.toWire()`.
   - **Fix:** save `draftToWire(preview, …)`, or run the checks on exactly what gets saved.
@@ -85,30 +85,30 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** leave `period` out of the `isEmpty` check.
   - **Test:** delete every digit of a 12-hour value → `isEmpty: true`, and the draft clears.
 
-- [ ] **F3. From/To typing: a valid end can hide an invalid one.** 🔎 (reviewer reproduced)
+- [x] **F3. From/To typing: a valid end can hide an invalid one.** 🔎 (reviewer reproduced)
   - **What happens:** one `typingBlocked` flag covers both ends. An invalid From (31-02) followed by a valid To enables Confirm, which saves a From date the user never meant (the last parsable one).
   - **Where:** `DateTimePicker.tsx`, `onRangeTyped`.
   - **Fix:** keep one blocked flag per end.
   - **Test:** the scenario above keeps Confirm off until From is valid.
 
-- [ ] **F4. Multiple dates with a time per date: a time being typed can land on the wrong day.** 🔎 (reviewer reproduced)
+- [x] **F4. Multiple dates with a time per date: a time being typed can land on the wrong day.** 🔎 (reviewer reproduced)
   - **What happens:** rows target slots by array index. Adding a day that sorts earlier while a time is being typed moves the typed time onto another date.
   - **Where:** `src/components/time/TimeRows.tsx`, `TimeRow.tsx` (the unmount flush), `DateTimePicker.tsx` (around lines 405–420).
   - **Fix:** target slots by date, not index.
   - **Test:** type a time for 20 Oct, tap 5 Oct, Confirm → 20 Oct has the typed time and 10 Oct keeps its own.
 
-- [ ] **F5. Confirm can use an outdated `validate`, `onError` and `value`.** 🔎 (reviewer reproduced)
+- [x] **F5. Confirm can use an outdated `validate`, `onError` and `value`.** 🔎 (reviewer reproduced)
   - **Where:** `DateTimePicker.tsx`, `confirm`. These are deliberately left out of the `useCallback` deps, so the first ones are kept.
   - **Fix:** read them through refs.
   - **Test:** change `validate` between renders and expect the new one to run.
 
-- [ ] **F6. Confirm can stay disabled after closing and reopening.** 🔎 (reviewer reproduced)
+- [x] **F6. Confirm can stay disabled after closing and reopening.** 🔎 (reviewer reproduced)
   - **What happens:** type an invalid date in the sheet, close and reopen. The field shows the valid saved value, but Confirm stays off.
   - **Where:** `DateTimePicker.tsx`. `typingBlocked` isn't reset when the picker opens.
   - **Fix:** reset `typingBlocked` (and the time-check counter) on open.
   - **Test:** the scenario above has Confirm enabled after reopening.
 
-- [ ] **F7. An inline calendar folds away when any other field on the screen opens the keyboard.** 🔎
+- [x] **F7. An inline calendar folds away when any other field on the screen opens the keyboard.** 🔎
   - **Where:** `DateTimePicker.tsx` (`useKeyboardFold(isInline || sheetOpen)`) and `src/components/hooks/useKeyboardFold.ts`.
   - **Fix:** fold only while one of the picker's own boxes is focused.
   - **Test:** an inline picker plus a separate TextInput; focusing the other input leaves the calendar shown.
@@ -144,7 +144,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** call `AccessibilityInfo.announceForAccessibility` when the error text changes.
   - **Test:** mock `AccessibilityInfo` and expect a call when an error appears.
 
-- [ ] **F13. The README's `getConstraints` example takes the minimum hour from the device zone.** 🔎
+- [x] **F13. The README's `getConstraints` example takes the minimum hour from the device zone.** 🔎
   - **Where:** `README.md`, the `getConstraints` example (Limits & greying). `ctx.now.getHours()` is device-zone time, while `ctx.today` is in `timeZone`. Also, `CreateConstraintsOptions.timeZone` and `now` are accepted but never read.
   - **Fix:** add `nowTime` (the time in `timeZone`) to `ConstraintContext` and use it in the example. Either use or remove the unused options.
 
@@ -154,7 +154,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **What one review found:** typing 22-10-2026 with `minDate` 23 Oct saves nothing and shows no error, so the field looks saved. The other says an error does show.
   - **Fix if it's real:** show `errorNotAllowed`, and reset the field to the saved value when it loses focus.
 
-- [ ] **F16. Open the calendar on a chosen month when there's no value.**
+- [x] **F16. Open the calendar on a chosen month when there's no value.**
   - **What's missing:** with no value, the calendar opens on today's month, and there's no way to open it elsewhere without selecting something (for example a date-of-birth picker opening in 2000). `now` moves "today" and the limits too, so it isn't a substitute.
   - **Where:** `src/components/types.ts`, `DateTimePicker.tsx`, `src/components/calendar/Calendar.tsx` (`initialMonth`).
   - **Fix:** add `initialVisibleDate?: CalendarDate`. When there's no value, the calendar opens on that month (clamped to `yearRange` and the limits), with nothing selected.

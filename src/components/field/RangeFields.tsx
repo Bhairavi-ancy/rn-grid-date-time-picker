@@ -23,6 +23,8 @@ interface Props {
   /** From/To only: each field can be typed in. */
   allowTyping?: boolean;
   onTyped: (end: RangeEnd, parsed: ParsedSegments) => void;
+  /** A typed box of one end gained or lost focus. */
+  onFocusChange?: (end: RangeEnd, focused: boolean) => void;
   allowClear?: boolean;
   onClear: () => void;
   errorMessage?: string;
@@ -60,6 +62,7 @@ const RangeFields: React.FC<Props> = (props) => {
     onActivate,
     allowTyping,
     onTyped,
+    onFocusChange,
     allowClear,
     onClear,
     errorMessage,
@@ -120,6 +123,7 @@ const RangeFields: React.FC<Props> = (props) => {
         value={end === 'from' ? from : to}
         allowTyping={allowTyping}
         onTyped={(parsed) => onTyped(end, parsed)}
+        onFocusChange={(focused) => onFocusChange?.(end, focused)}
         onPress={() => onActivate(end)}
         icon={null}
         active={activeEnd === end}
