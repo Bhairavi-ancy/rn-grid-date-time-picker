@@ -233,6 +233,21 @@ describe('range: From / To fields', () => {
     expect(texts(tree)).toContain(DEFAULT_STRINGS.endTime);
     expect(texts(tree)).not.toContain(DEFAULT_STRINGS.startTime);
   });
+
+  it('sheet.fieldPlaceholder shows in both empty fields', () => {
+    const tree = mount({
+      mode: 'range',
+      range: { layout: 'fromTo' },
+      sheet: { fieldPlaceholder: 'Pick a day' },
+    });
+    open(tree);
+    for (const end of ['from', 'to']) {
+      const shown = find(tree, `dp-${end}-field`)
+        .findAllByType(Text)
+        .map((t) => t.props.children);
+      expect(shown).toContain('Pick a day');
+    }
+  });
 });
 
 describe('multiple', () => {

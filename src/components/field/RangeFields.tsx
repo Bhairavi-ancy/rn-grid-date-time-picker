@@ -118,6 +118,7 @@ const RangeFields: React.FC<Props> = (props) => {
         {...common}
         label={end === 'from' ? strings.from : strings.to}
         value={end === 'from' ? from : to}
+        placeholder={placeholder}
         allowTyping={allowTyping}
         onTyped={(parsed) => onTyped(end, parsed)}
         onPress={() => onActivate(end)}
