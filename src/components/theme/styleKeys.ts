@@ -112,8 +112,6 @@ export const STYLE_KEYS = [
   'emptyStateText',
   'holidayNotice',
   'dstNotice',
-  'keyboardDoneBar',
-  'keyboardDoneText',
 ] as const;
 
 export type StyleKey = (typeof STYLE_KEYS)[number];

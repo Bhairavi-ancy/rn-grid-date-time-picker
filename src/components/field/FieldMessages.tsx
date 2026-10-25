@@ -1,5 +1,5 @@
-import React from 'react';
-import { Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 import type { PickerStyles } from '../theme/styleKeys';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildFieldStyles } from './fieldStyles';
@@ -14,7 +14,10 @@ interface Props {
   testID?: string;
 }
 
-/** Helper text, instruction and the error, below the field. The error is announced. */
+/**
+ * Helper text, instruction and the error, below the field. The error is
+ * announced: a live region on Android, an announcement on iOS.
+ */
 const FieldMessages: React.FC<Props> = ({
   error,
   helperText,
@@ -24,6 +27,11 @@ const FieldMessages: React.FC<Props> = ({
   testID,
 }) => {
   const s = buildFieldStyles(tokens);
+  // Android reads the live region below; VoiceOver needs the error announced.
+  useEffect(() => {
+    if (error && Platform.OS === 'ios')
+      AccessibilityInfo.announceForAccessibility(error);
+  }, [error]);
   if (!error && !helperText && !instruction) return null;
   return (
     <View>

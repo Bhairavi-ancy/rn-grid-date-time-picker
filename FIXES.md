@@ -65,7 +65,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
     - don't call `onConfirm` here.
   - **Test:** `validate` returning a message blocks the save and shows the message; an off-step time isn't saved; focus and blur with no edit calls nothing.
 
-- [ ] **B8. iOS: the Done bar only appears on the first box.** 🔎 (from React Native 0.88's iOS source; check on the simulator)
+- [x] **B8. iOS: the Done bar only appears on the first box.** 🔎 (from React Native 0.88's iOS source) **Fixed in code; still to check on the iOS simulator.**
   - **What happens:** every segment and time box shares one `inputAccessoryViewID`. React Native's current iOS implementation attaches an accessory view to the first matching input only, so after the day (or hour) box the number pad has no Done key, and the keyboard can't be closed. Other pickers on the same screen share the same ID too.
   - **Where:** `src/components/field/KeyboardDoneBar.tsx`, `SegmentedInput.tsx`, `src/components/time/TypedTime.tsx`.
   - **Fix:** remove `InputAccessoryView` (it's also deprecated in 0.88). On each TextInput, set `returnKeyType="done"` and `inputAccessoryViewButtonLabel={strings.done}` (React Native then adds a Done toolbar per input), and handle `onSubmitEditing` to close the keyboard.
@@ -139,7 +139,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** don't fill the minutes when Backspace moves to the hour. Use `selectTextOnFocus`, or replace a full box's text instead of relying on `maxLength`.
   - **Test:** clear the minutes, Backspace, retype the hour, type the minutes → the typed minutes are kept.
 
-- [ ] **F12. On iOS, error messages aren't announced.** 🔎
+- [x] **F12. On iOS, error messages aren't announced.** 🔎
   - **Where:** `src/components/field/FieldMessages.tsx`. `accessibilityLiveRegion` only works on Android.
   - **Fix:** call `AccessibilityInfo.announceForAccessibility` when the error text changes.
   - **Test:** mock `AccessibilityInfo` and expect a call when an error appears.

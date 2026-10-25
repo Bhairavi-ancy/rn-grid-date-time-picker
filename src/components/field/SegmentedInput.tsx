@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import {
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -19,7 +18,6 @@ import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildFieldStyles } from './fieldStyles';
-import KeyboardDoneBar from './KeyboardDoneBar';
 
 interface Props {
   state: SegmentEditorState;
@@ -58,8 +56,6 @@ const A11Y_LABEL = (strings: PickerStrings): Record<SegmentKey, string> => {
     period: strings.a11yPeriod,
   };
 };
-
-const DONE_BAR_ID = 'dateTimePickerDoneBar';
 
 /** Turns a controlled TextInput change into editor actions (typed digits, paste, delete). */
 export const changeToActions = (
@@ -189,7 +185,10 @@ const SegmentedInput: React.FC<Props> = ({
           keyboardType="number-pad"
           editable={!disabled}
           contextMenuHidden
-          inputAccessoryViewID={Platform.OS === 'ios' ? DONE_BAR_ID : undefined}
+          // iOS adds a Done button above the number pad for every box; it
+          // closes the keyboard (and blurs the box).
+          returnKeyType="done"
+          inputAccessoryViewButtonLabel={strings.done}
           onFocus={() => dispatch({ type: 'focus', key: spec.key })}
           onBlur={() => {
             if ((getState?.() ?? state).focused === spec.key)
@@ -284,13 +283,6 @@ const SegmentedInput: React.FC<Props> = ({
           )}
         </View>
       ) : null}
-      <KeyboardDoneBar
-        nativeID={DONE_BAR_ID}
-        onDone={() => dispatch({ type: 'blur' })}
-        tokens={tokens}
-        styles={styles}
-        strings={strings}
-      />
     </View>
   );
 };

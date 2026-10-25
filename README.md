@@ -381,7 +381,7 @@ Everything inside the sheet can be set from props:
 
 The on-screen field shows the saved value (never the draft) in `dateFormat`, with an optional ×, label, helper text, instruction and error. Tap it, or its calendar icon, to open the picker.
 
-With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS a Done bar sits above the number pad. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
+With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
 
 `allowTriggerTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
 
@@ -421,7 +421,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `borderFocused` | `#2563EB` | Focused field / box |
 | `error` | `#DC2626` | Errors, mandatory mark |
 | `background` | `#FFFFFF` | Field, sheet |
-| `surface` | `#F9FAFB` | Done bar |
+| `surface` | `#F9FAFB` | Wheel highlight |
 | `disabledBackground` | `#F3F4F6` | Disabled field |
 | `disabledText` | `#9CA3AF` | Disabled text, greyed days |
 | `rangeFill` | `#DBEAFE` | Range band |
@@ -489,7 +489,7 @@ To change a single part, pass a text style through `styles` (for example `styles
 - **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (the Hijri day in a dual cell).
 - **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`.
 - **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
-- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`, `holidayNotice`, `dstNotice`, `keyboardDoneBar`, `keyboardDoneText`.
+- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`, `holidayNotice`, `dstNotice`.
 
 ## Icons
 
@@ -661,7 +661,7 @@ For Jest, no transform changes are needed: `main` points to the CommonJS build. 
 
 - **iOS and Android** are the supported targets. The package is pure JS, so it runs in Expo Go.
 - **Web** is untested.
-- The keyboard **Done bar** is iOS-only. It uses `InputAccessoryView`, which React Native 0.88 marks as deprecated.
+- The keyboard's **Done button** is iOS-only: React Native adds it above each box's number pad (`returnKeyType="done"`). Android's number pad has its own.
 - **Hijri** needs `Intl` support for `islamic-umalqura` and falls back to Gregorian without it (see above).
 - The built-in sheet doesn't add a safe-area inset; use `styles.sheet.paddingBottom` or `renderSheet`.
 - A `minuteStep` that doesn't divide 60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.
