@@ -3,7 +3,11 @@ import { useState, type ReactElement } from 'react';
 import { Keyboard, Text, TextInput } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import DateTimePicker from '../DateTimePicker';
-import type { ConstraintContext, DateTimePickerProps } from '../types';
+import type {
+  ConstraintContext,
+  DateTimePickerProps,
+  PickerState,
+} from '../types';
 import type { PickerValue } from '../../core/types';
 import { createConstraints } from '../../core/constraints';
 
@@ -328,5 +332,90 @@ describe('limits and opening month', () => {
     );
     open(withValue);
     expect(find(withValue, 'dp-day-2026-10-21')).toBeTruthy();
+  });
+});
+
+describe('renderTimeRow can set the time', () => {
+  const MyRow = (state: PickerState) => (
+    <>
+      <Text testID="my-time">
+        {state.time ? `${state.time.hour}:${state.time.minute}` : 'none'}
+      </Text>
+      <Text testID="my-range">{JSON.stringify(state.rangeTimes)}</Text>
+      <Text
+        testID="set-1415"
+        onPress={() => state.setTime({ hour: 14, minute: 15 })}
+      >
+        14:15
+      </Text>
+      <Text
+        testID="set-end-1800"
+        onPress={() => state.setTime({ hour: 18, minute: 0 }, 'to')}
+      >
+        end 18:00
+      </Text>
+    </>
+  );
+  const shown = (tree: ReactTestRenderer, id: string) =>
+    [].concat(find(tree, id)!.props.children).join('');
+
+  it('single: a time set before the day is used, and one set after replaces it', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen log={log} type="datetime" renderTimeRow={MyRow} />
+    );
+    open(tree);
+    press(tree, 'set-1415');
+    expect(shown(tree, 'my-time')).toBe('14:15');
+    day(tree, 2026, 10, 25);
+    press(tree, 'dp-confirm');
+    expect(log).toHaveBeenLastCalledWith('2026-10-25T14:15:00.000Z');
+  });
+
+  it('range: rangeTimes shows both ends, and setTime takes the end', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen
+        log={log}
+        type="datetime"
+        mode="range"
+        renderTimeRow={MyRow}
+        initial={{
+          from: '2026-10-22T09:00:00.000Z',
+          to: '2026-10-24T09:00:00.000Z',
+        }}
+      />
+    );
+    open(tree);
+    press(tree, 'set-end-1800');
+    expect(JSON.parse(shown(tree, 'my-range'))).toEqual({
+      from: { hour: 9, minute: 0 },
+      to: { hour: 18, minute: 0 },
+    });
+    press(tree, 'dp-confirm');
+    expect(log).toHaveBeenLastCalledWith({
+      from: '2026-10-22T09:00:00.000Z',
+      to: '2026-10-24T18:00:00.000Z',
+    });
+  });
+
+  it('multiple with a shared time: setTime sets it for every day', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen
+        log={log}
+        type="datetime"
+        mode="multiple"
+        renderTimeRow={MyRow}
+        initial={['2026-10-10T09:00:00.000Z', '2026-10-11T09:00:00.000Z']}
+      />
+    );
+    open(tree);
+    press(tree, 'set-1415');
+    press(tree, 'dp-confirm');
+    expect(log).toHaveBeenLastCalledWith([
+      '2026-10-10T14:15:00.000Z',
+      '2026-10-11T14:15:00.000Z',
+    ]);
   });
 });

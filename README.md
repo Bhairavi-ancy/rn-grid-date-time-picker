@@ -186,7 +186,7 @@ const epochMs: ValueAdapter = {
 | `renderMonthChip` | `(month: number, state: { selected; disabled }) => ReactNode` | |
 | `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
 | `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
-| `renderTimeRow` | `(state: PickerState) => ReactNode` | |
+| `renderTimeRow` | `(state: PickerState) => ReactNode` | Replaces the time row. Read `state.time` (ranges: `state.rangeTimes`) and change it with `state.setTime(time, end?)`, which works like the built-in row, including before a day is picked. |
 
 ### Calendar
 

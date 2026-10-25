@@ -872,6 +872,43 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           )
         : undefined;
 
+  // The time a custom renderTimeRow edits, and how it sets it (the same
+  // targets as the built-in rows).
+  const multipleTarget: DraftTarget | null =
+    d.mode !== 'multiple'
+      ? null
+      : multipleTimeMode === 'shared'
+        ? 'shared'
+        : activeDay
+          ? { day: activeDay }
+          : null;
+  const draftTime: Time | null =
+    d.mode === 'single'
+      ? (d.slot.value?.time ?? pending.single ?? null)
+      : d.mode === 'multiple'
+        ? multipleTarget === 'shared'
+          ? d.sharedTime
+          : (d.slots.find((slot) => isSameDay(slot.value?.date, activeDay))
+              ?.value?.time ?? null)
+        : null;
+  const setDraftTime = (time: Time, end?: RangeEnd) => {
+    edited.current = true;
+    if (d.mode === 'single') {
+      if (d.slot.value) draft.setTime(time, 'single');
+      else setPending('single', time);
+      return;
+    }
+    if (d.mode === 'range') {
+      const which =
+        end ??
+        (rangeLayout === 'fromTo' ? activeEnd : d.to.value ? 'to' : 'from');
+      if (d[which].value) draft.setTime(time, which);
+      else setPending(which, time);
+      return;
+    }
+    if (multipleTarget) draft.setTime(time, multipleTarget);
+  };
+
   const state: PickerState = {
     type,
     mode,
@@ -887,6 +924,15 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     close,
     confirm,
     clear: clearValue,
+    time: type === 'datetime' ? draftTime : null,
+    rangeTimes:
+      type === 'datetime' && d.mode === 'range'
+        ? {
+            from: d.from.value?.time ?? pending.from ?? null,
+            to: d.to.value?.time ?? pending.to ?? null,
+          }
+        : null,
+    setTime: setDraftTime,
     tokens,
     strings,
   };

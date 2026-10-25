@@ -47,6 +47,21 @@ export interface PickerState {
   confirm: () => void;
   /** Clears the saved value: calls `onChange('')` right away, as the built-in × does. */
   clear: () => void;
+  /**
+   * Date-time: the time being edited, for a custom `renderTimeRow`. Single:
+   * the draft's time (or one set before a day is picked); multiple: the shared
+   * time, or the active day's with `timeMode: 'perDate'`. Ranges use
+   * `rangeTimes`. Null when there's none yet.
+   */
+  time: Time | null;
+  /** Date-time ranges: the start and end times; null otherwise. */
+  rangeTimes: { from: Time | null; to: Time | null } | null;
+  /**
+   * Sets the draft's time, as the built-in time row does (before a day is
+   * picked, it's kept for that day). Ranges pass the end; the default is the
+   * end being edited.
+   */
+  setTime: (time: Time, end?: 'from' | 'to') => void;
   tokens: ThemeTokens;
   strings: PickerStrings;
 }

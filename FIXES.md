@@ -9,7 +9,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 ## Decisions (settle these first)
 
 - [x] **Q1. Daylight-saving and holiday notices.** **Decided (2026-10-25): remove for 0.1.0.** The README promises them, but nothing renders them. Default: remove them from the README, CHANGELOG and the `dstNotice` / `holidayNotice` style keys for 0.1.0, and add them in a later release.
-- [x] **Q2. `renderTimeRow`.** **Decided (2026-10-25): add the draft time and `setTime`.** It can only show a time today. Default: add the draft time and a `setTime(time)` to `PickerState` so a custom row can change it.
+- [x] **Q2. `renderTimeRow`.** **Decided (2026-10-25): add the draft time and `setTime`. Done: `state.time`, `state.rangeTimes`, `state.setTime(time, end?)`.** It can only show a time today. Default: add the draft time and a `setTime(time)` to `PickerState` so a custom row can change it.
 - [x] **Q3. `range.minDays` / `maxDays`.** **Decided (2026-10-25): count calendar days, inclusive.** These currently count nights (`maxDays: 14` allows 15 calendar days). Default: count calendar days, inclusive, and say so in the README.
 
 ## Blockers
