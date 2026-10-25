@@ -38,19 +38,19 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** save `draftToWire(preview, …)`, or run the checks on exactly what gets saved.
   - **Test:** the scenario above saves nothing until the time is allowed, then saves the allowed time.
 
-- [ ] **B5. On-screen field, 12-hour: switching AM/PM after the minutes fill isn't saved.** ✅
+- [x] **B5. On-screen field, 12-hour: switching AM/PM after the minutes fill isn't saved.** ✅
   - **What happens:** the user types 09:30, which saves 09:30 AM, then taps PM. The field shows PM, but AM stays saved, even after the field loses focus.
   - **Where:** `src/components/field/ValueField.tsx` (`onTypingDone` fires only when segment focus goes from set to none) and `SegmentedInput.tsx` (`renderPeriod`).
   - **Fix:** also save when the AM/PM choice changes while no segment is focused.
   - **Test:** type a full time, tap PM, expect `onChange` with the PM value.
 
-- [ ] **B6. On-screen field: deleting every digit doesn't clear the value.** ✅
+- [x] **B6. On-screen field: deleting every digit doesn't clear the value.** ✅
   - **What happens:** the field looks empty and the × disappears, but the old date is still saved and submitted with the form.
   - **Where:** `DateTimePicker.tsx`, `onTriggerTyped`, which ignores `parsed.isEmpty`.
   - **Fix:** an empty field calls `clearValue()`, the same as ×.
   - **Test:** delete every segment, then leave the field → `onChange('')`.
 
-- [ ] **B7. On-screen field: typing skips `validate` and the minute step, and focus alone rewrites the value.** ✅
+- [x] **B7. On-screen field: typing skips `validate` and the minute step, and focus alone rewrites the value.** ✅
   - **What happens:**
     - typed values are saved without calling `validate`;
     - an off-step time (09:07 with `minuteStep={15}`) is saved;
@@ -113,7 +113,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** fold only while one of the picker's own boxes is focused.
   - **Test:** an inline picker plus a separate TextInput; focusing the other input leaves the calendar shown.
 
-- [ ] **F8. Tapping from one box to another briefly leaves no box focused.** 🔎
+- [ ] **F8. Tapping from one box to another briefly leaves no box focused.** 🔎 **Checked on the Android emulator (2026-10-25): doesn't happen.** Logging the field's focus while tapping from box to box showed no moment without focus; Android delivers the blur and the next focus in one render. It only shows in Jest, where each event is fired separately. Check on iOS before deciding whether to change anything.
   - **What happens:** the old box blurs before the new one focuses, with a render in between where nothing is focused. In that moment:
     - the on-screen field saves part-way;
     - the error border and text flash, and screen readers may announce them;
@@ -122,12 +122,12 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - **Fix:** defer the blur until it's clear no other box took focus (a microtask, or `TextInput.State.currentlyFocusedInput()`).
   - **Test:** a blur followed straight away by a focus on another box doesn't save and doesn't show an error.
 
-- [ ] **F9. Two remaining fast-typing edge cases.** 🔎 (the reviewer has failing tests)
+- [x] **F9. Two remaining fast-typing edge cases.** 🔎 (the reviewer has failing tests)
   - **(a) A late focus event pads a digit that already arrived.** `src/core/segmentEditor.ts` `moveFocus` pads a box even when focusing the box that's already focused, so month "1" becomes "01" and the next digit gives "02" instead of "12". Fix: ignore `focus` for the box already focused.
   - **(b) A render between two keystrokes can replay a character.** `SegmentedInput.tsx` `sinceRender` is cleared on every render; if the native box ignored the reset, the next change replays a digit. Fix: keep each box's last native text across renders, or use `onChange`'s `eventCount`.
   - **Test:** both scenarios as tests, plus a burst-typing check on the Android emulator with a hardware keyboard.
 
-- [ ] **F10. Focusing and leaving a box without editing still reports a change.** 🔎 (reviewer reproduced)
+- [x] **F10. Focusing and leaving a box without editing still reports a change.** 🔎 (reviewer reproduced)
   - **What happens:** focus and blur rebuild `parsed`, so `onTyped` fires. With `commitMode="instant"` inline, that calls `onChange` and `onConfirm` with an unchanged value, and re-renders the whole picker on every box change.
   - **Where:** `segmentEditor.ts` (focus/blur) and `useTypedSegments.ts`.
   - **Fix:** keep the same `parsed` object when the values didn't change.
@@ -150,7 +150,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
 
 - [ ] **F14. The notices from Q1.** Whichever way Q1 is decided, make the README, CHANGELOG and style keys match what renders.
 
-- [ ] **F15. On-screen typing outside the limits.** Check first: the two reviews disagree.
+- [x] **F15. On-screen typing outside the limits.** Check first: the two reviews disagree.
   - **What one review found:** typing 22-10-2026 with `minDate` 23 Oct saves nothing and shows no error, so the field looks saved. The other says an error does show.
   - **Fix if it's real:** show `errorNotAllowed`, and reset the field to the saved value when it loses focus.
 
@@ -178,7 +178,7 @@ Work on the `fix/pre-release-review` branch. Tick an item when its fix and its r
   - From and To segments read the same; add the end to the label (`SegmentedInput.tsx`).
   - The AM/PM switch has no disabled state.
   - The AM/PM options use `selected` rather than `checked` (`TypedTime.tsx`).
-- [ ] **M10. Android: one Backspace could delete twice.** `SegmentedInput.tsx` `onKeyPress` checks the latest state; if `onChangeText` arrived first, it also deletes in the previous box. Check the box's own rendered text instead. Low likelihood on number pads.
+- [x] **M10. Android: one Backspace could delete twice.** `SegmentedInput.tsx` `onKeyPress` checks the latest state; if `onChangeText` arrived first, it also deletes in the previous box. Check the box's own rendered text instead. Low likelihood on number pads.
 - [x] **M11. A new day's time can be off-step with a step that doesn't divide 60.** `DateTimePicker.tsx` `nowTime`: step 7 at 10:57 gives 11:03. Round within the hour, or accept only steps that divide 60 (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60).
 - [ ] **M12. Doc comments that no longer match.** `DateTimePicker.tsx` (~line 68) and `types.ts` (`onChange`) say `onChange` fires only on Confirm or clear; it also fires on instant saves and on-screen typing. The README says `onClose` fires for Close, the backdrop and Back; it also fires after Confirm.
 - [ ] **M13. Template files in the example.** `example/.claude/settings.json` and `example/AGENTS.md` came from the Expo template; remove them if you don't want them in the repo.

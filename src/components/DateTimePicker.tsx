@@ -60,6 +60,12 @@ import {
   type PickerState,
 } from './types';
 
+/** Same day and time (or both without a time). */
+const sameValue = (a: DateTimeValue, b: DateTimeValue): boolean =>
+  isSameDay(a.date, b.date) &&
+  (a.time?.hour ?? -1) === (b.time?.hour ?? -1) &&
+  (a.time?.minute ?? -1) === (b.time?.minute ?? -1);
+
 /** Minute steps that divide the hour. */
 const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
 
@@ -786,18 +792,59 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per open
   }, [isOpen]);
 
-  // Typing straight into the on-screen field saves on a complete, allowed value.
   // The on-screen field saves when typing pauses (focus leaves it, or its last
-  // box fills), so 09:30 isn't saved as 09:03 on the way.
-  const onTriggerTyped = useCallback(
-    (parsed: ParsedSegments) => {
-      if (parsed.value && constraints.isValueAllowed(parsed.value)) {
-        const wire = adapter.format(parsed.value, { type, timeZone: zone });
-        if (wire && wire !== value) commit(wire);
+  // box fills, or AM/PM is switched after that), so 09:30 isn't saved as 09:03
+  // on the way. It runs the same checks as Confirm and shows their message
+  // under the field; an emptied field clears the value, and an unchanged one
+  // saves nothing.
+  const [triggerError, setTriggerError] = useState('');
+  useEffect(() => setTriggerError(''), [valueKey]);
+  const onTriggerTyped = (parsed: ParsedSegments) => {
+    if (parsed.isEmpty) {
+      setTriggerError('');
+      if (savedSingle) clearValue();
+      return;
+    }
+    const typed = parsed.value;
+    // An unfinished entry shows the field's own error.
+    if (!typed) return;
+    if (savedSingle && sameValue(typed, savedSingle)) {
+      setTriggerError('');
+      return;
+    }
+    const dayOff = constraints.dayStatus(typed.date).disabled;
+    if (dayOff || !constraints.isValueAllowed(typed)) {
+      setTriggerError(
+        dayOff ? strings.errorNotAllowed : strings.errorTimeNotAllowed
+      );
+      return;
+    }
+    if (type === 'datetime' && typed.time) {
+      const issue = checkTime(typed.time, {
+        minuteStep,
+        bounds: constraints.timeBounds(typed.date),
+      });
+      if (issue) {
+        setTriggerError(
+          issue === 'OFF_STEP'
+            ? strings.errorMinuteStep(minuteStep)
+            : strings.errorTimeNotAllowed
+        );
+        return;
       }
-    },
-    [constraints, adapter, type, zone, value, commit]
-  );
+    }
+    const wire = adapter.format(typed, { type, timeZone: zone });
+    if (!wire) return;
+    const message = latest.current.validate?.(wire);
+    if (message) {
+      setTriggerError(message);
+      latest.current.onError?.('VALIDATION', wire);
+      return;
+    }
+    setTriggerError('');
+    onChange(wire);
+    onBlur?.();
+  };
 
   // What the on-screen field shows: the saved value, never the draft.
   const savedKey = valueKey;
@@ -891,6 +938,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         displayText={savedText}
         allowTyping={mode === 'single' && allowTriggerTyping}
         onTypingDone={onTriggerTyped}
+        onTyped={() => setTriggerError('')}
         onPress={open}
         allowClear={allowClear}
         onClear={clearValue}
@@ -900,7 +948,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         helperText={helperText}
         instruction={instruction}
         renderInstruction={renderInstruction}
-        errorMessage={errorMessage}
+        errorMessage={triggerError || errorMessage}
         disabled={disabled}
         readOnly={readOnly}
         testID={testID ? `${testID}-trigger` : undefined}

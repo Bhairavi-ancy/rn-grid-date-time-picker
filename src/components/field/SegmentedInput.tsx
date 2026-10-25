@@ -106,11 +106,13 @@ const SegmentedInput: React.FC<Props> = ({
   strings,
   testID,
 }) => {
-  // Text each box reported since the last render. Fast input (a hardware
-  // keyboard, autofill) sends the next character before React re-renders,
-  // and a full box keeps receiving characters until focus moves on.
-  const sinceRender = useRef<Partial<Record<SegmentKey, string>>>({});
-  sinceRender.current = {};
+  // Each box's text as last rendered, and as it last reported. Fast input (a
+  // hardware keyboard, autofill) sends the next character before React has
+  // re-rendered, and the native box may ignore React's reset while it's
+  // behind, so a change is read against whichever of the two it extends.
+  const boxText = useRef<
+    Partial<Record<SegmentKey, { rendered: string; reported?: string }>>
+  >({});
   const refs = useRef<Partial<Record<SegmentKey, TextInputRef | null>>>({});
   const s = buildFieldStyles(tokens);
   const labels = A11Y_LABEL(strings);
@@ -139,18 +141,21 @@ const SegmentedInput: React.FC<Props> = ({
   const renderNumeric = (spec: SegmentSpec, index: number) => {
     const text = state.values[spec.key] ?? '';
     const isFocused = state.focused === spec.key;
+    const track = boxText.current[spec.key] ?? { rendered: text };
+    track.rendered = text;
+    boxText.current[spec.key] = track;
     // After the last box fills, no segment is focused but the cursor stays in
     // that box: input there (a correction, Backspace) focuses it first.
     const claimFocus = () => {
       if (!(getState?.() ?? state).focused)
         dispatch({ type: 'focus', key: spec.key });
     };
+    // Backspace in a box that was already empty goes back to the previous
+    // one; the box's rendered text is checked, so a change that arrives first
+    // (and empties it) doesn't also delete in the previous box.
     const onKeyPress = (e: KeyPressEvent) => {
       claimFocus();
-      if (
-        e.nativeEvent.key === 'Backspace' &&
-        !(getState?.() ?? state).values[spec.key]
-      )
+      if (e.nativeEvent.key === 'Backspace' && !track.rendered)
         dispatch({ type: 'backspace' });
     };
     const separator =
@@ -192,11 +197,15 @@ const SegmentedInput: React.FC<Props> = ({
           }}
           onKeyPress={onKeyPress}
           onChangeText={(next) => {
-            // What was added since this box last showed something: its last
-            // reported text, or the value rendered into it since.
             claimFocus();
-            const before = sinceRender.current[spec.key] ?? text;
-            sinceRender.current[spec.key] = next;
+            const { rendered, reported } = track;
+            const before =
+              reported !== undefined &&
+              reported !== rendered &&
+              next.startsWith(reported)
+                ? reported
+                : rendered;
+            track.reported = next;
             changeToActions(before, next).forEach(dispatch);
           }}
           style={[

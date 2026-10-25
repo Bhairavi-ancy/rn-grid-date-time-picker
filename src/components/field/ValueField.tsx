@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import type { SegmentEditorAction } from '../../core/segmentEditor';
 import type { ParsedSegments } from '../../core/segments';
 import type { DateTimeValue, PickerType, TimeFormat } from '../../core/types';
 import {
@@ -185,6 +186,14 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     wasFocused.current = focused;
   }, [state.focused, getState]);
 
+  // Switching AM/PM once no box is focused (after the minutes filled) is
+  // a finished edit of its own.
+  const dispatchTyped = (action: SegmentEditorAction) => {
+    dispatch(action);
+    if (action.type === 'period' && !getState().focused)
+      onTypingDoneRef.current?.(getState().parsed);
+  };
+
   const editable = !disabled && !readOnly;
   const typing = !!allowTyping && editable;
   const typedError =
@@ -259,7 +268,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     <View style={fieldStyle}>
       <SegmentedInput
         state={state}
-        dispatch={dispatch}
+        dispatch={dispatchTyped}
         getState={getState}
         disabled={!editable}
         tokens={tokens}
