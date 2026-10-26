@@ -97,6 +97,8 @@ export interface SheetOptions {
   showField?: boolean;
   /** Placeholder of that field when it shows text. Default: from `dateFormat`, e.g. 'DD/MM/YYYY'. */
   fieldPlaceholder?: string;
+  /** The calendar icon at the end of that field, as on the on-screen field. Default false. */
+  fieldIcon?: boolean;
 }
 
 /** What `renderLabel` receives. */
@@ -238,6 +240,14 @@ export interface DateTimePickerProps {
   showOutsideDays?: boolean;
   yearRange?: { first: number; last: number };
   initialView?: 'day' | 'month' | 'year';
+  /**
+   * What one pick is. 'month' and 'year' make the month or year grid the last
+   * step: the saved value is the first day of the period, the field shows
+   * "March 2026" or "2026", and a period can be picked when any day in it can.
+   * Single date pickers only (ignored for date-time, range and multiple), always
+   * in the Gregorian calendar, without typing. Default 'day'.
+   */
+  precision?: 'day' | 'month' | 'year';
   /**
    * With no value, the calendar opens on this day's month (e.g. 2000 for a
    * date of birth) without selecting anything. Default: today.

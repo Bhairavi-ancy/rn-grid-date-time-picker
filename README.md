@@ -137,7 +137,7 @@ const epochMs: ValueAdapter = {
 | `value` | `PickerValue` | required | See [Values](#values). |
 | `onChange` | `(value: PickerValue) => void` | required | Once per Confirm, or with `''` on clear. |
 | `onBlur` | `() => void` | – | On Confirm only, right after `onChange`. |
-| `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit. |
+| `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
 | `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
 | `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. `minDays` / `maxDays` count calendar days with both ends included (the 1st to the 3rd is 3 days; a same-day range is 1). |
@@ -151,7 +151,7 @@ const epochMs: ValueAdapter = {
 | `onOpen` / `onClose` | `() => void` | – | `onClose` fires whenever the sheet closes: Close, the backdrop, Android back, and after Confirm. |
 | `onBeforeOpen` | `() => void` | – | Just before opening, e.g. to close your own dropdowns. |
 | `showField` | `boolean` | `true` | Hide the on-screen field (for example with `visible`). |
-| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`. See [Sheet layout](#sheet-layout). |
+| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`. See [Sheet layout](#sheet-layout). |
 | `renderSheet` | `(p: SheetRenderProps) => ReactNode` | built-in sheet | See [Presentation](#presentation). |
 
 ### Value field
@@ -196,6 +196,7 @@ const epochMs: ValueAdapter = {
 | `showOutsideDays` | `boolean` | `true` |
 | `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
+| `precision` | `'day' \| 'month' \| 'year'` | `'day'`: what one pick is. With `'month'` or `'year'` the month or year grid is the last step, the saved value is the period's first day, the field shows "March 2026" or "2026", and a period can be picked when any day in it can (so `minDate` 15 Oct still allows October). The current month or year is outlined. Single date pickers only (ignored for date-time, range and multiple), always Gregorian, without typing. |
 | `initialVisibleDate` | `CalendarDate` | today: with no value, the calendar opens on this day's month without selecting it (e.g. `{ year: 2000, month: 1, day: 1 }` for a date of birth); a value's month always wins |
 | `enableMonthSwipe` | `boolean` | `true` |
 | `showToday` | `boolean` | `false` |
@@ -363,6 +364,7 @@ Everything inside the sheet can be set from props:
 | `fixedFooter` | `true` | Confirm stays pinned below the body. `false` scrolls it at the end of the body. `renderSheet` then gets `footer: null`. |
 | `showField` | `true` | The field above the calendar, which shows the picked date and takes typing with `allowTyping`. When it's hidden, its errors still show above the calendar. Applies inline too. |
 | `fieldPlaceholder` | from `dateFormat` | Placeholder of that field when it shows text. |
+| `fieldIcon` | `false` | The calendar icon at the end of that field, as on the on-screen field. |
 
 ```tsx
 <DateTimePicker
@@ -484,10 +486,10 @@ To change a single part, pass a text style through `styles` (for example `styles
 `styles` takes a style for any of these keys:
 
 - **Containers**: `container`, `sheet`, `sheetBackdrop`, `header`, `title`, `resetButton`, `resetText`, `body`, `footer`, `confirmButton`, `confirmText`.
-- **Field**: `field`, `fieldFocused`, `fieldError`, `fieldDisabled`, `fieldText`, `fieldPlaceholder`, `fieldSegment`, `fieldSegmentFocused`, `fieldSeparator`, `fieldPeriod`, `fieldPeriodSelected`, `fieldPeriodText`, `fieldIcon`, `clearIcon`, `label`, `mandatoryMark`, `helperText`, `instructionText`, `errorText`, `validationText`.
+- **Field**: `field`, `fieldFocused`, `fieldError`, `fieldDisabled`, `fieldText`, `fieldTextDisabled` (the value while disabled; the placeholder keeps its colour), `fieldPlaceholder`, `fieldSegment`, `fieldSegmentFocused`, `fieldSeparator`, `fieldPeriod`, `fieldPeriodSelected`, `fieldPeriodText`, `fieldIcon`, `clearIcon`, `label`, `mandatoryMark`, `helperText`, `instructionText`, `errorText`, `validationText`.
 - **Calendar header**: `calendarHeader`, `navArrow`, `navArrowDisabled`, `yearButton`, `yearButtonText`, `monthChipRow`, `monthChip`, `monthChipText`, `monthChipSelected`, `monthChipDisabled`.
 - **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (the Hijri day in a dual cell).
-- **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`.
+- **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `yearCellCurrent`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`, `monthCellCurrent` (the outlined current year / month in a `precision` pick).
 - **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
 - **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`.
 
@@ -584,7 +586,7 @@ You can also hide the field and open the picker from anywhere, with `showField={
 
 ## Strings / i18n
 
-Every visible and spoken text is in `strings`, and the defaults are English (`DEFAULT_STRINGS`). Pass any subset; a few entries are functions:
+Every visible and spoken text is in `strings`, and the defaults are English (`DEFAULT_STRINGS`). Pass any subset. `rangeSeparator` (default `' – '`) joins the two ends of a range in the field text, e.g. `' ↔ '`. A few entries are functions:
 
 ```ts
 errorYearOutOfRange: ({ first, last }) => string;

@@ -37,6 +37,8 @@ interface Props {
   renderLabel?: (p: LabelRenderProps) => React.ReactNode;
   /** Placeholder of the one-field layout. */
   placeholder?: string;
+  /** The calendar icon at the end of each field. Default false. */
+  showIcon?: boolean;
   /** Replacements for the built-in clear icon. */
   icons?: Partial<IconSet>;
   iconProps?: Partial<Record<IconName, IconOptions>>;
@@ -73,6 +75,7 @@ const RangeFields: React.FC<Props> = (props) => {
     disabled,
     renderLabel,
     placeholder,
+    showIcon,
     icons,
     iconProps,
     tokens,
@@ -99,12 +102,19 @@ const RangeFields: React.FC<Props> = (props) => {
       <ValueField
         {...common}
         value={null}
-        displayText={formatRangeText(from, to, type, dateFormat, timeFormat)}
+        displayText={formatRangeText(
+          from,
+          to,
+          type,
+          dateFormat,
+          timeFormat,
+          strings.rangeSeparator
+        )}
         placeholder={placeholder}
         allowClear={allowClear}
         onClear={onClear}
         errorMessage={errorMessage}
-        icon={null}
+        icon={showIcon ? undefined : null}
         active
         testID={testID ? `${testID}-value` : undefined}
       />
@@ -121,11 +131,12 @@ const RangeFields: React.FC<Props> = (props) => {
         {...common}
         label={end === 'from' ? strings.from : strings.to}
         value={end === 'from' ? from : to}
+        placeholder={placeholder}
         allowTyping={allowTyping}
         onTyped={(parsed) => onTyped(end, parsed)}
         onFocusChange={(focused) => onFocusChange?.(end, focused)}
         onPress={() => onActivate(end)}
-        icon={null}
+        icon={showIcon ? undefined : null}
         active={activeEnd === end}
         testID={testID ? `${testID}-${end}` : undefined}
       />

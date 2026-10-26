@@ -113,6 +113,40 @@ describe('icons: colour, size and replacements', () => {
   });
 });
 
+describe('sheet.fieldIcon', () => {
+  const picker = (props: Partial<DateTimePickerProps>) =>
+    mount(
+      <DateTimePicker
+        type="date"
+        value="2026-10-21"
+        onChange={() => {}}
+        timeZone="UTC"
+        dateFormat="dd-MM-yyyy"
+        presentation="inline"
+        testID="dp"
+        {...props}
+      />
+    );
+  const has = (tree: ReactTestRenderer, id: string) =>
+    tree.root.findAll((n) => n.props.testID === id).length > 0;
+
+  it('hidden by default in the field above the calendar', () => {
+    expect(has(picker({}), 'dp-value-icon')).toBe(false);
+  });
+
+  it('shows the calendar icon there, for one date and for a range', () => {
+    const one = picker({ sheet: { fieldIcon: true } });
+    expect(has(one, 'dp-value-icon')).toBe(true);
+    expect(propsOf(one, CalendarIcon).length).toBeGreaterThan(0);
+    const range = picker({
+      mode: 'range',
+      value: { from: '2026-10-21', to: '2026-10-23' },
+      sheet: { fieldIcon: true },
+    });
+    expect(has(range, 'dp-value-icon')).toBe(true);
+  });
+});
+
 describe('renderField: your own input', () => {
   it('gets the formatted text, open and clear', () => {
     const onChange = jest.fn();

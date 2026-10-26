@@ -37,6 +37,7 @@ import type {
   ValueAdapter,
 } from '../core/types';
 import Calendar from './calendar/Calendar';
+import { localeNames } from './calendar/localeNames';
 import type { CalendarSelection } from './calendar/selection';
 import PickerContainer from './container/PickerContainer';
 import {
@@ -134,6 +135,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     firstDayOfWeek = 7,
     showOutsideDays = true,
     initialView,
+    precision: precisionProp = 'day',
     initialVisibleDate,
     enableMonthSwipe = true,
     calendarSystem,
@@ -176,6 +178,17 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     [stringOverrides]
   );
   const loc = useMemo(() => locale ?? defaultLocale(), [locale]);
+  // Month and year picks are for single dates only.
+  const precision =
+    type === 'date' && mode === 'single' ? precisionProp : 'day';
+  const monthNames = useMemo(() => localeNames(loc).monthsLong, [loc]);
+  /** A month or year pick shown as text: "March 2026" or "2026". */
+  const periodText = (v: DateTimeValue | null): string => {
+    if (!v) return '';
+    return precision === 'year'
+      ? String(v.date.year)
+      : `${monthNames[v.date.month - 1]} ${v.date.year}`;
+  };
   const localeDateFormat = useMemo(() => deriveDateFormat(loc), [loc]);
   const dateFormat = useMemo(() => {
     if (dateFormatProp === undefined) return localeDateFormat;
@@ -484,14 +497,20 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     );
   };
   const draftValues = valuesOf(preview);
+  // A month or year pick stands for the whole period: it can be picked when any
+  // day in it can (its saved first day may itself be outside the limits).
+  const dayOff = (date: CalendarDate): boolean =>
+    precision === 'month'
+      ? !constraints.isMonthSelectable(date.year, date.month)
+      : precision === 'year'
+        ? !constraints.isYearSelectable(date.year)
+        : constraints.dayStatus(date).disabled;
+  const valueAllowed = (v: DateTimeValue): boolean =>
+    precision === 'day' ? constraints.isValueAllowed(v) : !dayOff(v.date);
   // Days that can't be picked block Confirm; a time outside the day's limits
   // is only checked when Confirm is pressed, like the other time problems.
-  const datesAllowed = draftValues.every(
-    (v) => !v || !constraints.dayStatus(v.date).disabled
-  );
-  const timesAllowed = draftValues.every(
-    (v) => !v || constraints.isValueAllowed(v)
-  );
+  const datesAllowed = draftValues.every((v) => !v || !dayOff(v.date));
+  const timesAllowed = draftValues.every((v) => !v || valueAllowed(v));
   const timeBlocked = !!timeIssue || !timesAllowed;
   const canConfirm =
     !previewIssue &&
@@ -517,8 +536,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     valuesOf(dr).every(
       (v) =>
         !v ||
-        (!constraints.dayStatus(v.date).disabled &&
-          constraints.isValueAllowed(v) &&
+        (!dayOff(v.date) &&
+          valueAllowed(v) &&
           (type !== 'datetime' ||
             !v.time ||
             checkTime(v.time, {
@@ -580,6 +599,13 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     draft.clear();
     resetSelectionUi();
   }, [draft, resetSelectionUi]);
+
+  // × in the field above the calendar. 'instant' saves every edit, so it
+  // clears the saved value too (once; an empty value isn't saved again).
+  const clearInSheet = useCallback(() => {
+    if (commitMode === 'instant' && valueKey !== '""') clearValue();
+    else clearDraft();
+  }, [commitMode, valueKey, clearValue, clearDraft]);
 
   // Opening or closing starts without the last `validate` message.
   useEffect(() => setValidation(null), [isOpen]);
@@ -813,10 +839,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       setTriggerError('');
       return;
     }
-    const dayOff = constraints.dayStatus(typed.date).disabled;
-    if (dayOff || !constraints.isValueAllowed(typed)) {
+    const typedDayOff = dayOff(typed.date);
+    if (typedDayOff || !valueAllowed(typed)) {
       setTriggerError(
-        dayOff ? strings.errorNotAllowed : strings.errorTimeNotAllowed
+        typedDayOff ? strings.errorNotAllowed : strings.errorTimeNotAllowed
       );
       return;
     }
@@ -862,7 +888,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           saved.to.value,
           type,
           dateFormat,
-          timeFormat
+          timeFormat,
+          strings.rangeSeparator
         )
       : saved.mode === 'multiple'
         ? formatMultipleText(
@@ -871,6 +898,14 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             dateFormat,
             timeFormat
           )
+        : precision !== 'day'
+          ? periodText(savedSingle)
+          : undefined;
+  const periodPlaceholder =
+    precision === 'year'
+      ? strings.placeholderYear
+      : precision === 'month'
+        ? `${strings.placeholderMonth} ${strings.placeholderYear}`
         : undefined;
 
   // The time a custom renderTimeRow edits, and how it sets it (the same
@@ -941,9 +976,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     draft.draft.mode === 'single' ? draft.draft.slot.value : null;
   // A time outside the limits is explained under the time row, not here.
   const sheetValueError =
-    sheetValue && constraints.dayStatus(sheetValue.date).disabled
-      ? strings.errorNotAllowed
-      : '';
+    sheetValue && dayOff(sheetValue.date) ? strings.errorNotAllowed : '';
 
   let rangeError = '';
   if (d.mode === 'range' && d.from.value && d.to.value) {
@@ -983,7 +1016,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         {...fieldCommon}
         value={savedSingle}
         displayText={savedText}
-        allowTyping={mode === 'single' && allowTriggerTyping}
+        allowTyping={
+          mode === 'single' && precision === 'day' && allowTriggerTyping
+        }
         onTypingDone={onTriggerTyped}
         onTyped={() => setTriggerError('')}
         onPress={open}
@@ -991,7 +1026,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onClear={clearValue}
         label={label}
         isMandatory={isMandatory}
-        placeholder={placeholder}
+        placeholder={placeholder ?? periodPlaceholder}
         helperText={helperText}
         instruction={instruction}
         renderInstruction={renderInstruction}
@@ -1009,6 +1044,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       : d.mode === 'range'
         ? rangeError
         : undefined) || (isInline ? errorMessage : undefined);
+  // The calendar icon at the end of the field above the calendar (sheet.fieldIcon).
+  const sheetIcon = sheetOptions?.fieldIcon ? undefined : null;
   const sheetField =
     sheetOptions?.showField === false ? (
       <FieldMessages
@@ -1021,17 +1058,15 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       <ValueField
         {...fieldCommon}
         value={sheetValue}
-        placeholder={sheetOptions?.fieldPlaceholder}
-        allowTyping={allowTyping}
+        displayText={precision !== 'day' ? periodText(sheetValue) : undefined}
+        placeholder={sheetOptions?.fieldPlaceholder ?? periodPlaceholder}
+        allowTyping={allowTyping && precision === 'day'}
         onTyped={onSheetTyped}
         onFocusChange={(f) => reportFocus('value', f)}
         allowClear={allowClear}
-        onClear={() => {
-          edited.current = true;
-          draft.clear();
-        }}
+        onClear={clearInSheet}
         errorMessage={sheetValueError || (isInline ? errorMessage : undefined)}
-        icon={null}
+        icon={sheetIcon}
         active
         testID={testID ? `${testID}-value` : undefined}
       />
@@ -1039,6 +1074,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       <RangeFields
         {...fieldCommon}
         layout={rangeLayout}
+        showIcon={sheetOptions?.fieldIcon}
         from={d.from.value}
         to={d.to.value}
         placeholder={sheetOptions?.fieldPlaceholder}
@@ -1048,7 +1084,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onTyped={onRangeTyped}
         onFocusChange={(end, f) => reportFocus(`value-${end}`, f)}
         allowClear={allowClear}
-        onClear={clearDraft}
+        onClear={clearInSheet}
         errorMessage={rangeError || (isInline ? errorMessage : undefined)}
         disabled={disabled}
         testID={testID}
@@ -1065,9 +1101,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         )}
         placeholder={sheetOptions?.fieldPlaceholder}
         allowClear={allowClear}
-        onClear={clearDraft}
+        onClear={clearInSheet}
         errorMessage={isInline ? errorMessage : undefined}
-        icon={null}
+        icon={sheetIcon}
         active
         testID={testID ? `${testID}-value` : undefined}
       />
@@ -1085,8 +1121,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       showHolidays={showHolidays}
       yearRange={yearRange}
       locale={loc}
-      calendarSystem={resolveCalendarSystem(calendarSystem)}
+      // Month and year picks are Gregorian whatever the calendar system.
+      calendarSystem={
+        precision === 'day' ? resolveCalendarSystem(calendarSystem) : 'gregory'
+      }
       initialView={initialView}
+      precision={precision}
       enableMonthSwipe={enableMonthSwipe}
       showToday={showToday}
       onVisibleMonthChange={handleVisibleMonth}

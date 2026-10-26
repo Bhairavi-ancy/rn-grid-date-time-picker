@@ -11,6 +11,8 @@ export interface PeriodItem {
   a11yLabel?: string;
   selected: boolean;
   disabled: boolean;
+  /** This year or month, outlined when it isn't the one picked. */
+  current?: boolean;
 }
 
 interface Props {
@@ -30,6 +32,7 @@ const KEYS: Record<
     cell: StyleKey;
     selected: StyleKey;
     disabled: StyleKey;
+    current: StyleKey;
     text: StyleKey;
   }
 > = {
@@ -38,6 +41,7 @@ const KEYS: Record<
     cell: 'yearCell',
     selected: 'yearCellSelected',
     disabled: 'yearCellDisabled',
+    current: 'yearCellCurrent',
     text: 'yearCellText',
   },
   month: {
@@ -45,6 +49,7 @@ const KEYS: Record<
     cell: 'monthCell',
     selected: 'monthCellSelected',
     disabled: 'monthCellDisabled',
+    current: 'monthCellCurrent',
     text: 'monthCellText',
   },
 };
@@ -79,6 +84,8 @@ const PeriodGrid: React.FC<Props> = ({
               s.gridButton,
               styles?.[k.cell],
               item.selected && [s.gridSelected, styles?.[k.selected]],
+              item.current &&
+                !item.selected && [s.gridCurrent, styles?.[k.current]],
               item.disabled && [s.gridDisabled, styles?.[k.disabled]],
             ]}
           >
@@ -90,6 +97,7 @@ const PeriodGrid: React.FC<Props> = ({
                 style={[
                   s.gridText,
                   styles?.[k.text],
+                  item.current && !item.selected && s.gridCurrentText,
                   item.selected && s.gridSelectedText,
                 ]}
               >

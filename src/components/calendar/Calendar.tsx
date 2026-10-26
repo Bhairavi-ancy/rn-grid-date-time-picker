@@ -42,6 +42,8 @@ export interface CalendarProps {
   /** Already resolved (see resolveCalendarSystem). Default 'gregory'. */
   calendarSystem?: CalendarSystem;
   initialView?: CalendarView;
+  /** 'month' / 'year': that grid is the last step and a tap picks the period's first day. */
+  precision?: 'day' | 'month' | 'year';
   enableMonthSwipe?: boolean;
   showToday?: boolean;
   /** Gregorian year and month of the first day shown (also in the Hijri grid). */
@@ -156,6 +158,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     locale,
     calendarSystem = 'gregory',
     initialView = 'day',
+    precision = 'day',
     enableMonthSwipe = true,
     showToday,
     onVisibleMonthChange,
@@ -187,7 +190,12 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     [sys, yearRange.first, yearRange.last]
   );
   const years = { first: limits.first.year, last: limits.last.year };
-  const [view, setView] = useState<CalendarView>(initialView);
+  const [view, setView] = useState<CalendarView>(
+    precision === 'day' ? initialView : precision
+  );
+  // A month or year pick: what's picked, and the grid that's the last step.
+  const picked = precision === 'day' ? null : firstSelectedDay(selection);
+  const pickView: CalendarView = precision === 'day' ? 'day' : precision;
   const [visible, setVisible] = useState<VisibleMonth>(() =>
     initialMonth(props, sys)
   );
@@ -268,8 +276,12 @@ const Calendar: React.FC<CalendarProps> = (props) => {
   };
 
   const pickYear = (year: number) => {
+    if (precision === 'year') {
+      onSelectDay({ year, month: 1, day: 1 });
+      return;
+    }
     goTo(monthIn(year));
-    setView('day');
+    setView(pickView);
   };
 
   // ‹ › beside the year move a whole year; months change by swipe or chips.
@@ -294,7 +306,9 @@ const Calendar: React.FC<CalendarProps> = (props) => {
         canNext={pageStart + PAGE <= years.last}
         onPrev={() => setPageStart((p) => Math.max(years.first, p - PAGE))}
         onNext={() => setPageStart((p) => p + PAGE)}
-        onTitlePress={() => setView('day')}
+        onTitlePress={() => {
+          if (precision !== 'year') setView(pickView);
+        }}
         prevLabel={strings.a11yPreviousYear}
         nextLabel={strings.a11yNextYear}
         titleLabel={strings.a11yChooseYear}
@@ -349,7 +363,9 @@ const Calendar: React.FC<CalendarProps> = (props) => {
       yearItems.push({
         value: y,
         label: String(y),
-        selected: y === visible.year,
+        selected:
+          precision === 'year' ? picked?.year === y : y === visible.year,
+        current: precision !== 'day' && y === today.year,
         disabled: y < years.first || !isYearOpen(sys, constraints, y),
       });
     }
@@ -369,7 +385,14 @@ const Calendar: React.FC<CalendarProps> = (props) => {
       return {
         value: i + 1,
         label,
-        selected: i + 1 === visible.month,
+        selected:
+          precision === 'month'
+            ? picked?.year === visible.year && picked?.month === i + 1
+            : i + 1 === visible.month,
+        current:
+          precision === 'month' &&
+          visible.year === today.year &&
+          i + 1 === today.month,
         disabled: !monthEnabled.get(i + 1),
       };
     });
@@ -378,6 +401,10 @@ const Calendar: React.FC<CalendarProps> = (props) => {
         kind="month"
         items={months}
         onSelect={(month) => {
+          if (precision === 'month') {
+            onSelectDay({ year: visible.year, month, day: 1 });
+            return;
+          }
           goTo({ ...visible, month });
           setView('day');
         }}

@@ -156,6 +156,59 @@ describe('instant mode', () => {
   });
 });
 
+describe('× in the field above the calendar', () => {
+  it('instant, inline: clears the saved value in one save', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen log={log} commitMode="instant" presentation="inline" allowClear />
+    );
+    day(tree, 2026, 10, 25);
+    press(tree, 'dp-value-clear');
+    expect(log.mock.calls.map((c) => c[0])).toEqual(['2026-10-25', '']);
+    expect(texts(tree)).not.toContain('25-10-2026');
+    // An empty field has no ×.
+    expect(find(tree, 'dp-value-clear')).toBeUndefined();
+  });
+
+  it('instant, inline range: clears both ends; a half-picked range saves nothing', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen
+        log={log}
+        commitMode="instant"
+        presentation="inline"
+        mode="range"
+        allowClear
+      />
+    );
+    day(tree, 2026, 10, 22);
+    day(tree, 2026, 10, 24);
+    press(tree, 'dp-value-clear');
+    expect(log.mock.calls.map((c) => c[0])).toEqual([
+      { from: '2026-10-22', to: '2026-10-24' },
+      '',
+    ]);
+    day(tree, 2026, 10, 27);
+    press(tree, 'dp-value-clear');
+    expect(log).toHaveBeenCalledTimes(2);
+  });
+
+  it('with Confirm: clears the selection only; the saved value stays until Confirm', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <Screen
+        log={log}
+        allowClear
+        sheet={{ showField: true }}
+        initial="2026-10-25"
+      />
+    );
+    open(tree);
+    press(tree, 'dp-value-clear');
+    expect(log).not.toHaveBeenCalled();
+  });
+});
+
 describe('Confirm', () => {
   it('a From/To range with a From that does not parse stays blocked when To is fine', () => {
     const log = jest.fn();

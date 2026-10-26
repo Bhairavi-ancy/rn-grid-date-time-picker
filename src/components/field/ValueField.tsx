@@ -298,7 +298,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
           s.text,
           styles?.fieldText,
           !text && [s.placeholder, styles?.fieldPlaceholder],
-          disabled && s.disabledText,
+          disabled && [s.disabledText, text ? styles?.fieldTextDisabled : null],
         ]}
       >
         {text ||

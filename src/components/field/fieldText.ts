@@ -45,12 +45,13 @@ export const formatRangeText = (
   to: DateTimeValue | null,
   type: PickerType,
   dateFormat: string,
-  timeFormat: TimeFormat
+  timeFormat: TimeFormat,
+  separator: string = ' – '
 ): string => {
   if (!from && !to) return '';
   const a = formatValueText(from, type, dateFormat, timeFormat);
   const b = formatValueText(to, type, dateFormat, timeFormat);
-  return `${a} – ${b}`.trim();
+  return `${a}${separator}${b}`.trim();
 };
 
 /** '21-10-2026, 23-10-2026' (the field shows one line and truncates). */

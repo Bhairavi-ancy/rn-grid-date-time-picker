@@ -122,6 +122,8 @@ const create = (t: ThemeTokens) =>
       ...fontStyle(t, 'semiBold'),
     },
     gridDisabled: { opacity: 0.35 },
+    gridCurrent: { borderWidth: 1, borderColor: t.accent },
+    gridCurrentText: { color: t.accent },
     empty: { paddingVertical: 24, alignItems: 'center' },
     emptyText: {
       ...fontStyle(t, 'regular'),
