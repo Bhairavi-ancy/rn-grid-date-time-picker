@@ -100,7 +100,7 @@ const create = (t: ThemeTokens) =>
     selected: { backgroundColor: t.accent },
     selectedText: { color: t.onAccent, ...fontStyle(t, 'semiBold') },
     outsideText: { color: t.placeholder },
-    disabledText: { color: t.disabledText, textDecorationLine: 'line-through' },
+    disabledText: { color: t.disabledText },
     holidayText: { color: t.holiday },
     pressed: { backgroundColor: t.rangeFill },
     grid: { flexDirection: 'row', flexWrap: 'wrap', paddingVertical: 8 },

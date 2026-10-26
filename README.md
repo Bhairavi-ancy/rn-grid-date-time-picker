@@ -258,7 +258,7 @@ The limit props cover most cases:
 />
 ```
 
-Greyed days aren't pressable and are read out as "unavailable". A typed value on a greyed day keeps Confirm disabled and shows `strings.errorNotAllowed`. Greying only guides the user, so keep your own validation for what is saved.
+Greyed days are drawn in the `disabledText` colour (no strike-through), aren't pressable and are read out as "unavailable". A typed value on a greyed day keeps Confirm disabled and shows `strings.errorNotAllowed`. Greying only guides the user, so keep your own validation for what is saved.
 
 `createConstraints` is the engine behind those props. Use it on its own, for example to check a value on the server side of a form:
 
