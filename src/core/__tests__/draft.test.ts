@@ -209,7 +209,7 @@ describe('draft: multiple', () => {
       oct(11),
       perDate
     );
-    per = setTime(per, { hour: 9, minute: 0 }, { index: 1 });
+    per = setTime(per, { hour: 9, minute: 0 }, { day: oct(11) });
     expect(draftToWire(per, perDate)).toEqual([
       '2026-10-09T18:30:00.000Z',
       '2026-10-11T03:30:00.000Z',

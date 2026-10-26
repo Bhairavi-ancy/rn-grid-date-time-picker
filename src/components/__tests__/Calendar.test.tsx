@@ -134,7 +134,11 @@ describe('Calendar: month view', () => {
     expect(day(tree, 2026, 10, 21).props.accessibilityLabel).toBe(
       `Wednesday, 21 October 2026, ${DEFAULT_STRINGS.a11yToday}`
     );
-    expect(day(tree, 2026, 10, 23).props.accessibilityLabel).toContain(
+    // Selected is announced from the state, not repeated in the label.
+    expect(day(tree, 2026, 10, 23).props.accessibilityState.selected).toBe(
+      true
+    );
+    expect(day(tree, 2026, 10, 23).props.accessibilityLabel).not.toContain(
       DEFAULT_STRINGS.a11ySelected
     );
   });
@@ -180,7 +184,11 @@ describe('Calendar: greyed days and limits', () => {
   it('greys days outside the range and makes them not pressable', () => {
     const tree = mount({ constraints: futureOnly });
     expect(day(tree, 2026, 10, 21).props.disabled).toBe(true);
-    expect(day(tree, 2026, 10, 21).props.accessibilityLabel).toContain(
+    // Unavailable is announced from the state, not repeated in the label.
+    expect(day(tree, 2026, 10, 21).props.accessibilityState.disabled).toBe(
+      true
+    );
+    expect(day(tree, 2026, 10, 21).props.accessibilityLabel).not.toContain(
       DEFAULT_STRINGS.a11yUnavailable
     );
     expect(day(tree, 2026, 10, 22).props.disabled).toBe(false);

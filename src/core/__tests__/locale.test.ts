@@ -68,3 +68,16 @@ describe('normalizeDateFormat', () => {
     expect(normalizeDateFormat('')).toBeNull();
   });
 });
+
+describe('normalizeDateFormat: separators', () => {
+  it("allows '/', '-', '.', a space or a comma, and nothing else", () => {
+    expect(normalizeDateFormat('dd,mm,yyyy')).toBe('dd,MM,yyyy');
+    expect(normalizeDateFormat('dd\nmm\nyyyy')).toBeNull();
+    expect(normalizeDateFormat('dd\tmm\tyyyy')).toBeNull();
+    expect(normalizeDateFormat('ddxmmxyyyy')).toBeNull();
+  });
+
+  it('treats a format that is not a string as missing', () => {
+    expect(normalizeDateFormat(42 as unknown as string)).toBeNull();
+  });
+});

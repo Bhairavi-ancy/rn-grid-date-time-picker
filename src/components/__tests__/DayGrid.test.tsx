@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import { createConstraints } from '../../core/constraints';
 import DayGrid, {
@@ -8,7 +8,7 @@ import DayGrid, {
   type DayGridProps,
 } from '../calendar/DayGrid';
 import { DEFAULT_STRINGS } from '../theme/defaultStrings';
-import { buildTokens } from '../theme/tokens';
+import { DEFAULT_TOKENS, buildTokens } from '../theme/tokens';
 
 const NOW = new Date(Date.UTC(2026, 9, 21, 6, 30));
 
@@ -42,6 +42,28 @@ const mount = (props: Partial<DayGridProps>): ReactTestRenderer => {
 };
 
 describe('DayGrid', () => {
+  it('a greyed day is grey, not struck through', () => {
+    const tree = mount({
+      constraints: createConstraints({
+        type: 'date',
+        timeZone: 'Asia/Kolkata',
+        now: NOW,
+        minDate: { year: 2026, month: 10, day: 15 },
+      }),
+    });
+    const dayText = (day: number) => {
+      const cell = tree.root.findAll(
+        (n) =>
+          n.props.testID === `g-day-2026-10-${day}` &&
+          typeof n.type !== 'string'
+      )[0]!;
+      return StyleSheet.flatten(cell.findAllByType(Text)[0]!.props.style);
+    };
+    expect(dayText(10).color).toBe(DEFAULT_TOKENS.disabledText);
+    expect(dayText(10).textDecorationLine).toBeUndefined();
+    expect(dayText(20).color).not.toBe(DEFAULT_TOKENS.disabledText);
+  });
+
   it('draws 5 or 6 weeks and hides outside days when asked', () => {
     const withOutside = mount({});
     expect(

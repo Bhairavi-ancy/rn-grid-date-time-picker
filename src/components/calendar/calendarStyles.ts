@@ -100,7 +100,7 @@ const create = (t: ThemeTokens) =>
     selected: { backgroundColor: t.accent },
     selectedText: { color: t.onAccent, ...fontStyle(t, 'semiBold') },
     outsideText: { color: t.placeholder },
-    disabledText: { color: t.disabledText, textDecorationLine: 'line-through' },
+    disabledText: { color: t.disabledText },
     holidayText: { color: t.holiday },
     pressed: { backgroundColor: t.rangeFill },
     grid: { flexDirection: 'row', flexWrap: 'wrap', paddingVertical: 8 },
@@ -122,6 +122,8 @@ const create = (t: ThemeTokens) =>
       ...fontStyle(t, 'semiBold'),
     },
     gridDisabled: { opacity: 0.35 },
+    gridCurrent: { borderWidth: 1, borderColor: t.accent },
+    gridCurrentText: { color: t.accent },
     empty: { paddingVertical: 24, alignItems: 'center' },
     emptyText: {
       ...fontStyle(t, 'regular'),
@@ -138,12 +140,6 @@ const create = (t: ThemeTokens) =>
       ...fontStyle(t, 'medium'),
       fontSize: t.fontSizeMedium,
       color: t.accent,
-    },
-    notice: {
-      marginTop: 8,
-      ...fontStyle(t, 'regular'),
-      fontSize: t.fontSizeSmall,
-      color: t.mutedText,
     },
   });
 

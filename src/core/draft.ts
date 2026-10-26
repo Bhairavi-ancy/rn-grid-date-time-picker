@@ -61,8 +61,12 @@ export interface DraftOptions {
   };
 }
 
+/**
+ * Which part of the draft an edit goes to. Multiple dates are targeted by
+ * their day, not their position, since the list re-sorts as days are added.
+ */
 export type DraftTarget =
-  'single' | 'from' | 'to' | 'shared' | { index: number };
+  'single' | 'from' | 'to' | 'shared' | { day: CalendarDate };
 
 export type DraftIssue =
   'INCOMPLETE' | 'RANGE_ORDER' | 'RANGE_LENGTH' | 'MAX_SELECTIONS';
@@ -162,7 +166,10 @@ const pickRangeDay = (
 ): Draft => {
   const from = draft.from.value?.date;
   const to = draft.to.value?.date;
-  const allowSameDay = opts.type === 'datetime' || !!opts.range?.allowSameDay;
+  // A same-day range is 1 day long, so it's only an end when minDays allows it.
+  const allowSameDay =
+    (opts.type === 'datetime' || !!opts.range?.allowSameDay) &&
+    (opts.range?.minDays ?? 1) <= 1;
 
   if (!from) return { ...draft, from: withDay(draft.from, day, opts, eq) };
 
@@ -285,8 +292,8 @@ export const setTime = (
   if (typeof target === 'object') {
     return {
       ...draft,
-      slots: draft.slots.map((s, i) =>
-        i === target.index ? setSlotTime(s, time) : s
+      slots: draft.slots.map((s) =>
+        isSameDay(s.value?.date, target.day) ? setSlotTime(s, time) : s
       ),
     };
   }
@@ -308,7 +315,7 @@ export const setSlotValue = (
   }
   if (typeof target === 'object') {
     const slots = draft.slots
-      .map((s, i) => (i === target.index ? { ...s, value } : s))
+      .map((s) => (isSameDay(s.value?.date, target.day) ? { ...s, value } : s))
       .filter((s) => s.value);
     return { ...draft, slots: sortSlots(slots) };
   }
@@ -375,11 +382,12 @@ export const validateDraft = (
       if (order < 0 || (order === 0 && !opts.range?.allowSameDay))
         return 'RANGE_ORDER';
     }
-    const span = daysBetween(from.date, to.date);
+    // Calendar days with both ends included: a same-day range is 1 day.
+    const length = daysBetween(from.date, to.date) + 1;
     const { minDays, maxDays } = opts.range ?? {};
     if (
-      (minDays !== undefined && span < minDays) ||
-      (maxDays !== undefined && span > maxDays)
+      (minDays !== undefined && length < minDays) ||
+      (maxDays !== undefined && length > maxDays)
     )
       return 'RANGE_LENGTH';
     return null;

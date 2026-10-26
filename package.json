@@ -89,8 +89,8 @@
     "luxon": "^3.7.2"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
+    "react": ">=18",
+    "react-native": ">=0.71"
   },
   "workspaces": [
     "example"

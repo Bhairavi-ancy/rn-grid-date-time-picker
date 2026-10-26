@@ -4,7 +4,7 @@ import {
   toDateKey,
 } from '../core/calendarDate';
 import type { ValueAdapter } from '../core/types';
-import { formatInstant, parseInstant } from './utcMidnight';
+import { formatInstant, isWritableYear, parseInstant } from './utcMidnight';
 
 /**
  * `valueFormat: 'iso'` (the default):
@@ -26,7 +26,9 @@ export const isoAdapter: ValueAdapter = {
   },
   format: (value, { type, timeZone }) => {
     if (type === 'datetime') return formatInstant(value, timeZone);
-    return value && isValidCalendarDate(value.date)
+    return value &&
+      isValidCalendarDate(value.date) &&
+      isWritableYear(value.date.year)
       ? toDateKey(value.date)
       : '';
   },

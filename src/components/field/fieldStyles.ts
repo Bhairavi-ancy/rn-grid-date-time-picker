@@ -90,20 +90,6 @@ const create = (t: ThemeTokens) =>
     },
     error: { color: t.error },
     helper: { color: t.mutedText },
-    doneBar: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      backgroundColor: t.surface,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: t.border,
-    },
-    doneText: {
-      ...fontStyle(t, 'semiBold'),
-      fontSize: t.fontSizeLarge,
-      color: t.accent,
-    },
   });
 
 /** Field styles for a theme, created once per tokens object. */

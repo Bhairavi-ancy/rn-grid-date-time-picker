@@ -22,7 +22,7 @@ npm i rn-calendar-time-picker
 yarn add rn-calendar-time-picker
 ```
 
-There are no native steps. It works in Expo Go and in bare React Native apps. `react` and `react-native` are peer dependencies.
+There are no native steps. It works in Expo Go and in bare React Native apps. `react` (18 or later) and `react-native` (0.71 or later) are peer dependencies.
 
 ## Quick start
 
@@ -124,7 +124,7 @@ const epochMs: ValueAdapter = {
 
 **Unchanged Confirm.** If the user confirms without changing a value, the stored string comes back as it came in (`'iso'`), so a value with seconds or an offset isn't rewritten. `'utc-midnight'` re-serialises the stored instant or day as UTC (`formatUnchanged`).
 
-**Time zones.** Date-time values are read and written in `timeZone` (an IANA name; default: the device zone). "Today" uses the same zone. Dates have no zone. A wall time skipped by a daylight-saving change moves forward, and a repeated one uses its first occurrence; the sheet shows a notice for both.
+**Time zones.** Date-time values are read and written in `timeZone` (an IANA name; default: the device zone). "Today" uses the same zone. Dates have no zone. A wall time skipped by a daylight-saving change moves forward, and a repeated one uses its first occurrence.
 
 ## Props
 
@@ -137,10 +137,10 @@ const epochMs: ValueAdapter = {
 | `value` | `PickerValue` | required | See [Values](#values). |
 | `onChange` | `(value: PickerValue) => void` | required | Once per Confirm, or with `''` on clear. |
 | `onBlur` | `() => void` | – | On Confirm only, right after `onChange`. |
-| `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit. |
+| `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
 | `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
-| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. |
+| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. `minDays` / `maxDays` count calendar days with both ends included (the 1st to the 3rd is 3 days; a same-day range is 1). |
 
 ### Presentation
 
@@ -148,10 +148,10 @@ const epochMs: ValueAdapter = {
 |---|---|---|---|
 | `presentation` | `'sheet' \| 'inline'` | `'sheet'` | |
 | `visible` | `boolean` | – | Controls the sheet; without it the picker opens itself. |
-| `onOpen` / `onClose` | `() => void` | – | `onClose` fires for Close, the backdrop and Android back. |
+| `onOpen` / `onClose` | `() => void` | – | `onClose` fires whenever the sheet closes: Close, the backdrop, Android back, and after Confirm. |
 | `onBeforeOpen` | `() => void` | – | Just before opening, e.g. to close your own dropdowns. |
 | `showField` | `boolean` | `true` | Hide the on-screen field (for example with `visible`). |
-| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`. See [Sheet layout](#sheet-layout). |
+| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`. See [Sheet layout](#sheet-layout). |
 | `renderSheet` | `(p: SheetRenderProps) => ReactNode` | built-in sheet | See [Presentation](#presentation). |
 
 ### Value field
@@ -186,7 +186,7 @@ const epochMs: ValueAdapter = {
 | `renderMonthChip` | `(month: number, state: { selected; disabled }) => ReactNode` | |
 | `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
 | `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
-| `renderTimeRow` | `(state: PickerState) => ReactNode` | |
+| `renderTimeRow` | `(state: PickerState) => ReactNode` | Replaces the time row. Read `state.time` (ranges: `state.rangeTimes`) and change it with `state.setTime(time, end?)`, which works like the built-in row, including before a day is picked. |
 
 ### Calendar
 
@@ -196,6 +196,8 @@ const epochMs: ValueAdapter = {
 | `showOutsideDays` | `boolean` | `true` |
 | `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
+| `precision` | `'day' \| 'month' \| 'year'` | `'day'`: what one pick is. With `'month'` or `'year'` the month or year grid is the last step, the saved value is the period's first day, the field shows "March 2026" or "2026", and a period can be picked when any day in it can (so `minDate` 15 Oct still allows October). The current month or year is outlined. Single date pickers only (ignored for date-time, range and multiple), always Gregorian, without typing. |
+| `initialVisibleDate` | `CalendarDate` | today: with no value, the calendar opens on this day's month without selecting it (e.g. `{ year: 2000, month: 1, day: 1 }` for a date of birth); a value's month always wins |
 | `enableMonthSwipe` | `boolean` | `true` |
 | `showToday` | `boolean` | `false` |
 | `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'` |
@@ -209,7 +211,7 @@ const epochMs: ValueAdapter = {
 |---|---|---|---|
 | `timeInput` | `'typed' \| 'wheel'` | `'typed'` | |
 | `timeFormat` | `'12h' \| '24h'` | from `locale`, else `'12h'` | |
-| `minuteStep` | `number` | `1` | A whole number from 1 to 60. Off-step minutes are flagged on Confirm, never rounded silently. |
+| `minuteStep` | `number` | `1` | A step that divides the hour: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. Off-step minutes are flagged on Confirm, never rounded silently. |
 | `newDayTime` | `Time` | – | Every newly picked day gets this time. It wins over a time typed before the day and over the current time. |
 
 ### Limits
@@ -257,7 +259,7 @@ The limit props cover most cases:
 />
 ```
 
-Greyed days aren't pressable and are read out as "unavailable". A typed value on a greyed day keeps Confirm disabled and shows `strings.errorNotAllowed`. Greying only guides the user, so keep your own validation for what is saved.
+Greyed days are drawn in the `disabledText` colour (no strike-through), aren't pressable and are read out as "unavailable". A typed value on a greyed day keeps Confirm disabled and shows `strings.errorNotAllowed`. Greying only guides the user, so keep your own validation for what is saved.
 
 `createConstraints` is the engine behind those props. Use it on its own, for example to check a value on the server side of a form:
 
@@ -295,7 +297,7 @@ For full control, pass `getConstraints`. Its result is used as is, and the limit
       now: ctx.now,
       maxDate: ctx.limits.maxDate,
       // From now on, to the minute; refreshed while the sheet is open.
-      min: { date: ctx.today, time: { hour: ctx.now.getHours(), minute: ctx.now.getMinutes() } },
+      min: { date: ctx.today, time: ctx.nowTime },
       dependsOnNow: true,
       holidays: ctx.holidays,
       timeBounds: () => ({ min: { hour: 9, minute: 0 }, max: { hour: 17, minute: 30 } }),
@@ -304,7 +306,7 @@ For full control, pass `getConstraints`. Its result is used as is, and the limit
 />
 ```
 
-`ctx` also holds `today` (in `timeZone`) and `holidays` (the prop plus every year loaded so far). This example reads `ctx.now.getHours()` in the device zone; for another `timeZone`, convert `ctx.now` first.
+`ctx` also holds `today` and `nowTime` (the current day and time in `timeZone`) and `holidays` (the prop plus every year loaded so far).
 
 ## Presentation
 
@@ -362,6 +364,7 @@ Everything inside the sheet can be set from props:
 | `fixedFooter` | `true` | Confirm stays pinned below the body. `false` scrolls it at the end of the body. `renderSheet` then gets `footer: null`. |
 | `showField` | `true` | The field above the calendar, which shows the picked date and takes typing with `allowTyping`. When it's hidden, its errors still show above the calendar. Applies inline too. |
 | `fieldPlaceholder` | from `dateFormat` | Placeholder of that field when it shows text. |
+| `fieldIcon` | `false` | The calendar icon at the end of that field, as on the on-screen field. |
 
 ```tsx
 <DateTimePicker
@@ -380,7 +383,7 @@ Everything inside the sheet can be set from props:
 
 The on-screen field shows the saved value (never the draft) in `dateFormat`, with an optional ×, label, helper text, instruction and error. Tap it, or its calendar icon, to open the picker.
 
-With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS a Done bar sits above the number pad. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
+With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
 
 `allowTriggerTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
 
@@ -420,7 +423,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `borderFocused` | `#2563EB` | Focused field / box |
 | `error` | `#DC2626` | Errors, mandatory mark |
 | `background` | `#FFFFFF` | Field, sheet |
-| `surface` | `#F9FAFB` | Done bar |
+| `surface` | `#F9FAFB` | Wheel highlight |
 | `disabledBackground` | `#F3F4F6` | Disabled field |
 | `disabledText` | `#9CA3AF` | Disabled text, greyed days |
 | `rangeFill` | `#DBEAFE` | Range band |
@@ -428,8 +431,8 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `fontFamily` | `undefined` | One family for all text, at weight 400 / 500 / 600 as each part needs. Setting it replaces the default Inter files |
 | `fontRegular`, `fontMedium`, `fontSemiBold` | `'Inter-Regular'`, `'Inter-Medium'`, `'Inter-SemiBold'` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `SYSTEM_FONTS` clears all four for the system font |
 | `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field (the Hijri day under a dual cell is 75% of it) |
-| `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, AM / PM toggle |
-| `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time boxes, wheel, Done |
+| `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, time boxes, AM / PM toggle |
+| `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time label, wheel |
 | `radius` | `8` | Field and button corners (the sheet uses `radius * 2`) |
 | `fieldHeight` | `44` | Field minimum height |
 | `touchTarget` | `44` | Minimum button size |
@@ -483,12 +486,12 @@ To change a single part, pass a text style through `styles` (for example `styles
 `styles` takes a style for any of these keys:
 
 - **Containers**: `container`, `sheet`, `sheetBackdrop`, `header`, `title`, `resetButton`, `resetText`, `body`, `footer`, `confirmButton`, `confirmText`.
-- **Field**: `field`, `fieldFocused`, `fieldError`, `fieldDisabled`, `fieldText`, `fieldPlaceholder`, `fieldSegment`, `fieldSegmentFocused`, `fieldSeparator`, `fieldPeriod`, `fieldPeriodSelected`, `fieldPeriodText`, `fieldIcon`, `clearIcon`, `label`, `mandatoryMark`, `helperText`, `instructionText`, `errorText`, `validationText`.
+- **Field**: `field`, `fieldFocused`, `fieldError`, `fieldDisabled`, `fieldText`, `fieldTextDisabled` (the value while disabled; the placeholder keeps its colour), `fieldPlaceholder`, `fieldSegment`, `fieldSegmentFocused`, `fieldSeparator`, `fieldPeriod`, `fieldPeriodSelected`, `fieldPeriodText`, `fieldIcon`, `clearIcon`, `label`, `mandatoryMark`, `helperText`, `instructionText`, `errorText`, `validationText`.
 - **Calendar header**: `calendarHeader`, `navArrow`, `navArrowDisabled`, `yearButton`, `yearButtonText`, `monthChipRow`, `monthChip`, `monthChipText`, `monthChipSelected`, `monthChipDisabled`.
 - **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (the Hijri day in a dual cell).
-- **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`.
-- **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled`, `wheelText`, `wheelHighlight`.
-- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`, `holidayNotice`, `dstNotice`, `keyboardDoneBar`, `keyboardDoneText`.
+- **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `yearCellCurrent`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`, `monthCellCurrent` (the outlined current year / month in a `precision` pick).
+- **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
+- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`.
 
 ## Icons
 
@@ -583,7 +586,7 @@ You can also hide the field and open the picker from anywhere, with `showField={
 
 ## Strings / i18n
 
-Every visible and spoken text is in `strings`, and the defaults are English (`DEFAULT_STRINGS`). Pass any subset; a few entries are functions:
+Every visible and spoken text is in `strings`, and the defaults are English (`DEFAULT_STRINGS`). Pass any subset. `rangeSeparator` (default `' – '`) joins the two ends of a range in the field text, e.g. `' ↔ '`. A few entries are functions:
 
 ```ts
 errorYearOutOfRange: ({ first, last }) => string;
@@ -624,10 +627,10 @@ Memoise `strings` (and `theme`) so they aren't rebuilt on every render.
 
 ## Accessibility
 
-- Every control has a role, a label and state. Day cells are read as full dates with "today", "selected", "unavailable", "holiday", "start of range" and "end of range". Month changes are announced.
+- Every control has a role, a label and state. Day cells are read as full dates with "today", "holiday", "start of range" or "end of range"; selected and unavailable come from their state, so they aren't said twice. Typed segments include the field's label ("From, Day"). AM/PM in the time row are radio buttons. Month changes are announced.
 - Day cells reach a 48 pt touch target. Text grows with the system font size up to 1.4×, then stops so fixed-size parts don't clip.
 - Reduce motion is respected: scrolls and snaps jump instead of animating.
-- Errors are live regions. The wheel supports increment / decrement actions.
+- Errors are announced: a live region on Android, an announcement on iOS. The wheel supports increment / decrement actions.
 
 ## Testing
 
@@ -660,10 +663,10 @@ For Jest, no transform changes are needed: `main` points to the CommonJS build. 
 
 - **iOS and Android** are the supported targets. The package is pure JS, so it runs in Expo Go.
 - **Web** is untested.
-- The keyboard **Done bar** is iOS-only. It uses `InputAccessoryView`, which React Native 0.88 marks as deprecated.
+- The keyboard's **Done button** is iOS-only: React Native adds it above each box's number pad (`returnKeyType="done"`). Android's number pad has its own.
 - **Hijri** needs `Intl` support for `islamic-umalqura` and falls back to Gregorian without it (see above).
 - The built-in sheet doesn't add a safe-area inset; use `styles.sheet.paddingBottom` or `renderSheet`.
-- A `minuteStep` outside 1–60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.
+- A `minuteStep` that doesn't divide 60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.
 - Only one runtime dependency: `luxon`. Exported types don't reference Luxon, so you don't need `@types/luxon`.
 
 ## Contributing

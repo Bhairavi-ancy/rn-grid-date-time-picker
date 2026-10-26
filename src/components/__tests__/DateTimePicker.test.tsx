@@ -492,7 +492,7 @@ describe('DateTimePicker: time row', () => {
     // "Now" is 06:30 UTC = 12:00 PM in India: a new day starts at the current time.
     expect(box(tree, 'dp-time-hour')?.props.value).toBe('12');
     expect(box(tree, 'dp-time-minute')?.props.value).toBe('00');
-    expect(find(tree, 'dp-time-pm').props.accessibilityState.selected).toBe(
+    expect(find(tree, 'dp-time-pm').props.accessibilityState.checked).toBe(
       true
     );
     typeBox(tree, 'dp-time-hour', '09');

@@ -17,6 +17,8 @@ export interface PickerStrings {
   from: string;
   to: string;
   am: string;
+  /** Between the two ends of a range in the field text. */
+  rangeSeparator: string;
   pm: string;
   /** Placeholders of the typed date segments and time boxes, and of the empty field. */
   placeholderDay: string;
@@ -76,6 +78,7 @@ export const DEFAULT_STRINGS: PickerStrings = {
   from: 'From',
   to: 'To',
   am: 'AM',
+  rangeSeparator: ' – ',
   pm: 'PM',
   placeholderDay: 'DD',
   placeholderMonth: 'MM',

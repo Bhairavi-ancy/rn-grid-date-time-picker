@@ -51,15 +51,16 @@ export const deriveDateFormat = (locale: string): string => {
 };
 
 const DATE_FORMAT_PATTERN =
-  /^(dd|mm|yyyy)([^a-z0-9])(dd|mm|yyyy)\2(dd|mm|yyyy)$/i;
+  /^(dd|mm|yyyy)([/\-., ])(dd|mm|yyyy)\2(dd|mm|yyyy)$/i;
 
 /**
  * A `dateFormat` written in any case ('dd/mm/yyyy', 'DD-MM-YYYY') in the form
  * the picker uses ('dd/MM/yyyy'). Null unless it is a two-digit day, a
- * two-digit month and a four-digit year, each once, with the same single
- * separator character between them.
+ * two-digit month and a four-digit year, each once, with the same separator
+ * ('/', '-', '.', a space or a comma) between them.
  */
 export const normalizeDateFormat = (format: string): string | null => {
+  if (typeof format !== 'string') return null;
   const m = DATE_FORMAT_PATTERN.exec(format.trim());
   if (!m) return null;
   const tokens = [m[1], m[3], m[4]].map((t) => (t ?? '').toLowerCase());

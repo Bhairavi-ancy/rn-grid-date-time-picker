@@ -100,6 +100,23 @@ const moveFocus = (
   return { layout: state.layout, values, focused: to };
 };
 
+const sameValues = (a: SegmentValues, b: SegmentValues): boolean => {
+  const keysOf = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return [...keysOf].every((k) => a[k as SegmentKey] === b[k as SegmentKey]);
+};
+
+/** Moving focus re-reads the segments only when leaving one changed it. */
+const withFocus = (
+  state: SegmentEditorState,
+  to: SegmentKey | null,
+  opts: SegmentEditorOptions
+): SegmentEditorState => {
+  const moved = moveFocus(state, to);
+  return sameValues(moved.values, state.values)
+    ? { ...moved, parsed: state.parsed }
+    : withParsed(moved, opts);
+};
+
 export const segmentEditorReducer = (
   state: SegmentEditorState,
   action: SegmentEditorAction,
@@ -107,10 +124,13 @@ export const segmentEditorReducer = (
 ): SegmentEditorState => {
   switch (action.type) {
     case 'focus':
-      return withParsed(moveFocus(state, action.key), opts);
+      // A late focus event for the box already being typed in changes nothing
+      // (padding it would turn a typed '1' into '01').
+      if (state.focused === action.key) return state;
+      return withFocus(state, action.key, opts);
 
     case 'blur':
-      return withParsed(moveFocus(state, null), opts);
+      return withFocus(state, null, opts);
 
     case 'digit': {
       const key = state.focused;

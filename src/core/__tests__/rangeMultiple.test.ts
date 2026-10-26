@@ -21,12 +21,12 @@ const rangeOf = (from: number, to: number, o: DraftOptions = opts) =>
   createDraft('range', { from: wire(from), to: wire(to) }, o);
 
 describe('range length', () => {
-  it('validateDraft flags a range shorter or longer than allowed', () => {
-    const o = { ...opts, range: { minDays: 2, maxDays: 5 } };
-    expect(validateDraft(rangeOf(20, 21, o), o)).toBe('RANGE_LENGTH');
-    expect(validateDraft(rangeOf(20, 22, o), o)).toBeNull();
-    expect(validateDraft(rangeOf(20, 25, o), o)).toBeNull();
-    expect(validateDraft(rangeOf(20, 26, o), o)).toBe('RANGE_LENGTH');
+  it('validateDraft flags a range shorter or longer than allowed (calendar days, both ends included)', () => {
+    const o = { ...opts, range: { minDays: 3, maxDays: 5 } };
+    expect(validateDraft(rangeOf(20, 21, o), o)).toBe('RANGE_LENGTH'); // 2 days
+    expect(validateDraft(rangeOf(20, 22, o), o)).toBeNull(); // 3 days
+    expect(validateDraft(rangeOf(20, 24, o), o)).toBeNull(); // 5 days
+    expect(validateDraft(rangeOf(20, 25, o), o)).toBe('RANGE_LENGTH'); // 6 days
     expect(validateDraft(rangeOf(22, 20, o), o)).toBe('RANGE_ORDER');
   });
 
@@ -35,11 +35,13 @@ describe('range length', () => {
     expect(
       isRangeEndAllowed(day(20), day(18), { blockBeforeStart: true })
     ).toBe(false);
-    expect(isRangeEndAllowed(day(20), day(21), { minDays: 2 })).toBe(false);
-    expect(isRangeEndAllowed(day(20), day(24), { maxDays: 3 })).toBe(false);
+    // Lengths count calendar days with both ends included.
+    expect(isRangeEndAllowed(day(20), day(21), { minDays: 3 })).toBe(false);
+    expect(isRangeEndAllowed(day(20), day(24), { maxDays: 4 })).toBe(false);
     expect(
-      isRangeEndAllowed(day(20), day(23), { minDays: 2, maxDays: 3 })
+      isRangeEndAllowed(day(20), day(23), { minDays: 3, maxDays: 4 })
     ).toBe(true);
+    expect(isRangeEndAllowed(day(20), day(20), { minDays: 1 })).toBe(true);
   });
 });
 
@@ -96,13 +98,14 @@ describe('withSelectionRules', () => {
   it('greys ends outside the allowed length while the end is chosen', () => {
     const c = withSelectionRules(base, {
       rangeStart: day(20),
-      minDays: 2,
-      maxDays: 4,
+      minDays: 3,
+      maxDays: 5,
     });
-    expect(c.dayStatus(day(21)).disabled).toBe(true);
+    expect(c.dayStatus(day(21)).disabled).toBe(true); // 2 days
     expect(c.dayStatus(day(21)).reasons).toContain('RANGE_LENGTH');
-    expect(c.dayStatus(day(22)).disabled).toBe(false);
-    expect(c.dayStatus(day(25)).disabled).toBe(true);
+    expect(c.dayStatus(day(22)).disabled).toBe(false); // 3 days
+    expect(c.dayStatus(day(24)).disabled).toBe(false); // 5 days
+    expect(c.dayStatus(day(25)).disabled).toBe(true); // 6 days
     expect(c.dayStatus(day(20)).disabled).toBe(false); // the start itself
     expect(c.dayStatus(day(15)).disabled).toBe(false); // restarts the range
   });

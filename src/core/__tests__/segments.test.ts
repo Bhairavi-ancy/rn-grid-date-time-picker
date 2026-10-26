@@ -193,3 +193,14 @@ describe('segments: parse and format', () => {
     expect(formatSegments(null, 'date', '12h')).toEqual({});
   });
 });
+
+describe('parseSegments: an empty 12-hour field', () => {
+  it('is empty once every digit is gone, even with AM/PM still set', () => {
+    const parsed = parseSegments(
+      { day: '', month: '', year: '', hour: '', minute: '', period: 'PM' },
+      { type: 'datetime', timeFormat: '12h' }
+    );
+    expect(parsed.isEmpty).toBe(true);
+    expect(parsed.errors).toEqual([]);
+  });
+});

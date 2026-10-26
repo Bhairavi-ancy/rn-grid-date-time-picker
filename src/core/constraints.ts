@@ -216,8 +216,12 @@ export const createConstraints = (o: CreateConstraintsOptions): Constraints => {
       if (range.max && compareCalendarDates(day, range.max.date) > 0) break;
       if (!dayStatus(day).disabled) return day;
     }
-    for (let i = 1; i < SEARCH_LIMIT_DAYS; i += 1) {
-      const day = addDays(from, -i);
+    // Backwards from `from`, or from `max` when it lies before `from` (a
+    // date-of-birth limit years ago), so the search never runs out early.
+    const pastMax = range.max && compareCalendarDates(from, range.max.date) > 0;
+    const origin = pastMax && range.max ? range.max.date : from;
+    for (let i = pastMax ? 0 : 1; i < SEARCH_LIMIT_DAYS; i += 1) {
+      const day = addDays(origin, -i);
       if (range.min && compareCalendarDates(day, range.min.date) < 0) break;
       if (!dayStatus(day).disabled) return day;
     }

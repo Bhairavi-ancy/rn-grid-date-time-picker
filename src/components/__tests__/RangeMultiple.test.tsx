@@ -119,13 +119,30 @@ describe('range: single field', () => {
     expect(texts(tree)).toContain('05-10-2026 –');
   });
 
-  it('greys ends too close or too far once the start is picked', () => {
-    const tree = mount({ mode: 'range', range: { minDays: 2, maxDays: 4 } });
+  it('greys ends too close or too far once the start is picked (calendar days, both ends included)', () => {
+    const tree = mount({ mode: 'range', range: { minDays: 3, maxDays: 5 } });
     open(tree);
     tap(tree, 20);
-    expect(dayCell(tree, 21).props.disabled).toBe(true);
-    expect(dayCell(tree, 22).props.disabled).toBe(false);
-    expect(dayCell(tree, 25).props.disabled).toBe(true);
+    expect(dayCell(tree, 21).props.disabled).toBe(true); // 2 days
+    expect(dayCell(tree, 22).props.disabled).toBe(false); // 3 days
+    expect(dayCell(tree, 24).props.disabled).toBe(false); // 5 days
+    expect(dayCell(tree, 25).props.disabled).toBe(true); // 6 days
+  });
+
+  it('with minDays above 1, tapping the start again never makes a same-day range', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      timeFormat: '24h',
+      range: { minDays: 2 },
+      onChange,
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorRangeTooShort(2));
+    expect(find(tree, 'dp-confirm').props.disabled).toBe(true);
   });
 
   it('shows the saved range on the screen field', () => {

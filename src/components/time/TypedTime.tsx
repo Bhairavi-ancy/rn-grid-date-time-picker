@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Keyboard,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import type { TextInputRef } from '../nativeTypes';
 import type { TimeBounds } from '../../core/constraints';
 import type { Period } from '../../core/segments';
@@ -16,7 +9,6 @@ import {
   type TimeKey,
 } from '../../core/timeEntry';
 import type { TimeFormat } from '../../core/types';
-import KeyboardDoneBar from '../field/KeyboardDoneBar';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
@@ -42,7 +34,6 @@ interface Props {
   testID?: string;
 }
 
-const DONE_BAR_ID = 'dateTimePickerTimeDoneBar';
 const PERIODS: Period[] = ['AM', 'PM'];
 
 /**
@@ -98,14 +89,17 @@ const TypedTime: React.FC<Props> = ({
             placeholderTextColor={tokens.placeholder}
             keyboardType="number-pad"
             maxLength={2}
+            // A digit typed into a full box replaces it rather than being
+            // dropped (the row jumps into the minutes after the hour).
+            selectTextOnFocus
             textAlign="center"
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             contextMenuHidden
             editable={!disabled}
             underlineColorAndroid="transparent"
-            inputAccessoryViewID={
-              Platform.OS === 'ios' ? DONE_BAR_ID : undefined
-            }
+            // iOS adds a Done button above the number pad for each box.
+            returnKeyType="done"
+            inputAccessoryViewButtonLabel={strings.done}
             onChangeText={(text) => onChangeBox(key, text)}
             onFocus={() => onFocusBox(key)}
             onBlur={() => onBlurBox(key)}
@@ -150,7 +144,7 @@ const TypedTime: React.FC<Props> = ({
                 }
                 accessibilityRole="radio"
                 accessibilityState={{
-                  selected,
+                  checked: selected,
                   disabled: !allowed || disabled,
                 }}
                 disabled={!allowed || disabled}
@@ -177,13 +171,6 @@ const TypedTime: React.FC<Props> = ({
           })}
         </View>
       ) : null}
-      <KeyboardDoneBar
-        nativeID={DONE_BAR_ID}
-        onDone={() => Keyboard.dismiss()}
-        tokens={tokens}
-        styles={styles}
-        strings={strings}
-      />
     </View>
   );
 };

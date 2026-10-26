@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
 
 /**
- * True while the keyboard is up inside the open picker, so the sheet folds the
- * calendar away and the box being typed in (and Confirm) stay visible on small
- * phones. The picker closes the keyboard before opening, so a keyboard that shows
- * while it's open belongs to one of its own boxes.
+ * True while the keyboard is up and the picker is open. The picker folds the
+ * calendar away then, so the box being typed in (and Confirm) stay visible on
+ * small phones; inline, it folds only while one of its own boxes has focus,
+ * since another field on the screen can raise the keyboard too.
  */
 export const useKeyboardFold = (active: boolean): boolean => {
   const [keyboardUp, setKeyboardUp] = useState(false);

@@ -25,6 +25,10 @@ const isValidTime = (t: Time | null | undefined): t is Time =>
   t.minute >= 0 &&
   t.minute <= 59;
 
+/** Years that ISO strings write with four digits, so they read back the same. */
+export const isWritableYear = (year: number): boolean =>
+  year >= 1 && year <= 9999;
+
 /**
  * A stored instant → its day and wall-clock time in `zone`, or null when it
  * can't be parsed. Shared by every built-in format for date-time values.
@@ -66,9 +70,11 @@ const fromWire = (
 ): DateTimeValue | null => {
   if (!value) return null;
   if (type !== 'date') return parseInstant(value, zone);
-  const utc = DateTime.fromISO(value, { zone: 'utc' });
-  if (!utc.isValid) return null;
-  return { date: calendarDateOf(utc), time: null };
+  // The calendar day as written: an offset in the string ('+05:30') is kept,
+  // not converted to UTC, so the day never moves.
+  const written = DateTime.fromISO(value, { setZone: true });
+  if (!written.isValid) return null;
+  return { date: calendarDateOf(written), time: null };
 };
 
 /**
@@ -81,6 +87,7 @@ const toWire = (
   zone: string
 ): string => {
   if (!value || !isValidCalendarDate(value.date)) return '';
+  if (!isWritableYear(value.date.year)) return '';
   if (type === 'date') {
     return (
       DateTime.utc(value.date.year, value.date.month, value.date.day).toISO() ??
@@ -93,7 +100,7 @@ const toWire = (
 /**
  * What to emit when the user confirms without changing anything.
  * - date-time keeps the stored instant, including seconds/ms (re-serialised as UTC ISO);
- * - date re-serialises the stored UTC day.
+ * - date re-serialises the stored day, as written, as UTC midnight.
  * Returns '' for an unparsable value.
  */
 const unchangedWire = (

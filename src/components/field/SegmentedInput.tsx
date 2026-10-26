@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import {
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -19,7 +18,6 @@ import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildFieldStyles } from './fieldStyles';
-import KeyboardDoneBar from './KeyboardDoneBar';
 
 interface Props {
   state: SegmentEditorState;
@@ -30,6 +28,8 @@ interface Props {
   tokens: ThemeTokens;
   styles?: PickerStyles;
   strings: PickerStrings;
+  /** The field's label, spoken before each segment's own name. */
+  fieldLabel?: string;
   testID?: string;
 }
 
@@ -58,8 +58,6 @@ const A11Y_LABEL = (strings: PickerStrings): Record<SegmentKey, string> => {
     period: strings.a11yPeriod,
   };
 };
-
-const DONE_BAR_ID = 'dateTimePickerDoneBar';
 
 /** Turns a controlled TextInput change into editor actions (typed digits, paste, delete). */
 export const changeToActions = (
@@ -104,16 +102,25 @@ const SegmentedInput: React.FC<Props> = ({
   tokens,
   styles,
   strings,
+  fieldLabel,
   testID,
 }) => {
-  // Text each box reported since the last render. Fast input (a hardware
-  // keyboard, autofill) sends the next character before React re-renders,
-  // and a full box keeps receiving characters until focus moves on.
-  const sinceRender = useRef<Partial<Record<SegmentKey, string>>>({});
-  sinceRender.current = {};
+  // Each box's text as last rendered, and as it last reported. Fast input (a
+  // hardware keyboard, autofill) sends the next character before React has
+  // re-rendered, and the native box may ignore React's reset while it's
+  // behind, so a change is read against whichever of the two it extends.
+  const boxText = useRef<
+    Partial<Record<SegmentKey, { rendered: string; reported?: string }>>
+  >({});
   const refs = useRef<Partial<Record<SegmentKey, TextInputRef | null>>>({});
   const s = buildFieldStyles(tokens);
-  const labels = A11Y_LABEL(strings);
+  // 'From, Day' and 'To, Day' read differently when the field has a label.
+  const own = A11Y_LABEL(strings);
+  const labels = fieldLabel
+    ? (Object.fromEntries(
+        Object.entries(own).map(([k, v]) => [k, `${fieldLabel}, ${v}`])
+      ) as Record<SegmentKey, string>)
+    : own;
   // Segment boxes fit their digits at the font size in use and the phone's
   // text size (up to the picker's cap), so nothing clips at large sizes.
   const { fontScale } = useWindowDimensions();
@@ -139,18 +146,21 @@ const SegmentedInput: React.FC<Props> = ({
   const renderNumeric = (spec: SegmentSpec, index: number) => {
     const text = state.values[spec.key] ?? '';
     const isFocused = state.focused === spec.key;
+    const track = boxText.current[spec.key] ?? { rendered: text };
+    track.rendered = text;
+    boxText.current[spec.key] = track;
     // After the last box fills, no segment is focused but the cursor stays in
     // that box: input there (a correction, Backspace) focuses it first.
     const claimFocus = () => {
       if (!(getState?.() ?? state).focused)
         dispatch({ type: 'focus', key: spec.key });
     };
+    // Backspace in a box that was already empty goes back to the previous
+    // one; the box's rendered text is checked, so a change that arrives first
+    // (and empties it) doesn't also delete in the previous box.
     const onKeyPress = (e: KeyPressEvent) => {
       claimFocus();
-      if (
-        e.nativeEvent.key === 'Backspace' &&
-        !(getState?.() ?? state).values[spec.key]
-      )
+      if (e.nativeEvent.key === 'Backspace' && !track.rendered)
         dispatch({ type: 'backspace' });
     };
     const separator =
@@ -184,7 +194,10 @@ const SegmentedInput: React.FC<Props> = ({
           keyboardType="number-pad"
           editable={!disabled}
           contextMenuHidden
-          inputAccessoryViewID={Platform.OS === 'ios' ? DONE_BAR_ID : undefined}
+          // iOS adds a Done button above the number pad for every box; it
+          // closes the keyboard (and blurs the box).
+          returnKeyType="done"
+          inputAccessoryViewButtonLabel={strings.done}
           onFocus={() => dispatch({ type: 'focus', key: spec.key })}
           onBlur={() => {
             if ((getState?.() ?? state).focused === spec.key)
@@ -192,11 +205,15 @@ const SegmentedInput: React.FC<Props> = ({
           }}
           onKeyPress={onKeyPress}
           onChangeText={(next) => {
-            // What was added since this box last showed something: its last
-            // reported text, or the value rendered into it since.
             claimFocus();
-            const before = sinceRender.current[spec.key] ?? text;
-            sinceRender.current[spec.key] = next;
+            const { rendered, reported } = track;
+            const before =
+              reported !== undefined &&
+              reported !== rendered &&
+              next.startsWith(reported)
+                ? reported
+                : rendered;
+            track.reported = next;
             changeToActions(before, next).forEach(dispatch);
           }}
           style={[
@@ -227,6 +244,7 @@ const SegmentedInput: React.FC<Props> = ({
         accessibilityRole="button"
         accessibilityLabel={labels.period}
         accessibilityValue={{ text: current ?? '' }}
+        accessibilityState={{ disabled }}
         disabled={disabled}
         onPress={toggle}
         hitSlop={8}
@@ -275,13 +293,6 @@ const SegmentedInput: React.FC<Props> = ({
           )}
         </View>
       ) : null}
-      <KeyboardDoneBar
-        nativeID={DONE_BAR_ID}
-        onDone={() => dispatch({ type: 'blur' })}
-        tokens={tokens}
-        styles={styles}
-        strings={strings}
-      />
     </View>
   );
 };

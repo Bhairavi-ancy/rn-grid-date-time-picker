@@ -47,6 +47,21 @@ export interface PickerState {
   confirm: () => void;
   /** Clears the saved value: calls `onChange('')` right away, as the built-in × does. */
   clear: () => void;
+  /**
+   * Date-time: the time being edited, for a custom `renderTimeRow`. Single:
+   * the draft's time (or one set before a day is picked); multiple: the shared
+   * time, or the active day's with `timeMode: 'perDate'`. Ranges use
+   * `rangeTimes`. Null when there's none yet.
+   */
+  time: Time | null;
+  /** Date-time ranges: the start and end times; null otherwise. */
+  rangeTimes: { from: Time | null; to: Time | null } | null;
+  /**
+   * Sets the draft's time, as the built-in time row does (before a day is
+   * picked, it's kept for that day). Ranges pass the end; the default is the
+   * end being edited.
+   */
+  setTime: (time: Time, end?: 'from' | 'to') => void;
   tokens: ThemeTokens;
   strings: PickerStrings;
 }
@@ -82,6 +97,8 @@ export interface SheetOptions {
   showField?: boolean;
   /** Placeholder of that field when it shows text. Default: from `dateFormat`, e.g. 'DD/MM/YYYY'. */
   fieldPlaceholder?: string;
+  /** The calendar icon at the end of that field, as on the on-screen field. Default false. */
+  fieldIcon?: boolean;
 }
 
 /** What `renderLabel` receives. */
@@ -109,6 +126,8 @@ export interface ConstraintContext {
   timeZone: string;
   now: Date;
   today: CalendarDate;
+  /** The current time in `timeZone`, e.g. for "no earlier than now" limits. */
+  nowTime: Time;
   /** The `holidays` prop plus every year loaded so far. */
   holidays: string[];
   /** The limit props, to merge into your own constraints. */
@@ -128,7 +147,10 @@ export interface DateTimePickerProps {
   type: PickerType;
   mode?: SelectionMode;
   value: PickerValue;
-  /** On Confirm (once), or on clear (with ''). */
+  /**
+   * A value was saved: on Confirm; as it's edited with commitMode 'instant';
+   * when typing in the on-screen field pauses; or '' on clear. Never on close.
+   */
   onChange: (value: PickerValue) => void;
   /** On Confirm only, right after onChange (like a form field losing focus). */
   onBlur?: () => void;
@@ -218,6 +240,19 @@ export interface DateTimePickerProps {
   showOutsideDays?: boolean;
   yearRange?: { first: number; last: number };
   initialView?: 'day' | 'month' | 'year';
+  /**
+   * What one pick is. 'month' and 'year' make the month or year grid the last
+   * step: the saved value is the first day of the period, the field shows
+   * "March 2026" or "2026", and a period can be picked when any day in it can.
+   * Single date pickers only (ignored for date-time, range and multiple), always
+   * in the Gregorian calendar, without typing. Default 'day'.
+   */
+  precision?: 'day' | 'month' | 'year';
+  /**
+   * With no value, the calendar opens on this day's month (e.g. 2000 for a
+   * date of birth) without selecting anything. Default: today.
+   */
+  initialVisibleDate?: CalendarDate;
   enableMonthSwipe?: boolean;
   showToday?: boolean;
   /** Default 'gregory'. Falls back to 'gregory' when the platform has no Hijri calendar. */

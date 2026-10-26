@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import type { SegmentEditorAction } from '../../core/segmentEditor';
 import type { ParsedSegments } from '../../core/segments';
 import type { DateTimeValue, PickerType, TimeFormat } from '../../core/types';
 import {
@@ -42,6 +43,8 @@ export interface ValueFieldProps {
    * the last box filled). Gets what the field holds then.
    */
   onTypingDone?: (parsed: ParsedSegments) => void;
+  /** One of its typed boxes gained or lost focus. */
+  onFocusChange?: (focused: boolean) => void;
   /** Tap on a display-only field, or on its calendar icon. */
   onPress?: () => void;
   allowClear?: boolean;
@@ -130,6 +133,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     allowTyping,
     onTyped,
     onTypingDone,
+    onFocusChange,
     onPress,
     allowClear,
     onClear,
@@ -164,6 +168,14 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     }
   );
 
+  const onFocusChangeRef = useRef(onFocusChange);
+  onFocusChangeRef.current = onFocusChange;
+  const hasFocus = !!state.focused;
+  useEffect(() => {
+    onFocusChangeRef.current?.(hasFocus);
+  }, [hasFocus]);
+  useEffect(() => () => onFocusChangeRef.current?.(false), []);
+
   const wasFocused = useRef(false);
   const onTypingDoneRef = useRef(onTypingDone);
   onTypingDoneRef.current = onTypingDone;
@@ -173,6 +185,14 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
       onTypingDoneRef.current?.(getState().parsed);
     wasFocused.current = focused;
   }, [state.focused, getState]);
+
+  // Switching AM/PM once no box is focused (after the minutes filled) is
+  // a finished edit of its own.
+  const dispatchTyped = (action: SegmentEditorAction) => {
+    dispatch(action);
+    if (action.type === 'period' && !getState().focused)
+      onTypingDoneRef.current?.(getState().parsed);
+  };
 
   const editable = !disabled && !readOnly;
   const typing = !!allowTyping && editable;
@@ -248,8 +268,9 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     <View style={fieldStyle}>
       <SegmentedInput
         state={state}
-        dispatch={dispatch}
+        dispatch={dispatchTyped}
         getState={getState}
+        fieldLabel={label}
         disabled={!editable}
         tokens={tokens}
         styles={styles}
@@ -277,7 +298,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
           s.text,
           styles?.fieldText,
           !text && [s.placeholder, styles?.fieldPlaceholder],
-          disabled && s.disabledText,
+          disabled && [s.disabledText, text ? styles?.fieldTextDisabled : null],
         ]}
       >
         {text ||

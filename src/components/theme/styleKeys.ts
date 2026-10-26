@@ -23,6 +23,8 @@ export const STYLE_KEYS = [
   'fieldError',
   'fieldDisabled',
   'fieldText',
+  /** The value's text while the field is disabled (the placeholder keeps its own colour). */
+  'fieldTextDisabled',
   'fieldPlaceholder',
   'fieldSegment',
   'fieldSegmentFocused',
@@ -79,11 +81,15 @@ export const STYLE_KEYS = [
   'yearCellSelected',
   'yearCellDisabled',
   'yearCellText',
+  /** The current year (outlined) in a year pick. */
+  'yearCellCurrent',
   'monthGrid',
   'monthCell',
   'monthCellSelected',
   'monthCellDisabled',
   'monthCellText',
+  /** The current month (outlined) in a month pick. */
+  'monthCellCurrent',
   // time
   'timeRow',
   'timeLabel',
@@ -102,16 +108,14 @@ export const STYLE_KEYS = [
   'wheelRowSelected',
   'wheelRowDisabled',
   'wheelText',
+  'wheelTextSelected',
+  'wheelTextDisabled',
   'wheelHighlight',
   // other
   'todayButton',
   'todayButtonText',
   'emptyState',
   'emptyStateText',
-  'holidayNotice',
-  'dstNotice',
-  'keyboardDoneBar',
-  'keyboardDoneText',
 ] as const;
 
 export type StyleKey = (typeof STYLE_KEYS)[number];

@@ -11,6 +11,8 @@ import { createConstraints } from '../../core/constraints';
 import { ChevronLeftIcon } from '../../icons';
 import Calendar, { type CalendarProps } from '../calendar/Calendar';
 import { buildCalendarStyles } from '../calendar/calendarStyles';
+import DateTimePicker from '../DateTimePicker';
+import { MonthChips } from '../calendar/CalendarHeader';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { DAY_HIT_SLOP, MAX_FONT_SCALE } from '../theme/a11y';
 import { DEFAULT_STRINGS } from '../theme/defaultStrings';
@@ -124,7 +126,7 @@ describe('accessibility', () => {
     ).toBe(true);
     const am = find(tree, 't-am');
     expect(am.props.accessibilityRole).toBe('radio');
-    expect(am.props.accessibilityState.selected).toBe(true);
+    expect(am.props.accessibilityState.checked).toBe(true);
   });
 
   it('useReduceMotion follows the system setting', async () => {
@@ -181,5 +183,71 @@ describe('right-to-left', () => {
     const rtl = mountCalendar();
     expect(icon(rtl, 'cal-prev-right')).toBe(true);
     expect(icon(rtl, 'cal-next-left')).toBe(true);
+  });
+});
+
+describe('segment labels', () => {
+  it('From and To segments read differently', () => {
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(
+        <DateTimePicker
+          type="date"
+          mode="range"
+          range={{ layout: 'fromTo' }}
+          value={{ from: '', to: '' }}
+          onChange={() => {}}
+          allowTyping
+          presentation="inline"
+          testID="dp"
+        />
+      );
+    });
+    const label = (id: string) =>
+      tree.root.findAllByType(TextInput).find((i) => i.props.testID === id)!
+        .props.accessibilityLabel;
+    expect(label('dp-from-segment-day')).toBe(
+      `${DEFAULT_STRINGS.from}, ${DEFAULT_STRINGS.a11yDay}`
+    );
+    expect(label('dp-to-segment-day')).toBe(
+      `${DEFAULT_STRINGS.to}, ${DEFAULT_STRINGS.a11yDay}`
+    );
+  });
+});
+
+describe('month chips', () => {
+  it('centres the selected chip from its measured position', () => {
+    const scrollTo = jest.fn();
+    const names = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(
+        <MonthChips
+          names={names}
+          fullNames={names}
+          selectedMonth={10}
+          isEnabled={() => true}
+          onSelect={() => {}}
+          tokens={buildTokens()}
+          strings={DEFAULT_STRINGS}
+          testID="dp"
+        />,
+        { createNodeMock: () => ({ scrollTo }) }
+      );
+    });
+    const row = tree.root.findAll(
+      (n) => n.props.horizontal && typeof n.type !== 'string'
+    )[0]!;
+    act(() => row.props.onLayout({ nativeEvent: { layout: { width: 300 } } }));
+    const chip = tree.root.findAll(
+      (n) => n.props.testID === 'dp-chip-10' && typeof n.type !== 'string'
+    )[0]!;
+    act(() =>
+      chip.props.onLayout({ nativeEvent: { layout: { x: 700, width: 120 } } })
+    );
+    // 700 − (300 − 120) / 2. The Jest preset's ScrollView keeps its own scrollTo.
+    const own = (row.instance as { scrollTo?: jest.Mock } | null)?.scrollTo;
+    const calls = [...scrollTo.mock.calls, ...(own?.mock?.calls ?? [])];
+    expect(calls.at(-1)?.[0]).toEqual({ x: 610, animated: false });
   });
 });

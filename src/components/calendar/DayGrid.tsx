@@ -101,13 +101,13 @@ const DayGrid: React.FC<DayGridProps> = ({
       const status = constraints.dayStatus(cell.date);
       const { selected, role } = selectionOf(selection, cell.date);
       const isToday = isSameDay(cell.date, today);
+      // Selected and unavailable are announced from the cell's state, so the
+      // label only adds what the state can't say.
       const parts = [fullDateLabel(locale, cell.date)];
       if (isToday) parts.push(strings.a11yToday);
-      if (selected) parts.push(strings.a11ySelected);
       if (role === 'start') parts.push(strings.a11yRangeStart);
       if (role === 'end') parts.push(strings.a11yRangeEnd);
       if (status.holiday) parts.push(strings.a11yHoliday);
-      if (status.disabled) parts.push(strings.a11yUnavailable);
       return {
         date: cell.date,
         inMonth: cell.inMonth,

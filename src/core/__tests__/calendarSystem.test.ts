@@ -100,3 +100,18 @@ describe('resolveCalendarSystem', () => {
     expect(toHijri({ year: 2026, month: 10, day: 21 })).toBeNull();
   });
 });
+
+describe('Hijri edge inputs', () => {
+  it('keeps a locale that already has a Unicode extension', () => {
+    const plain = hijriMonthNames('ar-SA');
+    const extended = hijriMonthNames('ar-SA-u-nu-arab');
+    expect(extended).toEqual(plain);
+    expect(extended[0]).not.toBe('Muharram');
+  });
+
+  it('reads years below 100 as written, not as 19xx', () => {
+    expect(toHijri({ year: 50, month: 6, day: 1 })).not.toEqual(
+      toHijri({ year: 1950, month: 6, day: 1 })
+    );
+  });
+});

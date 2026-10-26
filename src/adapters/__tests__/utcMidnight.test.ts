@@ -188,3 +188,36 @@ describe('formatUnchanged (what an untouched Confirm emits)', () => {
     expect(unchangedWire('nope', 'datetime')).toBe('');
   });
 });
+
+describe('utcMidnightAdapter: dates written with an offset', () => {
+  const ctx = { type: 'date' as const, timeZone: 'America/Los_Angeles' };
+  it.each([
+    '2026-10-24T00:00:00.000Z',
+    '2026-10-24T00:00:00+05:30',
+    '2026-10-24T23:00:00-05:00',
+    '2026-10-24',
+  ])('%s reads as 24 Oct', (raw) => {
+    expect(utcMidnightAdapter.parse(raw, ctx)).toEqual({
+      date: { year: 2026, month: 10, day: 24 },
+      time: null,
+    });
+  });
+
+  it('an unchanged Confirm keeps the written day', () => {
+    expect(
+      utcMidnightAdapter.formatUnchanged?.('2026-10-24T00:00:00+05:30', ctx)
+    ).toBe('2026-10-24T00:00:00.000Z');
+  });
+});
+
+describe('utcMidnightAdapter: years it can write', () => {
+  it('saves nothing for a year outside 1–9999', () => {
+    const ctx = { type: 'date' as const, timeZone: 'UTC' };
+    expect(
+      utcMidnightAdapter.format(
+        { date: { year: 10000, month: 1, day: 1 }, time: null },
+        ctx
+      )
+    ).toBe('');
+  });
+});
