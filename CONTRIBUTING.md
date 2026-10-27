@@ -124,7 +124,7 @@ When you're sending a pull request:
 
 Releases are published to npm by the `Release` workflow (`.github/workflows/release.yml`) when a GitHub release is published. It runs the same checks as CI, then `npm publish --provenance --access public`.
 
-Before the first release, the repository owner must add an npm automation token as the `NPM_TOKEN` repository secret and the private scrub terms as `SCRUB_PATTERNS` (Settings → Secrets and variables → Actions). Provenance needs the repository to be public.
+The workflow signs in to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored. On npmjs.com, the package's Settings → Trusted Publisher lists this repository and the `release.yml` workflow. The private scrub terms go in the `SCRUB_PATTERNS` repository secret (Settings → Secrets and variables → Actions). Provenance needs the repository to be public.
 
 To release:
 
