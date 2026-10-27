@@ -12,6 +12,7 @@ import type {
   SegmentEditorAction,
   SegmentEditorState,
 } from '../../core/segmentEditor';
+import { toLatinDigits } from '../../core/digits';
 import type { Period, SegmentKey, SegmentSpec } from '../../core/segments';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
@@ -204,8 +205,10 @@ const SegmentedInput: React.FC<Props> = ({
               dispatch({ type: 'blur' });
           }}
           onKeyPress={onKeyPress}
-          onChangeText={(next) => {
+          onChangeText={(raw) => {
             claimFocus();
+            // An Arabic or Persian number pad types ٠–٩ / ۰–۹.
+            const next = toLatinDigits(raw);
             const { rendered, reported } = track;
             const before =
               reported !== undefined &&
