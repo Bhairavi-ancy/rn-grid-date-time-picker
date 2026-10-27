@@ -7,7 +7,11 @@ export { DateTimePicker };
 export { createConstraints } from './core/constraints';
 export { isoAdapter, utcMidnightAdapter } from './adapters';
 export { DEFAULT_STRINGS } from './components/theme/defaultStrings';
-export { DEFAULT_TOKENS, SYSTEM_FONTS } from './components/theme/tokens';
+export {
+  DEFAULT_TOKENS,
+  INTER_FONTS,
+  SYSTEM_FONTS,
+} from './components/theme/tokens';
 export { DEFAULT_YEAR_RANGE } from './components/types';
 export { normalizeDateFormat } from './core/locale';
 export {

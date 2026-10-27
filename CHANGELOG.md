@@ -15,7 +15,7 @@ Initial release.
 - Gregorian, dual and Hijri (Umm al-Qura) calendars, with a Gregorian fallback.
 - Locale-based defaults for the date order and the clock (through `Intl`) and for the first day of the week (from the locale's region).
 - Theme tokens, `styles` keys for every part, `strings` for every text, and render props for the sheet, field, label, instruction, days, cells and time row.
-- Inter is the default font (`Inter-Regular`, `Inter-Medium`, `Inter-SemiBold`, loaded by the app). `SYSTEM_FONTS` switches to the system font.
+- The system font by default, so there's nothing to load. `INTER_FONTS` switches to Inter (`Inter-Regular`, `Inter-Medium`, `Inter-SemiBold`, loaded by the app); `SYSTEM_FONTS` switches back.
 - A `fontFamily` token that sets the font for all text, next to the per-weight `fontRegular` / `fontMedium` / `fontSemiBold`.
 - `icons` replaces any icon with your own component or hides it, and `iconProps` sets each icon's colour, disabled colour, size, width and height.
 - `renderField` receives `displayText` and `clear`, so your own input can show the value and clear it. `renderTimeRow` receives `time`, `rangeTimes` and `setTime`, so your own time row can change the time.

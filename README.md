@@ -428,8 +428,8 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `disabledText` | `#9CA3AF` | Disabled text, greyed days |
 | `rangeFill` | `#DBEAFE` | Range band |
 | `holiday` | `#DC2626` | Holiday days |
-| `fontFamily` | `undefined` | One family for all text, at weight 400 / 500 / 600 as each part needs. Setting it replaces the default Inter files |
-| `fontRegular`, `fontMedium`, `fontSemiBold` | `'Inter-Regular'`, `'Inter-Medium'`, `'Inter-SemiBold'` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `SYSTEM_FONTS` clears all four for the system font |
+| `fontFamily` | `undefined` (system font) | One family for all text, at weight 400 / 500 / 600 as each part needs |
+| `fontRegular`, `fontMedium`, `fontSemiBold` | `undefined` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `INTER_FONTS` sets all four to Inter, `SYSTEM_FONTS` clears them |
 | `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field (the Hijri day under a dual cell is 75% of it) |
 | `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, time boxes, AM / PM toggle |
 | `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time label, wheel |
@@ -441,28 +441,26 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 
 ### Fonts
 
-The default font is **Inter**, looked up under the names of its static files: `Inter-Regular` (400), `Inter-Medium` (500) and `Inter-SemiBold` (600). The package doesn't ship or load font files, so your app loads them:
+The picker uses the system font by default (San Francisco on iOS, Roboto on Android) at weights 400 / 500 / 600, so there's nothing to load.
+
+The picker was designed with **Inter**. To use it, load its static files under these names and pass `INTER_FONTS`. The package doesn't ship or load font files:
 
 ```tsx
 // Expo
 import { useFonts } from 'expo-font';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { INTER_FONTS } from 'rn-calendar-time-picker';
 
 const [loaded] = useFonts({
   'Inter-Regular': Inter_400Regular,
   'Inter-Medium': Inter_500Medium,
   'Inter-SemiBold': Inter_600SemiBold,
 });
+
+<DateTimePicker theme={{ ...INTER_FONTS }} … />
 ```
 
-In a bare app, add `Inter-Regular.ttf`, `Inter-Medium.ttf` and `Inter-SemiBold.ttf` to your fonts folder (`react-native.config.js` → `assets`) and run `npx react-native-asset`.
-
-If the app doesn't load Inter, iOS and Android quietly fall back to the system font, but every text is drawn at the regular weight. To use the system font with its weights instead, pass `SYSTEM_FONTS`:
-
-```tsx
-import { SYSTEM_FONTS } from 'rn-calendar-time-picker';
-<DateTimePicker theme={{ ...SYSTEM_FONTS }} … />
-```
+In a bare app, add `Inter-Regular.ttf`, `Inter-Medium.ttf` and `Inter-SemiBold.ttf` to your fonts folder (`react-native.config.js` → `assets`) and run `npx react-native-asset`. If a family isn't loaded, iOS and Android fall back to the system font, but every text is drawn at the regular weight.
 
 Every text in the picker takes its family and size from these tokens, so one `theme` sets the font for all of it:
 
