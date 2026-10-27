@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - `numerals="locale"` draws every number (day numbers, years, the field text, typed segments, time boxes and the wheel) in the locale's own digits, for example ١٢٣ for `ar-SA`. The default `'latin'` keeps 0–9, and values stay 0–9 either way.
 
+### Fixed
+
+- On Android, Arabic locales such as `ar-SA` fell back to the `yyyy-MM-dd` order, because Hermes labels the year differently. The date order now follows the locale (`dd/MM/yyyy` for `ar-SA`).
+
 ## [1.0.1] - 2026-10-27
 
 ### Fixed

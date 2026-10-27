@@ -8,10 +8,12 @@ import type { TimeFormat, Weekday } from './types';
 const FALLBACK_LOCALE = 'en-US';
 const FALLBACK_DATE_FORMAT = 'yyyy-MM-dd';
 const SEPARATORS = ['/', '-', '.'];
-const DATE_TOKENS: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {
+const DATE_TOKENS: Partial<Record<string, string>> = {
   day: 'dd',
   month: 'MM',
   year: 'yyyy',
+  // Hermes on Android labels the year of some locales (ar-SA) this way.
+  yearName: 'yyyy',
 };
 
 /** The device locale (a BCP-47 tag), or 'en-US'. */
@@ -42,7 +44,10 @@ export const deriveDateFormat = (locale: string): string => {
       !['dd', 'MM', 'yyyy'].every((t) => tokens.includes(t))
     )
       return FALLBACK_DATE_FORMAT;
-    const first = parts.find((p) => p.type === 'literal')?.value ?? '';
+    // RTL locales mark the separator with a direction mark ('\u200F/').
+    const first = (
+      parts.find((p) => p.type === 'literal')?.value ?? ''
+    ).replace(/[\u200E\u200F\u061C]/g, '');
     const separator = SEPARATORS.includes(first) ? first : '/';
     return tokens.join(separator);
   } catch {
