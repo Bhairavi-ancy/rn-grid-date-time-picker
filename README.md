@@ -1,6 +1,44 @@
 # rn-calendar-time-picker
 
+[![npm version](https://img.shields.io/npm/v/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![npm downloads](https://img.shields.io/npm/dm/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![CI](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml)
+[![types](https://img.shields.io/npm/types/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![license](https://img.shields.io/npm/l/rn-calendar-time-picker)](./LICENSE)
+![Expo Go](https://img.shields.io/badge/Expo%20Go-compatible-000020)
+
 A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.
+
+<!--
+  Screenshots: add images to docs/ and uncomment. Use absolute raw.githubusercontent.com
+  URLs so they also show on npmjs.com, e.g.
+  https://raw.githubusercontent.com/Bhairavi-ancy/rn-calendar-time-picker/main/docs/range.gif
+
+<p align="center">
+  <img src="…/docs/single.png" width="240" alt="Single date in a bottom sheet" />
+  <img src="…/docs/range.gif" width="240" alt="Picking a date range" />
+  <img src="…/docs/datetime.png" width="240" alt="Date and time with typed segments" />
+</p>
+-->
+
+<!--
+  Live demo: after publishing, create a Snack (see CONTRIBUTING.md) and uncomment.
+
+**[Try it in Expo Snack →](https://snack.expo.dev/@your-account/rn-calendar-time-picker)**
+-->
+
+- [Features](#features)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Values](#values)
+- [Props](#props)
+- [Limits & greying](#limits--greying)
+- [Presentation](#presentation-1) · [Field and typing](#field-and-typing) · [Time](#time-1)
+- [Locale, RTL & Hijri](#locale-rtl--hijri)
+- [Theming](#theming) · [Icons](#icons) · [Strings / i18n](#strings--i18n)
+- [Your own validation](#your-own-validation) · [Your own input](#your-own-input)
+- [Accessibility](#accessibility) · [Testing](#testing)
+- [Platform support and known limits](#platform-support-and-known-limits)
 
 ## Features
 
