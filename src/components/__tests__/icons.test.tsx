@@ -1,8 +1,15 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import type { ComponentType, ReactElement } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
-import { CalendarIcon, ClearIcon, type IconRenderProps } from '../../icons';
+import {
+  CalendarIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClearIcon,
+  type IconRenderProps,
+} from '../../icons';
 import DateTimePicker from '../DateTimePicker';
 import ValueField, { type ValueFieldProps } from '../field/ValueField';
 import { DEFAULT_STRINGS } from '../theme/defaultStrings';
@@ -115,6 +122,15 @@ describe('icons: colour, size and replacements', () => {
         n.props.size === 30
     );
     expect(caret).toBeTruthy();
+  });
+
+  it('chevrons draw left to right, so RTL swapping their borders does not turn them', () => {
+    const p = { color: '#000', size: 24, width: 24, height: 24 };
+    for (const Icon of [ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon]) {
+      const tree = mount(<Icon {...p} />);
+      const outer = tree.root.findAllByType(View)[0]!;
+      expect(StyleSheet.flatten(outer.props.style).direction).toBe('ltr');
+    }
   });
 });
 

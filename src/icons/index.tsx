@@ -37,6 +37,8 @@ export type IconSet = Record<IconName, IconComponent | null>;
 
 const s = StyleSheet.create({
   box: { alignItems: 'center', justifyContent: 'center' },
+  // RTL swaps left and right borders, which would move a chevron's corner.
+  ltr: { direction: 'ltr' },
   bar: { position: 'absolute' },
   frame: { overflow: 'hidden' },
 });
@@ -53,7 +55,7 @@ const Chevron: React.FC<IconRenderProps & { rotate: string }> = ({
 }) => {
   const side = size * 0.4;
   return (
-    <View style={[s.box, { width, height }]}>
+    <View style={[s.box, s.ltr, { width, height }]}>
       <View
         style={{
           width: side,
