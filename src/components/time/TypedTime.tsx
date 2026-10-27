@@ -12,6 +12,7 @@ import type { TimeFormat } from '../../core/types';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildTimeStyles } from './timeStyles';
 
@@ -59,6 +60,7 @@ const TypedTime: React.FC<Props> = ({
   strings,
   testID,
 }) => {
+  const digits = useNumerals();
   const s = buildTimeStyles(tokens);
 
   const box = (key: TimeKey) => (
@@ -78,7 +80,7 @@ const TypedTime: React.FC<Props> = ({
             accessibilityLabel={
               key === 'hour' ? strings.a11yHour : strings.a11yMinute
             }
-            value={values[key] ?? ''}
+            value={digits(values[key] ?? '')}
             placeholder={
               key === 'minute'
                 ? strings.placeholderMinute

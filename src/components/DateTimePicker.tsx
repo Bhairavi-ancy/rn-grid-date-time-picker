@@ -27,6 +27,7 @@ import {
   deriveTimeFormat,
   normalizeDateFormat,
 } from '../core/locale';
+import { latinDigits, localeDigits } from '../core/numerals';
 import { withSelectionRules } from '../core/selectionRules';
 import type { ParsedSegments } from '../core/segments';
 import { checkTime, type TimeEntryIssue } from '../core/timeEntry';
@@ -39,6 +40,7 @@ import type {
 } from '../core/types';
 import Calendar from './calendar/Calendar';
 import { localeNames } from './calendar/localeNames';
+import { NumeralsContext } from './theme/numerals';
 import type { CalendarSelection } from './calendar/selection';
 import PickerContainer from './container/PickerContainer';
 import {
@@ -148,6 +150,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     validate,
     yearRange: yearRangeProp = DEFAULT_YEAR_RANGE,
     locale,
+    numerals = 'latin',
     timeZone,
     now,
     timeFormat: timeFormatProp,
@@ -180,6 +183,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     [stringOverrides]
   );
   const loc = useMemo(() => locale ?? defaultLocale(), [locale]);
+  const digits = useMemo(
+    () => (numerals === 'locale' ? localeDigits(loc) : latinDigits),
+    [numerals, loc]
+  );
   const firstDayOfWeek = firstDayProp ?? deriveFirstDayOfWeek(loc);
   // Month and year picks are for single dates only.
   const precision =
@@ -954,8 +961,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     type,
     mode,
     value,
-    displayText:
-      savedText ?? formatValueText(savedSingle, type, dateFormat, timeFormat),
+    displayText: digits(
+      savedText ?? formatValueText(savedSingle, type, dateFormat, timeFormat)
+    ),
     disabled,
     readOnly,
     isOpen,
@@ -1212,7 +1220,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   );
 
   return (
-    <>
+    <NumeralsContext.Provider value={digits}>
       {trigger}
       <PickerContainer
         presentation={presentation}
@@ -1235,7 +1243,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       >
         {sheetContent}
       </PickerContainer>
-    </>
+    </NumeralsContext.Provider>
   );
 };
 

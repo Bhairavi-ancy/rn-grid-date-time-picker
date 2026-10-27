@@ -13,6 +13,7 @@ import {
 import { useTypedSegments } from '../hooks/useTypedSegments';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import type { InstructionRenderProps, LabelRenderProps } from '../types';
 import FieldMessages from './FieldMessages';
@@ -123,6 +124,7 @@ const DefaultInstruction: React.FC<
  * results go to `onTyped`, and the sheet decides what to do with them.
  */
 const ValueField: React.FC<ValueFieldProps> = (props) => {
+  const digits = useNumerals();
   const {
     type,
     value,
@@ -301,7 +303,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
           disabled && [s.disabledText, text ? styles?.fieldTextDisabled : null],
         ]}
       >
-        {text ||
+        {digits(text) ||
           placeholder ||
           placeholderText(type, dateFormat, timeFormat, strings)}
       </Text>
