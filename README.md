@@ -2,17 +2,18 @@
 
 [![npm version](https://img.shields.io/npm/v/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
 [![npm downloads](https://img.shields.io/npm/dm/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
-[![CI](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml)
+[![CI](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/actions/workflows/ci.yml)
 [![types](https://img.shields.io/npm/types/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
 [![license](https://img.shields.io/npm/l/rn-grid-date-time-picker)](./LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-blue)
 ![Expo Go](https://img.shields.io/badge/Expo%20Go-compatible-000020)
 
-A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.
+A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Runs on **iOS and Android**. Pure JS, so it also works in Expo Go and bare React Native apps.
 
 <!--
   Screenshots: add images to docs/ and uncomment. Use absolute raw.githubusercontent.com
   URLs so they also show on npmjs.com, e.g.
-  https://raw.githubusercontent.com/Bhairavi-ancy/rn-calendar-time-picker/main/docs/range.gif
+  https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/range.gif
 
 <p align="center">
   <img src="…/docs/single.png" width="240" alt="Single date in a bottom sheet" />
