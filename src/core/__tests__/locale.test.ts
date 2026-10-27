@@ -8,6 +8,10 @@ import {
 } from '../locale';
 
 describe('deriveDateFormat', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('follows the locale order and separator', () => {
     expect(deriveDateFormat('en-US')).toBe('MM/dd/yyyy');
     expect(deriveDateFormat('en-GB')).toBe('dd/MM/yyyy');
@@ -21,6 +25,21 @@ describe('deriveDateFormat', () => {
 
   it('falls back to yyyy-MM-dd for an invalid locale', () => {
     expect(deriveDateFormat('not a locale!')).toBe('yyyy-MM-dd');
+  });
+
+  it("reads the order when the year comes as 'yearName' and the separator has a direction mark", () => {
+    // What Hermes on Android returns for 'ar-SA'.
+    const parts = [
+      { type: 'day', value: '٢٢' },
+      { type: 'literal', value: '\u200F-' },
+      { type: 'month', value: '١١' },
+      { type: 'literal', value: '\u200F-' },
+      { type: 'yearName', value: '٢٠٠٦' },
+    ];
+    jest
+      .spyOn(Intl, 'DateTimeFormat')
+      .mockImplementation((() => ({ formatToParts: () => parts })) as never);
+    expect(deriveDateFormat('ar-SA')).toBe('dd-MM-yyyy');
   });
 });
 
