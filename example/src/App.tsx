@@ -1,179 +1,66 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
-  Modal,
-  Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import DateTimePicker, {
-  INTER_FONTS,
   type DateTimePickerProps,
-  type IconRenderProps,
-  type PickerState,
-  type PickerStrings,
   type PickerValue,
-  type SheetRenderProps,
-  type ThemeTokens,
-  type ValueAdapter,
-} from 'rn-calendar-time-picker';
+} from 'rn-grid-date-time-picker';
+import { CodeSheet, type LogEntry } from './playground/CodeSheet';
+import {
+  CATEGORIES,
+  PRESETS,
+  buildProps,
+  initialConfig,
+  isVisible,
+  presetConfig,
+  toJsx,
+  type Choice,
+  type Config,
+  type Preset,
+} from './playground/config';
+import { PALETTES } from './playground/fixtures';
+import {
+  GroupControl,
+  PillTabs,
+  PresetCard,
+  TextButton,
+  colors,
+  fonts,
+  mono,
+} from './playground/ui';
 
-/** One demo: a title, the picker, and its current value as JSON. */
-function Demo({
-  title,
-  initial = '',
-  children,
-}: {
-  title: string;
-  initial?: PickerValue;
-  children: (
-    value: PickerValue,
-    onChange: (v: PickerValue) => void
-  ) => ReactNode;
-}) {
-  const [value, setValue] = useState<PickerValue>(initial);
-  return (
-    <View style={styles.demo}>
-      <Text style={styles.title}>{title}</Text>
-      {children(value, setValue)}
-      <Text style={styles.json}>{JSON.stringify(value)}</Text>
-    </View>
-  );
-}
+/** Chips that change the value's shape or format, so the value starts empty. */
+const VALUE_KEYS = ['type', 'mode', 'valueFormat', 'precision'];
 
-/** Props every demo shares. */
-const common = (
-  value: PickerValue,
-  onChange: (v: PickerValue) => void
-): Pick<DateTimePickerProps, 'value' | 'onChange' | 'allowClear'> => {
-  return { value, onChange, allowClear: true };
-};
+const emptyValue = (mode: Choice): PickerValue =>
+  mode === 'multiple' ? [] : mode === 'range' ? { from: '', to: '' } : '';
 
-// Holidays "from a server": a few fixed days in each year, loaded once per year.
-const loadHolidays = (year: number) =>
-  new Promise<string[]>((resolve) =>
-    setTimeout(
-      () => resolve([`${year}-01-01`, `${year}-05-01`, `${year}-12-25`]),
-      300
-    )
-  );
+const isEmpty = (value: PickerValue) =>
+  typeof value === 'string'
+    ? !value
+    : Array.isArray(value)
+      ? !value.length
+      : !value.from && !value.to;
 
-const today = new Date();
-const thisMonth = { year: today.getFullYear(), month: today.getMonth() + 1 };
-
-const greenTheme: Partial<ThemeTokens> = {
-  accent: '#047857',
-  rangeFill: '#D1FAE5',
-  radius: 14,
-};
-
-const frenchStrings: Partial<PickerStrings> = {
-  titleDate: 'Choisir une date',
-  confirm: 'Valider',
-  clear: 'Effacer',
-  today: "Aujourd'hui",
-  time: 'Heure',
-  from: 'Du',
-  to: 'Au',
-  errorNotAllowed: "Cette date n'est pas disponible",
-  a11yOpen: 'Ouvrir le calendrier',
-  a11yClear: 'Effacer la date',
-};
-
-// A system serif, so the font demo needs no font files.
-const serif = Platform.select({ ios: 'Georgia', default: 'serif' });
-
-/** An app's own clear icon: a round badge with a cross, in the colour it's given. */
-const RoundClearIcon = ({ color, size }: IconRenderProps) => (
-  <View
-    style={[
-      styles.roundClear,
-      { width: size, height: size, borderRadius: size / 2, borderColor: color },
-    ]}
-  >
-    <Text style={[styles.roundClearText, { color, fontSize: size * 0.6 }]}>
-      ×
-    </Text>
-  </View>
-);
-
-/** An app's own sheet header: a question and a Close button. */
-const renderStartHeader = (state: PickerState) => (
-  <View style={styles.sheetHeader}>
-    <Text style={styles.title}>When does it start?</Text>
-    <Pressable accessibilityRole="button" onPress={state.close}>
-      <Text style={styles.sheetHeaderClose}>Close</Text>
-    </Pressable>
-  </View>
-);
-
-/** A centred card instead of the built-in bottom sheet. */
-const renderCardSheet = ({
-  onRequestClose,
-  body,
-  footer,
-}: SheetRenderProps) => (
-  <Modal
-    visible
-    transparent
-    animationType="fade"
-    onRequestClose={onRequestClose}
-  >
-    <View style={styles.cardBackdrop}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Close"
-        style={StyleSheet.absoluteFill}
-        onPress={onRequestClose}
-      />
-      <View style={styles.card}>
-        {body}
-        {footer}
-      </View>
-    </View>
-  </Modal>
-);
-
-/**
- * Stores date-times as epoch milliseconds, read and written through a JS Date
- * in the device zone.
- */
-const epochAdapter: ValueAdapter = {
-  parse: (raw) => {
-    const d = new Date(Number(raw));
-    if (!raw || Number.isNaN(d.getTime())) return null;
-    return {
-      date: {
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        day: d.getDate(),
-      },
-      time: { hour: d.getHours(), minute: d.getMinutes() },
-    };
-  },
-  format: ({ date, time }) =>
-    time
-      ? String(
-          new Date(
-            date.year,
-            date.month - 1,
-            date.day,
-            time.hour,
-            time.minute
-          ).getTime()
-        )
-      : '',
-};
+const FIRST = PRESETS[0]!;
 
 export default function App() {
-  // Inter under the names INTER_FONTS looks for (the "Inter" demo below).
+  // Inter under the names INTER_FONTS looks for (the "INTER_FONTS" theme chip),
+  // and for the playground's own text.
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
@@ -181,284 +68,319 @@ export default function App() {
   });
   if (!fontsLoaded) return null;
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
+    <SafeAreaProvider>
       <StatusBar style="dark" />
-      <Text style={styles.heading}>rn-calendar-time-picker</Text>
+      <Playground />
+    </SafeAreaProvider>
+  );
+}
 
-      <Demo title="Date">
-        {(v, set) => (
-          <DateTimePicker type="date" label="Due date" {...common(v, set)} />
-        )}
-      </Demo>
+function Playground() {
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const [config, setConfig] = useState<Config>(() => presetConfig(FIRST));
+  const [preset, setPreset] = useState<Preset | null>(FIRST);
+  const [edited, setEdited] = useState(false);
+  const [value, setValue] = useState<PickerValue>('');
+  const [tab, setTab] = useState('presets');
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [events, setEvents] = useState<LogEntry[]>([]);
+  const nextId = useRef(0);
 
-      <Demo title="Date-time, typed">
-        {(v, set) => (
-          <DateTimePicker
-            type="datetime"
-            label="Starts at"
-            allowTyping
-            allowFieldTyping
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
+  const log = (name: string, detail?: unknown) => {
+    const at = new Date().toTimeString().slice(0, 8);
+    const entry = {
+      id: nextId.current++,
+      at,
+      name,
+      detail: detail === undefined ? undefined : JSON.stringify(detail),
+    };
+    setEvents((prev) => [entry, ...prev].slice(0, 30));
+  };
 
-      <Demo title="Date-time, wheel, 24-hour, 15-minute steps">
-        {(v, set) => (
-          <DateTimePicker
-            type="datetime"
-            timeInput="wheel"
-            timeFormat="24h"
-            minuteStep={15}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
+  const choose = (key: string, choice: Choice) => {
+    const next = { ...config, [key]: choice };
+    setConfig(next);
+    setEdited(true);
+    if (VALUE_KEYS.includes(key)) setValue(emptyValue(next.mode!));
+  };
 
-      <Demo title="Range in one field" initial={{ from: '', to: '' }}>
-        {(v, set) => (
-          <DateTimePicker type="date" mode="range" {...common(v, set)} />
-        )}
-      </Demo>
+  const applyPreset = (p: Preset) => {
+    const next = presetConfig(p);
+    setConfig(next);
+    setPreset(p);
+    setEdited(false);
+    setValue(emptyValue(next.mode!));
+  };
 
-      <Demo
-        title="Range, From / To, 2 to 7 days"
-        initial={{ from: '', to: '' }}
+  const resetAll = () => {
+    setConfig(initialConfig());
+    setPreset(null);
+    setEdited(false);
+    setValue('');
+    setEvents([]);
+  };
+
+  const entries = useMemo(
+    () =>
+      buildProps(config, {
+        onReset: () => {
+          log('onReset');
+          setValue(emptyValue(config.mode!));
+        },
+      }),
+    // `log` only calls state setters.
+
+    [config]
+  );
+  const props = Object.fromEntries(
+    entries.map((e) => [e.name, e.value])
+  ) as Omit<DateTimePickerProps, 'value' | 'onChange'>;
+
+  const categories = CATEGORIES.filter((cat) =>
+    cat.groups.some((g) => isVisible(g, config))
+  );
+  const tabs = [
+    { key: 'presets', label: 'Presets' },
+    ...categories.map((cat) => ({
+      key: cat.key,
+      // The one selection tab names the mode it's showing.
+      label:
+        cat.key === 'selection'
+          ? config.mode === 'range'
+            ? 'Range'
+            : 'Multiple'
+          : cat.label,
+    })),
+  ];
+  const current = categories.find((cat) => cat.key === tab);
+  const activeTab = current ? tab : 'presets';
+
+  const palette = PALETTES[config.palette as string]!.tokens;
+  const inline = config.presentation === 'inline';
+  // A fresh picker when the value's shape or the layout changes.
+  const pickerKey = [
+    'type',
+    'mode',
+    'valueFormat',
+    'precision',
+    'presentation',
+    'calendarSystem',
+  ]
+    .map((k) => config[k])
+    .join('|');
+
+  return (
+    <View style={styles.screen}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.headerText}>
+          <Text style={styles.heading}>Date & time picker</Text>
+          <Text style={styles.subheading}>rn-grid-date-time-picker</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TextButton label="Reset" onPress={resetAll} />
+          <TextButton label="Code" onPress={() => setCodeOpen(true)} strong />
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.stage,
+          { backgroundColor: palette.background ?? colors.surface },
+        ]}
       >
-        {(v, set) => (
+        <View style={styles.stageBar}>
+          <Text
+            style={[
+              styles.stageTag,
+              { color: palette.mutedText ?? colors.muted },
+            ]}
+          >
+            {preset ? preset.title.toUpperCase() : 'DEFAULTS'}
+            {edited ? ' · EDITED' : ''}
+          </Text>
+          <Text
+            style={[
+              styles.stageHint,
+              { color: palette.mutedText ?? colors.faint },
+            ]}
+          >
+            {inline ? 'Inline' : 'Tap the field to open'}
+          </Text>
+        </View>
+        <ScrollView
+          style={[styles.stageScroll, { maxHeight: height * 0.46 }]}
+          contentContainerStyle={styles.stageContent}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+        >
           <DateTimePicker
-            type="date"
-            mode="range"
-            range={{ layout: 'fromTo', minDays: 2, maxDays: 7 }}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Multiple dates, each with its own time" initial={[]}>
-        {(v, set) => (
-          <DateTimePicker
-            type="datetime"
-            mode="multiple"
-            multiple={{ timeMode: 'perDate', maxSelections: 5 }}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Inline">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            presentation="inline"
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Limits: this month and next, weekdays only, holidays loaded">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            minDate={{ ...thisMonth, day: 1 }}
-            maxDate={{
-              year:
-                thisMonth.month === 12 ? thisMonth.year + 1 : thisMonth.year,
-              month: (thisMonth.month % 12) + 1,
-              day: 28,
+            key={pickerKey}
+            {...props}
+            value={value}
+            onChange={(v) => {
+              log('onChange', v);
+              setValue(v);
             }}
-            disabledWeekdays={[6, 7]}
-            loadHolidays={loadHolidays}
-            disableHolidays
-            showToday
-            {...common(v, set)}
+            onBlur={() => log('onBlur')}
+            onConfirm={(v) => log('onConfirm', v)}
+            onOpen={() => log('onOpen')}
+            onClose={() => log('onClose')}
+            onError={(code, v) => log('onError', { code, value: v })}
+            onVisibleMonthChange={(year, month) =>
+              log('onVisibleMonthChange', { year, month })
+            }
           />
-        )}
-      </Demo>
+        </ScrollView>
+      </View>
 
-      <Demo title="Gregorian with Hijri days ('dual')">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            calendarSystem="dual"
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Hijri grid ('hijri')">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            calendarSystem="hijri"
-            locale="ar-SA"
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Custom theme and French strings">
-        {(v, set) => (
-          <DateTimePicker
-            type="datetime"
-            locale="fr-FR"
-            label="Rendez-vous"
-            theme={greenTheme}
-            strings={frenchStrings}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="dateFormat 'dd/mm/yyyy', icon colours and sizes, own clear icon">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            label="Due date"
-            dateFormat="dd/mm/yyyy"
-            iconProps={{
-              calendar: { color: '#DB2777', size: 22 },
-              chevronDown: { color: '#DB2777' },
-              chevronLeft: { color: '#DB2777' },
-              chevronRight: { color: '#DB2777' },
-              clear: { color: '#DB2777', size: 18 },
-            }}
-            icons={{ clear: RoundClearIcon }}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Inter (theme INTER_FONTS, fonts loaded by the app)">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            label="Due date"
-            theme={INTER_FONTS}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="One font for all text (theme.fontFamily), larger sizes">
-        {(v, set) => (
-          <DateTimePicker
-            type="datetime"
-            label="Meeting"
-            theme={{
-              fontFamily: serif,
-              fontSizeSmall: 13,
-              fontSizeMedium: 16,
-              fontSizeLarge: 18,
-            }}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo
-        title="Disabled field (icon in its disabled colour)"
-        initial="2026-10-21"
-      >
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            disabled
-            iconProps={{ calendar: { disabledColor: '#F59E0B' } }}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Sheet: 60% high, own header, no field, Confirm scrolls">
-        {(v, set) => (
-          <DateTimePicker
-            type="datetime"
-            header={renderStartHeader}
-            sheet={{ height: '60%', showField: false, fixedFooter: false }}
-            strings={{ placeholderHour: 'HH', placeholderMinute: 'MM' }}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Custom sheet (renderSheet)">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            renderSheet={renderCardSheet}
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="valueFormat 'utc-midnight'">
-        {(v, set) => (
-          <DateTimePicker
-            type="date"
-            valueFormat="utc-midnight"
-            {...common(v, set)}
-          />
-        )}
-      </Demo>
-
-      <Demo title="Custom adapter (epoch milliseconds via JS Date)">
-        {(v, set) => (
-          <>
-            <DateTimePicker
-              type="datetime"
-              valueFormat={epochAdapter}
-              {...common(v, set)}
-            />
-            {typeof v === 'string' && v ? (
-              <Text style={styles.json}>{new Date(Number(v)).toString()}</Text>
+      <View style={styles.valueBar}>
+        <Text style={styles.valueLabel}>value</Text>
+        <View style={styles.valueText}>
+          <Text style={styles.value} numberOfLines={2} selectable>
+            {JSON.stringify(value)}
+            {isEmpty(value) ? (
+              <Text style={styles.valueNote}> nothing picked yet</Text>
             ) : null}
-          </>
-        )}
-      </Demo>
-    </ScrollView>
+          </Text>
+          {config.valueFormat === 'epoch' &&
+          typeof value === 'string' &&
+          value ? (
+            <Text style={styles.valueNote} numberOfLines={1}>
+              {new Date(Number(value)).toString()}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={[styles.panel, { paddingBottom: insets.bottom }]}>
+        <View style={styles.panelTabs}>
+          <PillTabs tabs={tabs} active={activeTab} onChange={setTab} />
+        </View>
+        <ScrollView
+          key={activeTab}
+          contentContainerStyle={styles.panelContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {current ? (
+            current.groups
+              .filter((g) => isVisible(g, config))
+              .map((g, i) => (
+                <View key={g.key} style={i > 0 && styles.divided}>
+                  <GroupControl group={g} config={config} onChange={choose} />
+                </View>
+              ))
+          ) : (
+            <>
+              <Text style={styles.intro}>
+                Start from a real setup, then fine-tune it in the other tabs.
+              </Text>
+              <View style={styles.presets}>
+                {PRESETS.map((p) => (
+                  <PresetCard
+                    key={p.key}
+                    preset={p}
+                    selected={preset?.key === p.key}
+                    onPress={() => applyPreset(p)}
+                  />
+                ))}
+              </View>
+            </>
+          )}
+        </ScrollView>
+      </View>
+
+      <CodeSheet
+        visible={codeOpen}
+        onClose={() => setCodeOpen(false)}
+        jsx={toJsx(entries)}
+        events={events}
+        onClearEvents={() => setEvents([])}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F9FAFB' },
-  content: { padding: 16, paddingTop: 64, paddingBottom: 48, gap: 16 },
-  heading: { fontSize: 22, fontWeight: '600', color: '#111827' },
-  demo: {
-    gap: 8,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  title: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  json: { fontSize: 12, color: '#6B7280', fontFamily: 'Courier' },
-  roundClear: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-  },
-  roundClearText: { fontWeight: '600' },
-  sheetHeader: {
+  screen: { flex: 1, backgroundColor: colors.screen },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
-  sheetHeaderClose: { fontSize: 15, color: '#2563EB' },
-  cardBackdrop: {
+  headerText: { flexShrink: 1 },
+  heading: { fontSize: 20, fontFamily: fonts.semibold, color: colors.ink },
+  subheading: {
+    marginTop: 2,
+    fontSize: 12,
+    fontFamily: mono,
+    color: colors.muted,
+  },
+  headerActions: { flexDirection: 'row', gap: 8 },
+  stage: {
+    marginHorizontal: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
+  },
+  stageBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  stageTag: { fontSize: 11, letterSpacing: 0.6, fontFamily: fonts.semibold },
+  stageHint: { fontSize: 12, fontFamily: fonts.regular },
+  stageScroll: { flexGrow: 0 },
+  stageContent: { padding: 16 },
+  valueBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    paddingHorizontal: 4,
+  },
+  valueLabel: {
+    paddingTop: 1,
+    fontSize: 11,
+    fontFamily: mono,
+    color: colors.faint,
+  },
+  valueText: { flex: 1, gap: 2 },
+  value: { fontSize: 12, fontFamily: mono, color: colors.text },
+  valueNote: { fontSize: 11, fontFamily: fonts.regular, color: colors.muted },
+  panel: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingTop: 14,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: colors.surface,
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
   },
-  card: {
-    maxHeight: '90%',
-    borderRadius: 16,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+  panelTabs: { paddingBottom: 6 },
+  panelContent: { padding: 20, paddingTop: 12 },
+  divided: {
+    marginTop: 18,
+    paddingTop: 18,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.line,
   },
+  intro: {
+    marginBottom: 14,
+    fontSize: 13,
+    lineHeight: 19,
+    fontFamily: fonts.regular,
+    color: colors.muted,
+  },
+  presets: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 });

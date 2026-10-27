@@ -5228,6 +5228,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-clipboard@npm:~58.0.4":
+  version: 58.0.4
+  resolution: "expo-clipboard@npm:58.0.4"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/471318371415ac8a5153e224603d3ec8506c07cf02e2afb4eb544aa172df4f43f47ff1a12bf449ea246ff283f59c0c8e008561b66c1138fa09aa432283c2d78b
+  languageName: node
+  linkType: hard
+
 "expo-constants@npm:~58.0.13":
   version: 58.0.13
   resolution: "expo-constants@npm:58.0.13"
@@ -8589,6 +8600,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-safe-area-context@npm:~5.10.1":
+  version: 5.10.1
+  resolution: "react-native-safe-area-context@npm:5.10.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/8aebfa832d483e385f9848b5ea92ce3e525a44cad5b3b363b5b190c1f559f3f01176f745ff7a2ad0e2191cb3fb2d0be26c8650956640f086562440c869713ec5
+  languageName: node
+  linkType: hard
+
 "react-native-web@npm:~0.21.4":
   version: 0.21.4
   resolution: "react-native-web@npm:0.21.4"
@@ -8885,13 +8906,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rn-calendar-time-picker-example@workspace:example":
+"rn-grid-date-time-picker-example@workspace:example":
   version: 0.0.0-use.local
-  resolution: "rn-calendar-time-picker-example@workspace:example"
+  resolution: "rn-grid-date-time-picker-example@workspace:example"
   dependencies:
     "@expo-google-fonts/inter": "npm:0.4.2"
     "@expo/metro-runtime": "npm:~58.0.15"
     expo: "npm:~58.0.17"
+    expo-clipboard: "npm:~58.0.4"
     expo-font: "npm:58.0.9"
     expo-status-bar: "npm:~58.0.4"
     react: "npm:19.3.0"
@@ -8899,13 +8921,14 @@ __metadata:
     react-native: "npm:0.88.0"
     react-native-builder-bob: "npm:^0.44.1"
     react-native-monorepo-config: "npm:^0.4.0"
+    react-native-safe-area-context: "npm:~5.10.1"
     react-native-web: "npm:~0.21.4"
   languageName: unknown
   linkType: soft
 
-"rn-calendar-time-picker@workspace:.":
+"rn-grid-date-time-picker@workspace:.":
   version: 0.0.0-use.local
-  resolution: "rn-calendar-time-picker@workspace:."
+  resolution: "rn-grid-date-time-picker@workspace:."
   dependencies:
     "@eslint/compat": "npm:^2.1.1"
     "@eslint/eslintrc": "npm:^3.3.7"
