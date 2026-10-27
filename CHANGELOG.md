@@ -37,4 +37,4 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[1.0.0]: https://github.com/Bhairavi-ancy/rn-calendar-time-picker/releases/tag/v1.0.0
+[1.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.0

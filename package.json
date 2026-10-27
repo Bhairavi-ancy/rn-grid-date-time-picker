@@ -1,7 +1,7 @@
 {
   "name": "rn-grid-date-time-picker",
   "version": "1.0.0",
-  "description": "A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.",
+  "description": "A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Runs on iOS and Android; pure JS, so it also works in Expo Go and bare React Native apps.",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
   "types": "./lib/typescript/commonjs/src/index.d.ts",
@@ -59,14 +59,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Bhairavi-ancy/rn-calendar-time-picker.git"
+    "url": "git+https://github.com/Bhairavi-ancy/rn-grid-date-time-picker.git"
   },
   "author": "Bhairavi M <ancybhairavi@gmail.com> (https://github.com/Bhairavi-ancy)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Bhairavi-ancy/rn-calendar-time-picker/issues"
+    "url": "https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/issues"
   },
-  "homepage": "https://github.com/Bhairavi-ancy/rn-calendar-time-picker#readme",
+  "homepage": "https://github.com/Bhairavi-ancy/rn-grid-date-time-picker#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
