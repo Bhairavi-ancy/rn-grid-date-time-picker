@@ -76,7 +76,6 @@ const greenTheme: Partial<ThemeTokens> = {
 
 const frenchStrings: Partial<PickerStrings> = {
   titleDate: 'Choisir une date',
-  titleTime: "Choisir l'heure",
   confirm: 'Valider',
   clear: 'Effacer',
   today: "Aujourd'hui",

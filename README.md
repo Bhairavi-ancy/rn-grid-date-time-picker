@@ -238,7 +238,7 @@ const epochMs: ValueAdapter = {
 | `strings` | `Partial<PickerStrings>` | See [Strings / i18n](#strings--i18n). |
 | `testID` | `string` | The prefix for every part; see [Testing](#testing). |
 | `onVisibleMonthChange` | `(year, month) => void` | The Gregorian month of the first day shown. |
-| `onError` | `(code, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. |
+| `onError` | `(code: PickerErrorCode, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. |
 | `validate` | `(value: PickerValue) => string \| null \| undefined` | – | Your own check on Confirm, after the built-in ones. Return a message to show it inside the picker and save nothing; `null` to save. See [Your own validation](#your-own-validation). |
 
 ## Limits & greying

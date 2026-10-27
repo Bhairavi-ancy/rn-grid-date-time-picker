@@ -34,7 +34,7 @@ Initial release.
 - A date typed into the field takes the time already entered in the time row, so Confirm works without retyping it.
 - In 12-hour mode a typed time reads as AM until switched; segment boxes grow with the font size and system text size, and the time wraps to a second line instead of overlapping the icons.
 - A bad `minuteStep`, an unknown `timeZone` or a throwing custom `parse` falls back with a development warning instead of crashing.
-- `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order. `normalizeDateFormat` is exported.
+- `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
 [1.0.0]: https://github.com/Bhairavi-ancy/rn-calendar-time-picker/releases/tag/v1.0.0

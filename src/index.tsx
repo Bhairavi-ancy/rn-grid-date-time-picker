@@ -13,7 +13,6 @@ export {
   SYSTEM_FONTS,
 } from './components/theme/tokens';
 export { DEFAULT_YEAR_RANGE } from './components/types';
-export { normalizeDateFormat } from './core/locale';
 export {
   CalendarIcon,
   ChevronDownIcon,
@@ -61,10 +60,12 @@ export type {
   DateTimePickerProps,
   InstructionRenderProps,
   LabelRenderProps,
+  PickerErrorCode,
   PickerState,
   SheetOptions,
   SheetRenderProps,
   SheetSize,
+  Slot,
 } from './components/types';
 export type { PickerStrings } from './components/theme/defaultStrings';
 export type { PickerStyles } from './components/theme/styleKeys';

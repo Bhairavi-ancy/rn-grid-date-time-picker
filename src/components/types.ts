@@ -66,7 +66,24 @@ export interface PickerState {
   strings: PickerStrings;
 }
 
+/** A slot's content: a node, or a function of the picker's state. */
 export type Slot = React.ReactNode | ((state: PickerState) => React.ReactNode);
+
+/**
+ * What `onError` reports: `'VALIDATION'` (your `validate` returned a message),
+ * `'NOTHING_SELECTABLE'` (no day can be picked), or a time problem found on
+ * Confirm (`'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`,
+ * `'AFTER_MAX'`, `'TIME_NOT_ALLOWED'`).
+ */
+export type PickerErrorCode =
+  | 'VALIDATION'
+  | 'NOTHING_SELECTABLE'
+  | 'INCOMPLETE'
+  | 'INVALID'
+  | 'OFF_STEP'
+  | 'BEFORE_MIN'
+  | 'AFTER_MAX'
+  | 'TIME_NOT_ALLOWED';
 
 /** What `renderSheet` receives. Render `body` above `footer`. */
 export interface SheetRenderProps {
@@ -303,7 +320,7 @@ export interface DateTimePickerProps {
 
   // events
   onVisibleMonthChange?: (year: number, month: number) => void;
-  onError?: (code: string, value: PickerValue) => void;
+  onError?: (code: PickerErrorCode, value: PickerValue) => void;
   /**
    * Your own check, run when Confirm is pressed (or, with commitMode 'instant',
    * before each save) once the built-in checks pass. It gets the value about to

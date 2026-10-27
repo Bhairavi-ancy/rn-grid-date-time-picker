@@ -4,9 +4,7 @@
  */
 export interface PickerStrings {
   titleDate: string;
-  titleTime: string;
   confirm: string;
-  apply: string;
   reset: string;
   clear: string;
   today: string;
@@ -49,14 +47,10 @@ export interface PickerStrings {
   a11yHour: string;
   a11yMinute: string;
   a11yPeriod: string;
-  a11yPreviousMonth: string;
-  a11yNextMonth: string;
   a11yPreviousYear: string;
   a11yNextYear: string;
   a11yChooseYear: string;
   a11yChooseMonth: string;
-  a11ySelected: string;
-  a11yUnavailable: string;
   a11yToday: string;
   a11yHoliday: string;
   a11yRangeStart: string;
@@ -65,9 +59,7 @@ export interface PickerStrings {
 
 export const DEFAULT_STRINGS: PickerStrings = {
   titleDate: 'Select date',
-  titleTime: 'Select time',
   confirm: 'Confirm',
-  apply: 'Apply',
   reset: 'Reset',
   clear: 'Clear',
   today: 'Today',
@@ -107,14 +99,10 @@ export const DEFAULT_STRINGS: PickerStrings = {
   a11yHour: 'Hour',
   a11yMinute: 'Minute',
   a11yPeriod: 'AM or PM',
-  a11yPreviousMonth: 'Previous month',
-  a11yNextMonth: 'Next month',
   a11yPreviousYear: 'Previous year',
   a11yNextYear: 'Next year',
   a11yChooseYear: 'Choose a year',
   a11yChooseMonth: 'Choose a month',
-  a11ySelected: 'selected',
-  a11yUnavailable: 'unavailable',
   a11yToday: 'today',
   a11yHoliday: 'holiday',
   a11yRangeStart: 'start of range',
