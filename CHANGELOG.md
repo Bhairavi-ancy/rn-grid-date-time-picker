@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - 2026-10-27
+## [1.0.0] - 2026-10-27
 
 Initial release.
 
@@ -13,7 +13,7 @@ Initial release.
 - Typed segments in the field, typed time boxes or a wheel, 12- / 24-hour, minute steps that divide the hour.
 - Limits: `minDate` / `maxDate`, `disabledWeekdays`, `disabledDates` / `enabledDates`, `timeBounds`, `holidays` / `loadHolidays` / `disableHolidays`, and `getConstraints` for full control. `createConstraints` is exported.
 - Gregorian, dual and Hijri (Umm al-Qura) calendars, with a Gregorian fallback.
-- Locale-based defaults for the date order and the clock, through `Intl`.
+- Locale-based defaults for the date order and the clock (through `Intl`) and for the first day of the week (from the locale's region).
 - Theme tokens, `styles` keys for every part, `strings` for every text, and render props for the sheet, field, label, instruction, days, cells and time row.
 - Inter is the default font (`Inter-Regular`, `Inter-Medium`, `Inter-SemiBold`, loaded by the app). `SYSTEM_FONTS` switches to the system font.
 - A `fontFamily` token that sets the font for all text, next to the per-weight `fontRegular` / `fontMedium` / `fontSemiBold`.
@@ -37,4 +37,4 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order. `normalizeDateFormat` is exported.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[0.1.0]: https://github.com/Bhairavi-ancy/rn-calendar-time-picker/releases/tag/v0.1.0
+[1.0.0]: https://github.com/Bhairavi-ancy/rn-calendar-time-picker/releases/tag/v1.0.0

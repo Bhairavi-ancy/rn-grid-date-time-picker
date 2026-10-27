@@ -192,7 +192,7 @@ const epochMs: ValueAdapter = {
 
 | Prop | Type | Default |
 |---|---|---|
-| `firstDayOfWeek` | `1`–`7` (Monday = 1) | `7` (Sunday) |
+| `firstDayOfWeek` | `1`–`7` (Monday = 1) | from `locale`'s region (Sunday for `en-US`, Monday for `en-GB`), else `7` (Sunday) |
 | `showOutsideDays` | `boolean` | `true` |
 | `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
@@ -400,7 +400,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 
 ## Locale, RTL & Hijri
 
-- **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) and the default `timeFormat` (the locale's hour cycle, else `'12h'`).
+- **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) the default `timeFormat` (the locale's hour cycle, else `'12h'`) and the default `firstDayOfWeek` (the region's first day from CLDR week data: Sunday for `en-US`, Monday for `en-GB` and `de-DE`, Saturday for `ar-EG`; Sunday when the tag has no region).
 - **RTL**: layouts use start/end, so they flip with `I18nManager`. The chevrons point the right way, and swipe directions are mirrored. Typed dates and times keep their left-to-right digit order.
 - **Hijri**: `calendarSystem="dual"` shows the Hijri day under each Gregorian day; `"hijri"` lays out Hijri (Umm al-Qura) months, years and day numbers. Values stay Gregorian either way. Hijri dates come from the platform's `Intl` (`islamic-umalqura`). Some JS engines and devices ship without that calendar, for example some Hermes / Android builds. The picker checks once, and if it isn't available it falls back to `'gregory'`. The default is always `'gregory'`, whatever the locale.
 

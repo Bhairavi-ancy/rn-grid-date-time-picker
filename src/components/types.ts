@@ -236,6 +236,7 @@ export interface DateTimePickerProps {
   renderTimeRow?: (state: PickerState) => React.ReactNode;
 
   // calendar
+  /** 1 = Monday … 7 = Sunday. Default: from `locale`'s region, else Sunday. */
   firstDayOfWeek?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   showOutsideDays?: boolean;
   yearRange?: { first: number; last: number };

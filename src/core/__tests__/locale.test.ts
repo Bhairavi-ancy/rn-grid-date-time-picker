@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import {
   defaultLocale,
   deriveDateFormat,
+  deriveFirstDayOfWeek,
   deriveTimeFormat,
   normalizeDateFormat,
 } from '../locale';
@@ -31,6 +32,41 @@ describe('deriveTimeFormat', () => {
 
   it('falls back to 12h for an invalid locale', () => {
     expect(deriveTimeFormat('not a locale!')).toBe('12h');
+  });
+});
+
+describe('deriveFirstDayOfWeek', () => {
+  it("follows the locale's region", () => {
+    expect(deriveFirstDayOfWeek('en-US')).toBe(7);
+    expect(deriveFirstDayOfWeek('en-GB')).toBe(1);
+    expect(deriveFirstDayOfWeek('de-DE')).toBe(1);
+    expect(deriveFirstDayOfWeek('ar-SA')).toBe(7);
+    expect(deriveFirstDayOfWeek('ar-EG')).toBe(6);
+    expect(deriveFirstDayOfWeek('dv-MV')).toBe(5);
+  });
+
+  it('finds the region after a script and before an extension', () => {
+    expect(deriveFirstDayOfWeek('zh-Hant-TW')).toBe(7);
+    expect(deriveFirstDayOfWeek('en_GB')).toBe(1);
+    expect(deriveFirstDayOfWeek('ar-EG-u-ca-islamic')).toBe(6);
+    expect(deriveFirstDayOfWeek('es-419')).toBe(1);
+  });
+
+  it('falls back to Sunday without a region', () => {
+    expect(deriveFirstDayOfWeek('en')).toBe(7);
+    expect(deriveFirstDayOfWeek('fr')).toBe(7);
+    expect(deriveFirstDayOfWeek('not a locale!')).toBe(7);
+  });
+
+  it('agrees with Intl week data where the engine has it', () => {
+    for (const tag of ['en-US', 'en-GB', 'ar-EG', 'ja-JP', 'zh-CN', 'pt-BR']) {
+      const loc = new Intl.Locale(tag) as Intl.Locale & {
+        getWeekInfo?: () => { firstDay: number };
+        weekInfo?: { firstDay: number };
+      };
+      const info = loc.getWeekInfo?.() ?? loc.weekInfo;
+      if (info) expect(deriveFirstDayOfWeek(tag)).toBe(info.firstDay);
+    }
   });
 });
 

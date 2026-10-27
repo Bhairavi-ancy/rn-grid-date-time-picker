@@ -1071,4 +1071,23 @@ describe('DateTimePicker: defaults from the locale and the clock', () => {
     openSheet(forced);
     expect(exists(forced, 'dp-time-am')).toBe(true);
   });
+
+  it('without firstDayOfWeek the week starts as in the locale; the prop wins', () => {
+    const firstWeekday = (props: Partial<DateTimePickerProps>) => {
+      const seen: number[] = [];
+      const tree = mount({
+        ...props,
+        renderWeekday: (wd) => {
+          seen.push(wd);
+          return null;
+        },
+      });
+      openSheet(tree);
+      return seen[0];
+    };
+    expect(firstWeekday({ locale: 'en-US' })).toBe(7);
+    expect(firstWeekday({ locale: 'en-GB' })).toBe(1);
+    expect(firstWeekday({ locale: 'ar-EG' })).toBe(6);
+    expect(firstWeekday({ locale: 'en-GB', firstDayOfWeek: 7 })).toBe(7);
+  });
 });

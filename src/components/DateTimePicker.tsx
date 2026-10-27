@@ -23,6 +23,7 @@ import { resolveCalendarSystem } from '../core/calendarSystem';
 import {
   defaultLocale,
   deriveDateFormat,
+  deriveFirstDayOfWeek,
   deriveTimeFormat,
   normalizeDateFormat,
 } from '../core/locale';
@@ -132,7 +133,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     renderMonthCell,
     renderEmptyState,
     renderTimeRow,
-    firstDayOfWeek = 7,
+    firstDayOfWeek: firstDayProp,
     showOutsideDays = true,
     initialView,
     precision: precisionProp = 'day',
@@ -178,6 +179,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     [stringOverrides]
   );
   const loc = useMemo(() => locale ?? defaultLocale(), [locale]);
+  const firstDayOfWeek = firstDayProp ?? deriveFirstDayOfWeek(loc);
   // Month and year picks are for single dates only.
   const precision =
     type === 'date' && mode === 'single' ? precisionProp : 'day';
