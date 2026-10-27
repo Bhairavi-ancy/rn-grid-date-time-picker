@@ -138,7 +138,7 @@ To release:
 Snack installs packages from npm, so the demo can only be made after a version is published.
 
 1. Open https://snack.expo.dev, sign in, and pick the newest Expo SDK it offers.
-2. Replace `App.js` with `example/src/App.tsx` (rename it `App.tsx`). Snack adds the imported packages (`rn-calendar-time-picker`, `expo-font`, `@expo-google-fonts/inter`, `expo-status-bar`) to its dependencies; check that `rn-calendar-time-picker` is at the published version.
+2. Replace `App.js` with `example/src/App.tsx` (rename it `App.tsx`), and add the `example/src/playground/` folder next to it (`config.ts`, `fixtures.tsx`, `ui.tsx`, `CodeSheet.tsx`). Snack adds the imported packages (`rn-calendar-time-picker`, `expo-font`, `@expo-google-fonts/inter`, `expo-status-bar`, `expo-clipboard`, `react-native-safe-area-context`) to its dependencies; check that `rn-calendar-time-picker` is at the published version.
 3. Run it on the iOS, Android and Web previews, then save it as public with a name like `rn-calendar-time-picker`.
 4. Put the Snack's URL in the "Live demo" link at the top of `README.md` and uncomment it.
 
