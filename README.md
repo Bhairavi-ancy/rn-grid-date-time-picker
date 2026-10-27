@@ -162,7 +162,7 @@ const epochMs: ValueAdapter = {
 | `isMandatory` | `boolean` | `false` | Adds ` *` to the label. |
 | `disabled`, `readOnly` | `boolean` | `false` | Neither opens; disabled also greys the field. |
 | `allowTyping` | `boolean` | `false` | Type in the field inside the sheet. |
-| `allowTriggerTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
+| `allowFieldTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
 | `allowClear` | `boolean` | `false` | Shows × when there is a value. |
 | `errorMessage` | `string` | – | Your error, shown under the field. |
 | `dateFormat` | `string` | from `locale` | `dd`, `MM` and `yyyy` with one separator, in any case: `'dd/mm/yyyy'`, `'DD.MM.YYYY'`, `'yyyy-MM-dd'`. Used for the field text, the typed segments and the placeholder. Anything else (for example `'d/m/yy'` or `'dd MMM yyyy'`) logs a warning in development and uses the locale order. |
@@ -385,7 +385,7 @@ The on-screen field shows the saved value (never the draft) in `dateFormat`, wit
 
 With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
 
-`allowTriggerTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
+`allowFieldTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
 
 ## Time
 
@@ -638,7 +638,7 @@ Every part gets a testID built from the `testID` prop (`dp` here):
 |---|---|
 | `dp-trigger-field` | The on-screen field (press to open) |
 | `dp-trigger-clear`, `dp-trigger-icon`, `dp-trigger-label`, `dp-trigger-error`, `dp-trigger-instruction` | Its ×, calendar icon, label, error and instruction |
-| `dp-trigger-segment-{day,month,year,hour,minute,period}` | Its typed segments (`allowTriggerTyping`) |
+| `dp-trigger-segment-{day,month,year,hour,minute,period}` | Its typed segments (`allowFieldTyping`) |
 | `dp-sheet`, `dp-sheet-backdrop` | The sheet panel and its backdrop (the `testID` passed to `renderSheet`) |
 | `dp-inline` | The inline container |
 | `dp-scroll` | The sheet's scrolling body |

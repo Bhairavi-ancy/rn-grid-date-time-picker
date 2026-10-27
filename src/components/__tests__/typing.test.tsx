@@ -28,7 +28,7 @@ function Screen({
       timeZone="UTC"
       dateFormat="dd-MM-yyyy"
       timeFormat="12h"
-      allowTriggerTyping
+      allowFieldTyping
       testID="dp"
       {...(props as object)}
       value={value}

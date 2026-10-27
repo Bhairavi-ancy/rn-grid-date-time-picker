@@ -210,7 +210,7 @@ describe('precision: month', () => {
     const tree = mount({
       precision: 'month',
       allowTyping: true,
-      allowTriggerTyping: true,
+      allowFieldTyping: true,
       value: '2026-03-01T00:00:00.000Z',
     });
     expect(tree.root.findAllByType(TextInput)).toHaveLength(0);

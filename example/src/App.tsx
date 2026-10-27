@@ -202,7 +202,7 @@ export default function App() {
             type="datetime"
             label="Starts at"
             allowTyping
-            allowTriggerTyping
+            allowFieldTyping
             {...common(v, set)}
           />
         )}

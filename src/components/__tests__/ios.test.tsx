@@ -20,7 +20,7 @@ describe('iOS keyboard', () => {
           now={now}
           timeZone="UTC"
           allowTyping
-          allowTriggerTyping
+          allowFieldTyping
           strings={{ done: 'Fertig' }}
           testID="dp"
         />

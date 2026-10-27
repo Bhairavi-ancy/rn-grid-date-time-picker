@@ -200,7 +200,7 @@ export interface DateTimePickerProps {
    * The on-screen field is typeable too. A complete, allowed value is saved
    * once, when focus leaves the field or its last box fills. Default false.
    */
-  allowTriggerTyping?: boolean;
+  allowFieldTyping?: boolean;
   allowClear?: boolean;
   errorMessage?: string;
   /** Order of the typed segments and the display: 'dd', 'MM', 'yyyy' with one separator. Default: from `locale`. */

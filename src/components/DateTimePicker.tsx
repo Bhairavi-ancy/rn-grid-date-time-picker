@@ -110,7 +110,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     disabled = false,
     readOnly = false,
     allowTyping,
-    allowTriggerTyping,
+    allowFieldTyping,
     allowClear,
     errorMessage,
     dateFormat: dateFormatProp,
@@ -1022,7 +1022,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         value={savedSingle}
         displayText={savedText}
         allowTyping={
-          mode === 'single' && precision === 'day' && allowTriggerTyping
+          mode === 'single' && precision === 'day' && allowFieldTyping
         }
         onTypingDone={onTriggerTyped}
         onTyped={() => setTriggerError('')}

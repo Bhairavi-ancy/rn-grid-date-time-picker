@@ -30,7 +30,7 @@ Initial release.
 - `validate` runs your own check before a value is saved (on Confirm, with `commitMode="instant"`, and when typing in the on-screen field) and shows its message (`styles.validationText`).
 - Times are checked when Confirm is pressed, not while typing; `onError` reports the time problem.
 - Typed segments handle fast input (hardware keyboards, autofill) without dropping or doubling digits, and a full last box can still be corrected.
-- With `allowTriggerTyping`, the on-screen field saves once typing pauses (focus leaves it or its last box fills), not on every complete value.
+- With `allowFieldTyping`, the on-screen field saves once typing pauses (focus leaves it or its last box fills), not on every complete value.
 - A date typed into the field takes the time already entered in the time row, so Confirm works without retyping it.
 - In 12-hour mode a typed time reads as AM until switched; segment boxes grow with the font size and system text size, and the time wraps to a second line instead of overlapping the icons.
 - A bad `minuteStep`, an unknown `timeZone` or a throwing custom `parse` falls back with a development warning instead of crashing.
