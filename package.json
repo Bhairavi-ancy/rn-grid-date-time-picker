@@ -1,5 +1,5 @@
 {
-  "name": "rn-calendar-time-picker",
+  "name": "rn-grid-date-time-picker",
   "version": "1.0.0",
   "description": "A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.",
   "main": "./lib/commonjs/index.js",
@@ -7,7 +7,7 @@
   "types": "./lib/typescript/commonjs/src/index.d.ts",
   "exports": {
     ".": {
-      "rn-calendar-time-picker-source": "./src/index.tsx",
+      "rn-grid-date-time-picker-source": "./src/index.tsx",
       "import": {
         "types": "./lib/typescript/module/src/index.d.ts",
         "default": "./lib/module/index.js"
@@ -29,7 +29,7 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "example": "yarn workspace rn-calendar-time-picker-example",
+    "example": "yarn workspace rn-grid-date-time-picker-example",
     "clean": "del-cli lib",
     "prepare": "bob build",
     "typecheck": "tsc",
@@ -143,7 +143,7 @@
       "customExportConditions": [
         "require",
         "react-native",
-        "rn-calendar-time-picker-source"
+        "rn-grid-date-time-picker-source"
       ]
     },
     "modulePathIgnorePatterns": [

@@ -18,7 +18,7 @@ import {
 import DateTimePicker, {
   type DateTimePickerProps,
   type PickerValue,
-} from 'rn-calendar-time-picker';
+} from 'rn-grid-date-time-picker';
 import { CodeSheet, type LogEntry } from './playground/CodeSheet';
 import {
   CATEGORIES,
@@ -175,7 +175,7 @@ function Playground() {
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={styles.headerText}>
           <Text style={styles.heading}>Date & time picker</Text>
-          <Text style={styles.subheading}>rn-calendar-time-picker</Text>
+          <Text style={styles.subheading}>rn-grid-date-time-picker</Text>
         </View>
         <View style={styles.headerActions}>
           <TextButton label="Reset" onPress={resetAll} />

@@ -2,12 +2,12 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "rn-calendar-time-picker": ["./src/index"]
+      "rn-grid-date-time-picker": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "customConditions": [
-      "rn-calendar-time-picker-source",
+      "rn-grid-date-time-picker-source",
       "react-native-strict-api"
     ],
     "esModuleInterop": true,

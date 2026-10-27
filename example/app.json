@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "RnCalendarTimePicker Example",
-    "slug": "rn-calendar-time-picker-example",
+    "name": "RnGridDateTimePicker Example",
+    "slug": "rn-grid-date-time-picker-example",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "rncalendartimepicker.example"
+      "bundleIdentifier": "rngriddatetimepicker.example"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +17,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "rncalendartimepicker.example"
+      "package": "rngriddatetimepicker.example"
     },
     "web": {
       "favicon": "./assets/favicon.png"

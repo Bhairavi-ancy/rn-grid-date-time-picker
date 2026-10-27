@@ -13,7 +13,7 @@ const root = path.resolve(__dirname, '..');
 const config = withMetroConfig(getDefaultConfig(__dirname), {
   root,
   dirname: __dirname,
-  conditions: ['rn-calendar-time-picker-source'],
+  conditions: ['rn-grid-date-time-picker-source'],
 });
 
 module.exports = config;

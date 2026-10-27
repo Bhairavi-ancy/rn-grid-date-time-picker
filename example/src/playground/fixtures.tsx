@@ -14,7 +14,7 @@ import type {
   SheetRenderProps,
   ThemeTokens,
   ValueAdapter,
-} from 'rn-calendar-time-picker';
+} from 'rn-grid-date-time-picker';
 
 const today = new Date();
 export const thisMonth = {

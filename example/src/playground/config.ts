@@ -1,4 +1,7 @@
-import { INTER_FONTS, type DateTimePickerProps } from 'rn-calendar-time-picker';
+import {
+  INTER_FONTS,
+  type DateTimePickerProps,
+} from 'rn-grid-date-time-picker';
 import {
   PALETTES,
   RoundClearIcon,

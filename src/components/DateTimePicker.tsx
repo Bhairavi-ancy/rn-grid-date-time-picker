@@ -198,7 +198,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     const normal = normalizeDateFormat(dateFormatProp);
     if (!normal && __DEV__)
       console.warn(
-        `rn-calendar-time-picker: dateFormat '${dateFormatProp}' isn't dd, MM and yyyy with one separator; using '${localeDateFormat}'.`
+        `rn-grid-date-time-picker: dateFormat '${dateFormatProp}' isn't dd, MM and yyyy with one separator; using '${localeDateFormat}'.`
       );
     return normal ?? localeDateFormat;
   }, [dateFormatProp, localeDateFormat]);
@@ -225,11 +225,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     if (!__DEV__) return;
     if (!zoneValid)
       console.warn(
-        `rn-calendar-time-picker: timeZone '${timeZone}' isn't a known zone; using '${zone}'.`
+        `rn-grid-date-time-picker: timeZone '${timeZone}' isn't a known zone; using '${zone}'.`
       );
     if (!stepValid)
       console.warn(
-        `rn-calendar-time-picker: minuteStep ${minuteStepProp} doesn't divide 60 (${MINUTE_STEPS.join(', ')}); using 1.`
+        `rn-grid-date-time-picker: minuteStep ${minuteStepProp} doesn't divide 60 (${MINUTE_STEPS.join(', ')}); using 1.`
       );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- warns once per bad prop value
   }, [timeZone, minuteStepProp]);
@@ -253,7 +253,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         } catch (e) {
           if (__DEV__)
             console.warn(
-              `rn-calendar-time-picker: valueFormat.parse threw for '${raw}'; reading it as empty.`,
+              `rn-grid-date-time-picker: valueFormat.parse threw for '${raw}'; reading it as empty.`,
               e
             );
           return null;

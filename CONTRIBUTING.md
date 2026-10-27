@@ -131,14 +131,14 @@ To release:
 1. On a branch, update `version` in `package.json` and add a dated section for it to `CHANGELOG.md`. Merge it into `main` once CI passes.
 2. Releases → Draft a new release → create the tag `vX.Y.Z` on `main`.
 3. Write the release notes: the highlights of the version, then a link to its `CHANGELOG.md` section. Publish the release. That starts the `Release` workflow.
-4. Check that the new version shows on https://www.npmjs.com/package/rn-calendar-time-picker.
+4. Check that the new version shows on https://www.npmjs.com/package/rn-grid-date-time-picker.
 
 ### Live demo (Expo Snack)
 
 Snack installs packages from npm, so the demo can only be made after a version is published.
 
 1. Open https://snack.expo.dev, sign in, and pick the newest Expo SDK it offers.
-2. Replace `App.js` with `example/src/App.tsx` (rename it `App.tsx`), and add the `example/src/playground/` folder next to it (`config.ts`, `fixtures.tsx`, `ui.tsx`, `CodeSheet.tsx`). Snack adds the imported packages (`rn-calendar-time-picker`, `expo-font`, `@expo-google-fonts/inter`, `expo-status-bar`, `expo-clipboard`, `react-native-safe-area-context`) to its dependencies; check that `rn-calendar-time-picker` is at the published version.
-3. Run it on the iOS, Android and Web previews, then save it as public with a name like `rn-calendar-time-picker`.
+2. Replace `App.js` with `example/src/App.tsx` (rename it `App.tsx`), and add the `example/src/playground/` folder next to it (`config.ts`, `fixtures.tsx`, `ui.tsx`, `CodeSheet.tsx`). Snack adds the imported packages (`rn-grid-date-time-picker`, `expo-font`, `@expo-google-fonts/inter`, `expo-status-bar`, `expo-clipboard`, `react-native-safe-area-context`) to its dependencies; check that `rn-grid-date-time-picker` is at the published version.
+3. Run it on the iOS, Android and Web previews, then save it as public with a name like `rn-grid-date-time-picker`.
 4. Put the Snack's URL in the "Live demo" link at the top of `README.md` and uncomment it.
 

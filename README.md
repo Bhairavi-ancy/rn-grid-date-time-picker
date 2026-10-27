@@ -1,10 +1,10 @@
-# rn-calendar-time-picker
+# rn-grid-date-time-picker
 
-[![npm version](https://img.shields.io/npm/v/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
-[![npm downloads](https://img.shields.io/npm/dm/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![npm version](https://img.shields.io/npm/v/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
+[![npm downloads](https://img.shields.io/npm/dm/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
 [![CI](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml)
-[![types](https://img.shields.io/npm/types/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
-[![license](https://img.shields.io/npm/l/rn-calendar-time-picker)](./LICENSE)
+[![types](https://img.shields.io/npm/types/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
+[![license](https://img.shields.io/npm/l/rn-grid-date-time-picker)](./LICENSE)
 ![Expo Go](https://img.shields.io/badge/Expo%20Go-compatible-000020)
 
 A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.
@@ -24,7 +24,7 @@ A flexible, themeable date & time picker for React Native: single, multiple and 
 <!--
   Live demo: after publishing, create a Snack (see CONTRIBUTING.md) and uncomment.
 
-**[Try it in Expo Snack →](https://snack.expo.dev/@your-account/rn-calendar-time-picker)**
+**[Try it in Expo Snack →](https://snack.expo.dev/@your-account/rn-grid-date-time-picker)**
 -->
 
 - [Features](#features)
@@ -55,9 +55,9 @@ A flexible, themeable date & time picker for React Native: single, multiple and 
 ## Install
 
 ```sh
-npm i rn-calendar-time-picker
+npm i rn-grid-date-time-picker
 # or
-yarn add rn-calendar-time-picker
+yarn add rn-grid-date-time-picker
 ```
 
 There are no native steps. It works in Expo Go and in bare React Native apps. `react` (18 or later) and `react-native` (0.71 or later) are peer dependencies.
@@ -66,7 +66,7 @@ There are no native steps. It works in Expo Go and in bare React Native apps. `r
 
 ```tsx
 import { useState } from 'react';
-import DateTimePicker, { type PickerValue } from 'rn-calendar-time-picker';
+import DateTimePicker, { type PickerValue } from 'rn-grid-date-time-picker';
 
 export function DueDate() {
   const [value, setValue] = useState<PickerValue>('');
@@ -138,7 +138,7 @@ interface DateTimeValue { date: CalendarDate; time: Time | null }
 For example, an adapter that stores epoch milliseconds:
 
 ```ts
-import type { ValueAdapter } from 'rn-calendar-time-picker';
+import type { ValueAdapter } from 'rn-grid-date-time-picker';
 
 const epochMs: ValueAdapter = {
   parse: (raw) => {
@@ -302,7 +302,7 @@ Greyed days are drawn in the `disabledText` colour (no strike-through), aren't p
 `createConstraints` is the engine behind those props. Use it on its own, for example to check a value on the server side of a form:
 
 ```ts
-import { createConstraints, toDateKey } from 'rn-calendar-time-picker';
+import { createConstraints, toDateKey } from 'rn-grid-date-time-picker';
 
 const bookedDays = new Set(['2026-10-27']);
 const c = createConstraints({
@@ -363,7 +363,7 @@ Or bring your own sheet with `renderSheet`. It is called only while the picker i
 
 ```tsx
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import type { SheetRenderProps } from 'rn-calendar-time-picker';
+import type { SheetRenderProps } from 'rn-grid-date-time-picker';
 
 const renderSheet = ({ onRequestClose, body, footer }: SheetRenderProps) => (
   <Modal visible transparent animationType="fade" onRequestClose={onRequestClose}>
@@ -487,7 +487,7 @@ The picker was designed with **Inter**. To use it, load its static files under t
 // Expo
 import { useFonts } from 'expo-font';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
-import { INTER_FONTS } from 'rn-calendar-time-picker';
+import { INTER_FONTS } from 'rn-grid-date-time-picker';
 
 const [loaded] = useFonts({
   'Inter-Regular': Inter_400Regular,
@@ -639,7 +639,7 @@ import { useTranslation } from 'react-i18next';
 import DateTimePicker, {
   type DateTimePickerProps,
   type PickerStrings,
-} from 'rn-calendar-time-picker';
+} from 'rn-grid-date-time-picker';
 
 function LocalizedPicker(props: Omit<DateTimePickerProps, 'strings' | 'locale'>) {
   const { t, i18n } = useTranslation();
