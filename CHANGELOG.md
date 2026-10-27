@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-27
+
+### Added
+
+- `numerals="locale"` draws every number (day numbers, years, the field text, typed segments, time boxes and the wheel) in the locale's own digits, for example ١٢٣ for `ar-SA`. The default `'latin'` keeps 0–9, and values stay 0–9 either way.
+
 ## [1.0.1] - 2026-10-27
 
 ### Fixed
@@ -44,5 +50,6 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
+[1.1.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.1.0
 [1.0.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.0
