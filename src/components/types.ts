@@ -152,7 +152,10 @@ export interface DateTimePickerProps {
    * when typing in the on-screen field pauses; or '' on clear. Never on close.
    */
   onChange: (value: PickerValue) => void;
-  /** On Confirm only, right after onChange (like a form field losing focus). */
+  /**
+   * Right after every onChange that saves a value (Confirm, an 'instant' edit,
+   * on-screen typing), like a form field losing focus. Not on clear.
+   */
   onBlur?: () => void;
   commitMode?: 'confirm' | 'instant';
   /** How values are stored. Default 'iso'. */
@@ -221,6 +224,7 @@ export interface DateTimePickerProps {
   bodyTop?: Slot;
   bodyBottom?: Slot;
   footer?: Slot;
+  /** After a Confirm press saves a value, following onChange and onBlur. Never with commitMode 'instant' edits. */
   onConfirm?: (value: PickerValue) => void;
   confirmDisabled?: boolean;
   renderField?: (state: PickerState) => React.ReactNode;

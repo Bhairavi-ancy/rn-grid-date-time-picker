@@ -316,6 +316,29 @@ describe('DateTimePicker: inline and instant', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('2026-10-21T00:00:00.000Z');
   });
+
+  it('onBlur follows every save; onConfirm only a Confirm press', () => {
+    const onBlur = jest.fn();
+    const onConfirm = jest.fn();
+    const instant = mount({
+      presentation: 'inline',
+      commitMode: 'instant',
+      onBlur,
+      onConfirm,
+    });
+    typeDate(instant);
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    onBlur.mockClear();
+    const confirmed = mount({ onBlur, onConfirm });
+    openSheet(confirmed);
+    typeDate(confirmed);
+    press(confirmed, 'dp-confirm');
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledWith('2026-10-21T00:00:00.000Z');
+  });
 });
 
 describe('DateTimePicker: limits', () => {

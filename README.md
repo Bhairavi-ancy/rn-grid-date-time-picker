@@ -136,7 +136,7 @@ const epochMs: ValueAdapter = {
 | `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | |
 | `value` | `PickerValue` | required | See [Values](#values). |
 | `onChange` | `(value: PickerValue) => void` | required | Once per Confirm, or with `''` on clear. |
-| `onBlur` | `() => void` | – | On Confirm only, right after `onChange`. |
+| `onBlur` | `() => void` | – | Right after every `onChange` that saves a value (Confirm, an `'instant'` edit, typing in the on-screen field), like a form field losing focus. Not on clear. |
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
 | `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
@@ -178,7 +178,7 @@ const epochMs: ValueAdapter = {
 | `header`, `bodyTop`, `bodyBottom`, `footer` | `ReactNode \| (state: PickerState) => ReactNode` | `header` replaces the title + Reset row; `footer` replaces Confirm (call `state.confirm`). |
 | `title` | `string` | Sheet title (default `strings.titleDate`). |
 | `onReset` | `() => void` | Shows a Reset button in the header. |
-| `onConfirm` | `(value: PickerValue) => void` | After `onChange` and `onBlur`. |
+| `onConfirm` | `(value: PickerValue) => void` | Only when Confirm is pressed and saves, after `onChange` and `onBlur`. Not for `'instant'` edits. |
 | `confirmDisabled` | `boolean` | Keep Confirm disabled. |
 | `renderField` | `(state: PickerState) => ReactNode` | Replaces the on-screen field with your own input: show `state.displayText`, open with `state.open`, clear with `state.clear`. See [Your own input](#your-own-input). |
 | `renderDay` | `(state: DayCellState, onPress: () => void) => ReactNode` | |
