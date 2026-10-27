@@ -1,6 +1,6 @@
 {
   "name": "rn-grid-date-time-picker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Runs on iOS and Android; pure JS, so it also works in Expo Go and bare React Native apps.",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
