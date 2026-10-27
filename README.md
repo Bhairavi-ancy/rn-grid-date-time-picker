@@ -1,6 +1,44 @@
 # rn-calendar-time-picker
 
+[![npm version](https://img.shields.io/npm/v/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![npm downloads](https://img.shields.io/npm/dm/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![CI](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bhairavi-ancy/rn-calendar-time-picker/actions/workflows/ci.yml)
+[![types](https://img.shields.io/npm/types/rn-calendar-time-picker)](https://www.npmjs.com/package/rn-calendar-time-picker)
+[![license](https://img.shields.io/npm/l/rn-calendar-time-picker)](./LICENSE)
+![Expo Go](https://img.shields.io/badge/Expo%20Go-compatible-000020)
+
 A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Pure JS, works with Expo Go.
+
+<!--
+  Screenshots: add images to docs/ and uncomment. Use absolute raw.githubusercontent.com
+  URLs so they also show on npmjs.com, e.g.
+  https://raw.githubusercontent.com/Bhairavi-ancy/rn-calendar-time-picker/main/docs/range.gif
+
+<p align="center">
+  <img src="…/docs/single.png" width="240" alt="Single date in a bottom sheet" />
+  <img src="…/docs/range.gif" width="240" alt="Picking a date range" />
+  <img src="…/docs/datetime.png" width="240" alt="Date and time with typed segments" />
+</p>
+-->
+
+<!--
+  Live demo: after publishing, create a Snack (see CONTRIBUTING.md) and uncomment.
+
+**[Try it in Expo Snack →](https://snack.expo.dev/@your-account/rn-calendar-time-picker)**
+-->
+
+- [Features](#features)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Values](#values)
+- [Props](#props)
+- [Limits & greying](#limits--greying)
+- [Presentation](#presentation-1) · [Field and typing](#field-and-typing) · [Time](#time-1)
+- [Locale, RTL & Hijri](#locale-rtl--hijri)
+- [Theming](#theming) · [Icons](#icons) · [Strings / i18n](#strings--i18n)
+- [Your own validation](#your-own-validation) · [Your own input](#your-own-input)
+- [Accessibility](#accessibility) · [Testing](#testing)
+- [Platform support and known limits](#platform-support-and-known-limits)
 
 ## Features
 
@@ -136,7 +174,7 @@ const epochMs: ValueAdapter = {
 | `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | |
 | `value` | `PickerValue` | required | See [Values](#values). |
 | `onChange` | `(value: PickerValue) => void` | required | Once per Confirm, or with `''` on clear. |
-| `onBlur` | `() => void` | – | On Confirm only, right after `onChange`. |
+| `onBlur` | `() => void` | – | Right after every `onChange` that saves a value (Confirm, an `'instant'` edit, typing in the on-screen field), like a form field losing focus. Not on clear. |
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
 | `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
@@ -162,7 +200,7 @@ const epochMs: ValueAdapter = {
 | `isMandatory` | `boolean` | `false` | Adds ` *` to the label. |
 | `disabled`, `readOnly` | `boolean` | `false` | Neither opens; disabled also greys the field. |
 | `allowTyping` | `boolean` | `false` | Type in the field inside the sheet. |
-| `allowTriggerTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
+| `allowFieldTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
 | `allowClear` | `boolean` | `false` | Shows × when there is a value. |
 | `errorMessage` | `string` | – | Your error, shown under the field. |
 | `dateFormat` | `string` | from `locale` | `dd`, `MM` and `yyyy` with one separator, in any case: `'dd/mm/yyyy'`, `'DD.MM.YYYY'`, `'yyyy-MM-dd'`. Used for the field text, the typed segments and the placeholder. Anything else (for example `'d/m/yy'` or `'dd MMM yyyy'`) logs a warning in development and uses the locale order. |
@@ -178,7 +216,7 @@ const epochMs: ValueAdapter = {
 | `header`, `bodyTop`, `bodyBottom`, `footer` | `ReactNode \| (state: PickerState) => ReactNode` | `header` replaces the title + Reset row; `footer` replaces Confirm (call `state.confirm`). |
 | `title` | `string` | Sheet title (default `strings.titleDate`). |
 | `onReset` | `() => void` | Shows a Reset button in the header. |
-| `onConfirm` | `(value: PickerValue) => void` | After `onChange` and `onBlur`. |
+| `onConfirm` | `(value: PickerValue) => void` | Only when Confirm is pressed and saves, after `onChange` and `onBlur`. Not for `'instant'` edits. |
 | `confirmDisabled` | `boolean` | Keep Confirm disabled. |
 | `renderField` | `(state: PickerState) => ReactNode` | Replaces the on-screen field with your own input: show `state.displayText`, open with `state.open`, clear with `state.clear`. See [Your own input](#your-own-input). |
 | `renderDay` | `(state: DayCellState, onPress: () => void) => ReactNode` | |
@@ -192,7 +230,7 @@ const epochMs: ValueAdapter = {
 
 | Prop | Type | Default |
 |---|---|---|
-| `firstDayOfWeek` | `1`–`7` (Monday = 1) | `7` (Sunday) |
+| `firstDayOfWeek` | `1`–`7` (Monday = 1) | from `locale`'s region (Sunday for `en-US`, Monday for `en-GB`), else `7` (Sunday) |
 | `showOutsideDays` | `boolean` | `true` |
 | `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
@@ -238,7 +276,7 @@ const epochMs: ValueAdapter = {
 | `strings` | `Partial<PickerStrings>` | See [Strings / i18n](#strings--i18n). |
 | `testID` | `string` | The prefix for every part; see [Testing](#testing). |
 | `onVisibleMonthChange` | `(year, month) => void` | The Gregorian month of the first day shown. |
-| `onError` | `(code, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. |
+| `onError` | `(code: PickerErrorCode, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. |
 | `validate` | `(value: PickerValue) => string \| null \| undefined` | – | Your own check on Confirm, after the built-in ones. Return a message to show it inside the picker and save nothing; `null` to save. See [Your own validation](#your-own-validation). |
 
 ## Limits & greying
@@ -385,7 +423,7 @@ The on-screen field shows the saved value (never the draft) in `dateFormat`, wit
 
 With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
 
-`allowTriggerTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
+`allowFieldTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
 
 ## Time
 
@@ -400,7 +438,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 
 ## Locale, RTL & Hijri
 
-- **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) and the default `timeFormat` (the locale's hour cycle, else `'12h'`).
+- **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) the default `timeFormat` (the locale's hour cycle, else `'12h'`) and the default `firstDayOfWeek` (the region's first day from CLDR week data: Sunday for `en-US`, Monday for `en-GB` and `de-DE`, Saturday for `ar-EG`; Sunday when the tag has no region).
 - **RTL**: layouts use start/end, so they flip with `I18nManager`. The chevrons point the right way, and swipe directions are mirrored. Typed dates and times keep their left-to-right digit order.
 - **Hijri**: `calendarSystem="dual"` shows the Hijri day under each Gregorian day; `"hijri"` lays out Hijri (Umm al-Qura) months, years and day numbers. Values stay Gregorian either way. Hijri dates come from the platform's `Intl` (`islamic-umalqura`). Some JS engines and devices ship without that calendar, for example some Hermes / Android builds. The picker checks once, and if it isn't available it falls back to `'gregory'`. The default is always `'gregory'`, whatever the locale.
 
@@ -428,8 +466,8 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `disabledText` | `#9CA3AF` | Disabled text, greyed days |
 | `rangeFill` | `#DBEAFE` | Range band |
 | `holiday` | `#DC2626` | Holiday days |
-| `fontFamily` | `undefined` | One family for all text, at weight 400 / 500 / 600 as each part needs. Setting it replaces the default Inter files |
-| `fontRegular`, `fontMedium`, `fontSemiBold` | `'Inter-Regular'`, `'Inter-Medium'`, `'Inter-SemiBold'` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `SYSTEM_FONTS` clears all four for the system font |
+| `fontFamily` | `undefined` (system font) | One family for all text, at weight 400 / 500 / 600 as each part needs |
+| `fontRegular`, `fontMedium`, `fontSemiBold` | `undefined` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `INTER_FONTS` sets all four to Inter, `SYSTEM_FONTS` clears them |
 | `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field (the Hijri day under a dual cell is 75% of it) |
 | `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, time boxes, AM / PM toggle |
 | `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time label, wheel |
@@ -441,28 +479,26 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 
 ### Fonts
 
-The default font is **Inter**, looked up under the names of its static files: `Inter-Regular` (400), `Inter-Medium` (500) and `Inter-SemiBold` (600). The package doesn't ship or load font files, so your app loads them:
+The picker uses the system font by default (San Francisco on iOS, Roboto on Android) at weights 400 / 500 / 600, so there's nothing to load.
+
+The picker was designed with **Inter**. To use it, load its static files under these names and pass `INTER_FONTS`. The package doesn't ship or load font files:
 
 ```tsx
 // Expo
 import { useFonts } from 'expo-font';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { INTER_FONTS } from 'rn-calendar-time-picker';
 
 const [loaded] = useFonts({
   'Inter-Regular': Inter_400Regular,
   'Inter-Medium': Inter_500Medium,
   'Inter-SemiBold': Inter_600SemiBold,
 });
+
+<DateTimePicker theme={{ ...INTER_FONTS }} … />
 ```
 
-In a bare app, add `Inter-Regular.ttf`, `Inter-Medium.ttf` and `Inter-SemiBold.ttf` to your fonts folder (`react-native.config.js` → `assets`) and run `npx react-native-asset`.
-
-If the app doesn't load Inter, iOS and Android quietly fall back to the system font, but every text is drawn at the regular weight. To use the system font with its weights instead, pass `SYSTEM_FONTS`:
-
-```tsx
-import { SYSTEM_FONTS } from 'rn-calendar-time-picker';
-<DateTimePicker theme={{ ...SYSTEM_FONTS }} … />
-```
+In a bare app, add `Inter-Regular.ttf`, `Inter-Medium.ttf` and `Inter-SemiBold.ttf` to your fonts folder (`react-native.config.js` → `assets`) and run `npx react-native-asset`. If a family isn't loaded, iOS and Android fall back to the system font, but every text is drawn at the regular weight.
 
 Every text in the picker takes its family and size from these tokens, so one `theme` sets the font for all of it:
 
@@ -640,7 +676,7 @@ Every part gets a testID built from the `testID` prop (`dp` here):
 |---|---|
 | `dp-trigger-field` | The on-screen field (press to open) |
 | `dp-trigger-clear`, `dp-trigger-icon`, `dp-trigger-label`, `dp-trigger-error`, `dp-trigger-instruction` | Its ×, calendar icon, label, error and instruction |
-| `dp-trigger-segment-{day,month,year,hour,minute,period}` | Its typed segments (`allowTriggerTyping`) |
+| `dp-trigger-segment-{day,month,year,hour,minute,period}` | Its typed segments (`allowFieldTyping`) |
 | `dp-sheet`, `dp-sheet-backdrop` | The sheet panel and its backdrop (the `testID` passed to `renderSheet`) |
 | `dp-inline` | The inline container |
 | `dp-scroll` | The sheet's scrolling body |

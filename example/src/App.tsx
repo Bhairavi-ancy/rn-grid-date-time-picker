@@ -14,6 +14,7 @@ import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker, {
+  INTER_FONTS,
   type DateTimePickerProps,
   type IconRenderProps,
   type PickerState,
@@ -75,7 +76,6 @@ const greenTheme: Partial<ThemeTokens> = {
 
 const frenchStrings: Partial<PickerStrings> = {
   titleDate: 'Choisir une date',
-  titleTime: "Choisir l'heure",
   confirm: 'Valider',
   clear: 'Effacer',
   today: "Aujourd'hui",
@@ -173,7 +173,7 @@ const epochAdapter: ValueAdapter = {
 };
 
 export default function App() {
-  // The picker's default font: Inter, under the names it looks for.
+  // Inter under the names INTER_FONTS looks for (the "Inter" demo below).
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
@@ -201,7 +201,7 @@ export default function App() {
             type="datetime"
             label="Starts at"
             allowTyping
-            allowTriggerTyping
+            allowFieldTyping
             {...common(v, set)}
           />
         )}
@@ -328,6 +328,17 @@ export default function App() {
               clear: { color: '#DB2777', size: 18 },
             }}
             icons={{ clear: RoundClearIcon }}
+            {...common(v, set)}
+          />
+        )}
+      </Demo>
+
+      <Demo title="Inter (theme INTER_FONTS, fonts loaded by the app)">
+        {(v, set) => (
+          <DateTimePicker
+            type="date"
+            label="Due date"
+            theme={INTER_FONTS}
             {...common(v, set)}
           />
         )}

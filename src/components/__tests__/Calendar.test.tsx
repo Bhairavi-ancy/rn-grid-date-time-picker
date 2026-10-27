@@ -139,7 +139,7 @@ describe('Calendar: month view', () => {
       true
     );
     expect(day(tree, 2026, 10, 23).props.accessibilityLabel).not.toContain(
-      DEFAULT_STRINGS.a11ySelected
+      'selected'
     );
   });
 
@@ -189,7 +189,7 @@ describe('Calendar: greyed days and limits', () => {
       true
     );
     expect(day(tree, 2026, 10, 21).props.accessibilityLabel).not.toContain(
-      DEFAULT_STRINGS.a11yUnavailable
+      'unavailable'
     );
     expect(day(tree, 2026, 10, 22).props.disabled).toBe(false);
   });

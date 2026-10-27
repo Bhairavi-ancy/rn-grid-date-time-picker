@@ -27,14 +27,13 @@ export interface ThemeTokens {
   holiday: string;
   /**
    * One font family for all text, drawn at weight 400 / 500 / 600 as each
-   * part needs. Setting it replaces the default Inter files below.
+   * part needs. Default: the system font.
    */
   fontFamily: string | undefined;
   /**
-   * A family per weight, for fonts shipped as one file per weight. Default:
-   * Inter ('Inter-Regular', 'Inter-Medium', 'Inter-SemiBold'), which the app
-   * loads. Each one set wins over `fontFamily`; `undefined` everywhere uses
-   * the system font (`SYSTEM_FONTS`).
+   * A family per weight, for fonts shipped as one file per weight (see
+   * `INTER_FONTS`). Each one set wins over `fontFamily`; `undefined`
+   * everywhere (the default) uses the system font.
    */
   fontRegular: string | undefined;
   fontMedium: string | undefined;
@@ -67,9 +66,9 @@ export const DEFAULT_TOKENS: ThemeTokens = {
   rangeFill: '#DBEAFE',
   holiday: '#DC2626',
   fontFamily: undefined,
-  fontRegular: 'Inter-Regular',
-  fontMedium: 'Inter-Medium',
-  fontSemiBold: 'Inter-SemiBold',
+  fontRegular: undefined,
+  fontMedium: undefined,
+  fontSemiBold: undefined,
   fontSizeSmall: 12,
   fontSizeMedium: 14,
   fontSizeLarge: 16,
@@ -78,11 +77,13 @@ export const DEFAULT_TOKENS: ThemeTokens = {
   touchTarget: 44,
 };
 
-/** The system font at weight 400 / 500 / 600, for apps that don't load Inter: `theme={{ ...SYSTEM_FONTS }}`. */
-export const SYSTEM_FONTS: Pick<
+type FontTokens = Pick<
   ThemeTokens,
   'fontFamily' | 'fontRegular' | 'fontMedium' | 'fontSemiBold'
-> = {
+>;
+
+/** The system font at weight 400 / 500 / 600 (the default): `theme={{ ...SYSTEM_FONTS }}`. */
+export const SYSTEM_FONTS: FontTokens = {
   fontFamily: undefined,
   fontRegular: undefined,
   fontMedium: undefined,
@@ -90,15 +91,24 @@ export const SYSTEM_FONTS: Pick<
 };
 
 /**
+ * Inter under the names of its static files, for apps that load them
+ * (`Inter-Regular`, `Inter-Medium`, `Inter-SemiBold`): `theme={{ ...INTER_FONTS }}`.
+ */
+export const INTER_FONTS: FontTokens = {
+  fontFamily: undefined,
+  fontRegular: 'Inter-Regular',
+  fontMedium: 'Inter-Medium',
+  fontSemiBold: 'Inter-SemiBold',
+};
+
+/**
  * Defaults with the caller's overrides on top. A given accent also becomes the
- * focused border; a given `fontFamily` replaces the default Inter files (a
- * per-weight family passed with it still wins).
+ * focused border.
  */
 export const buildTokens = (overrides?: Partial<ThemeTokens>): ThemeTokens => {
   return {
     ...DEFAULT_TOKENS,
     ...(overrides?.accent ? { borderFocused: overrides.accent } : null),
-    ...(overrides?.fontFamily ? SYSTEM_FONTS : null),
     ...overrides,
   };
 };

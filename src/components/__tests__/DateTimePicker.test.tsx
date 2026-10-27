@@ -215,9 +215,9 @@ describe('DateTimePicker: the on-screen field', () => {
     expect(texts(tree)).toContain('closed');
   });
 
-  it('typing in the on-screen field (allowTriggerTyping) saves a complete value', () => {
+  it('typing in the on-screen field (allowFieldTyping) saves a complete value', () => {
     const onChange = jest.fn();
-    const tree = mount({ onChange, allowTriggerTyping: true });
+    const tree = mount({ onChange, allowFieldTyping: true });
     typeDate(tree, 'dp-trigger');
     expect(onChange).toHaveBeenCalledWith('2026-10-21T00:00:00.000Z');
   });
@@ -228,7 +228,7 @@ describe('DateTimePicker: the on-screen field', () => {
       type: 'datetime',
       timeFormat: '24h',
       onChange,
-      allowTriggerTyping: true,
+      allowFieldTyping: true,
     });
     const seg = (key: string) =>
       tree.root
@@ -315,6 +315,29 @@ describe('DateTimePicker: inline and instant', () => {
     typeDate(tree);
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('2026-10-21T00:00:00.000Z');
+  });
+
+  it('onBlur follows every save; onConfirm only a Confirm press', () => {
+    const onBlur = jest.fn();
+    const onConfirm = jest.fn();
+    const instant = mount({
+      presentation: 'inline',
+      commitMode: 'instant',
+      onBlur,
+      onConfirm,
+    });
+    typeDate(instant);
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    onBlur.mockClear();
+    const confirmed = mount({ onBlur, onConfirm });
+    openSheet(confirmed);
+    typeDate(confirmed);
+    press(confirmed, 'dp-confirm');
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledWith('2026-10-21T00:00:00.000Z');
   });
 });
 
@@ -1070,5 +1093,24 @@ describe('DateTimePicker: defaults from the locale and the clock', () => {
     });
     openSheet(forced);
     expect(exists(forced, 'dp-time-am')).toBe(true);
+  });
+
+  it('without firstDayOfWeek the week starts as in the locale; the prop wins', () => {
+    const firstWeekday = (props: Partial<DateTimePickerProps>) => {
+      const seen: number[] = [];
+      const tree = mount({
+        ...props,
+        renderWeekday: (wd) => {
+          seen.push(wd);
+          return null;
+        },
+      });
+      openSheet(tree);
+      return seen[0];
+    };
+    expect(firstWeekday({ locale: 'en-US' })).toBe(7);
+    expect(firstWeekday({ locale: 'en-GB' })).toBe(1);
+    expect(firstWeekday({ locale: 'ar-EG' })).toBe(6);
+    expect(firstWeekday({ locale: 'en-GB', firstDayOfWeek: 7 })).toBe(7);
   });
 });

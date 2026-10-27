@@ -66,7 +66,24 @@ export interface PickerState {
   strings: PickerStrings;
 }
 
+/** A slot's content: a node, or a function of the picker's state. */
 export type Slot = React.ReactNode | ((state: PickerState) => React.ReactNode);
+
+/**
+ * What `onError` reports: `'VALIDATION'` (your `validate` returned a message),
+ * `'NOTHING_SELECTABLE'` (no day can be picked), or a time problem found on
+ * Confirm (`'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`,
+ * `'AFTER_MAX'`, `'TIME_NOT_ALLOWED'`).
+ */
+export type PickerErrorCode =
+  | 'VALIDATION'
+  | 'NOTHING_SELECTABLE'
+  | 'INCOMPLETE'
+  | 'INVALID'
+  | 'OFF_STEP'
+  | 'BEFORE_MIN'
+  | 'AFTER_MAX'
+  | 'TIME_NOT_ALLOWED';
 
 /** What `renderSheet` receives. Render `body` above `footer`. */
 export interface SheetRenderProps {
@@ -152,7 +169,10 @@ export interface DateTimePickerProps {
    * when typing in the on-screen field pauses; or '' on clear. Never on close.
    */
   onChange: (value: PickerValue) => void;
-  /** On Confirm only, right after onChange (like a form field losing focus). */
+  /**
+   * Right after every onChange that saves a value (Confirm, an 'instant' edit,
+   * on-screen typing), like a form field losing focus. Not on clear.
+   */
   onBlur?: () => void;
   commitMode?: 'confirm' | 'instant';
   /** How values are stored. Default 'iso'. */
@@ -197,7 +217,7 @@ export interface DateTimePickerProps {
    * The on-screen field is typeable too. A complete, allowed value is saved
    * once, when focus leaves the field or its last box fills. Default false.
    */
-  allowTriggerTyping?: boolean;
+  allowFieldTyping?: boolean;
   allowClear?: boolean;
   errorMessage?: string;
   /** Order of the typed segments and the display: 'dd', 'MM', 'yyyy' with one separator. Default: from `locale`. */
@@ -221,6 +241,7 @@ export interface DateTimePickerProps {
   bodyTop?: Slot;
   bodyBottom?: Slot;
   footer?: Slot;
+  /** After a Confirm press saves a value, following onChange and onBlur. Never with commitMode 'instant' edits. */
   onConfirm?: (value: PickerValue) => void;
   confirmDisabled?: boolean;
   renderField?: (state: PickerState) => React.ReactNode;
@@ -236,6 +257,7 @@ export interface DateTimePickerProps {
   renderTimeRow?: (state: PickerState) => React.ReactNode;
 
   // calendar
+  /** 1 = Monday … 7 = Sunday. Default: from `locale`'s region, else Sunday. */
   firstDayOfWeek?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   showOutsideDays?: boolean;
   yearRange?: { first: number; last: number };
@@ -298,7 +320,7 @@ export interface DateTimePickerProps {
 
   // events
   onVisibleMonthChange?: (year: number, month: number) => void;
-  onError?: (code: string, value: PickerValue) => void;
+  onError?: (code: PickerErrorCode, value: PickerValue) => void;
   /**
    * Your own check, run when Confirm is pressed (or, with commitMode 'instant',
    * before each save) once the built-in checks pass. It gets the value about to

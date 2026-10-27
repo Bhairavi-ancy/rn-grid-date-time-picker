@@ -23,6 +23,7 @@ import { resolveCalendarSystem } from '../core/calendarSystem';
 import {
   defaultLocale,
   deriveDateFormat,
+  deriveFirstDayOfWeek,
   deriveTimeFormat,
   normalizeDateFormat,
 } from '../core/locale';
@@ -77,8 +78,9 @@ const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
  * Everything comes in through props; the picker keeps no state of its own beyond
  * the draft being edited, and loads data only through `loadHolidays`.
  * onChange (then onBlur) fires once per Confirm, once per saved edit with
- * commitMode 'instant' or on-screen typing, and once with '' on clear; closing,
- * the backdrop and Android back fire nothing (onClose only).
+ * commitMode 'instant' or on-screen typing; onConfirm follows only a Confirm
+ * press. Clearing fires onChange('') alone; closing, the backdrop and Android
+ * back fire nothing (onClose only).
  */
 
 const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
@@ -108,7 +110,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     disabled = false,
     readOnly = false,
     allowTyping,
-    allowTriggerTyping,
+    allowFieldTyping,
     allowClear,
     errorMessage,
     dateFormat: dateFormatProp,
@@ -132,7 +134,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     renderMonthCell,
     renderEmptyState,
     renderTimeRow,
-    firstDayOfWeek = 7,
+    firstDayOfWeek: firstDayProp,
     showOutsideDays = true,
     initialView,
     precision: precisionProp = 'day',
@@ -178,6 +180,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     [stringOverrides]
   );
   const loc = useMemo(() => locale ?? defaultLocale(), [locale]);
+  const firstDayOfWeek = firstDayProp ?? deriveFirstDayOfWeek(loc);
   // Month and year picks are for single dates only.
   const precision =
     type === 'date' && mode === 'single' ? precisionProp : 'day';
@@ -549,13 +552,13 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     !wheelSpinning &&
     !confirmDisabled;
 
+  // Every save: Confirm, an 'instant' edit (onConfirm is added by `confirm`).
   const commit = useCallback(
     (wire: PickerValue) => {
       onChange(wire);
       onBlur?.();
-      onConfirm?.(wire);
     },
-    [onChange, onBlur, onConfirm]
+    [onChange, onBlur]
   );
 
   const confirm = useCallback(() => {
@@ -574,6 +577,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       return;
     }
     commit(wire);
+    onConfirm?.(wire);
     edited.current = false;
     if (!isInline) close();
   }, [
@@ -581,6 +585,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     timeBlocked,
     timeIssue,
     commit,
+    onConfirm,
     preview,
     draftOptions,
     isInline,
@@ -1017,7 +1022,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         value={savedSingle}
         displayText={savedText}
         allowTyping={
-          mode === 'single' && precision === 'day' && allowTriggerTyping
+          mode === 'single' && precision === 'day' && allowFieldTyping
         }
         onTypingDone={onTriggerTyped}
         onTyped={() => setTriggerError('')}

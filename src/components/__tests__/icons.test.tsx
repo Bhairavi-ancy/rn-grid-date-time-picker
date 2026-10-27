@@ -6,7 +6,12 @@ import { CalendarIcon, ClearIcon, type IconRenderProps } from '../../icons';
 import DateTimePicker from '../DateTimePicker';
 import ValueField, { type ValueFieldProps } from '../field/ValueField';
 import { DEFAULT_STRINGS } from '../theme/defaultStrings';
-import { buildTokens, fontStyle, SYSTEM_FONTS } from '../theme/tokens';
+import {
+  buildTokens,
+  fontStyle,
+  INTER_FONTS,
+  SYSTEM_FONTS,
+} from '../theme/tokens';
 import type { DateTimePickerProps } from '../types';
 
 const tokens = buildTokens({ accent: '#123456' });
@@ -264,11 +269,17 @@ describe('fonts', () => {
     expect(styled.length).toBeGreaterThan(5);
   });
 
-  it('Inter by default; fontFamily covers every weight; a per-weight family wins over it', () => {
+  it('the system font by default; fontFamily covers every weight; a per-weight family wins over it', () => {
     expect(fontStyle(buildTokens(), 'regular')).toEqual({
-      fontFamily: 'Inter-Regular',
+      fontWeight: '400',
     });
     expect(fontStyle(buildTokens(), 'semiBold')).toEqual({
+      fontWeight: '600',
+    });
+    expect(fontStyle(buildTokens(INTER_FONTS), 'regular')).toEqual({
+      fontFamily: 'Inter-Regular',
+    });
+    expect(fontStyle(buildTokens(INTER_FONTS), 'semiBold')).toEqual({
       fontFamily: 'Inter-SemiBold',
     });
     const one = buildTokens({ fontFamily: 'Inter' });
@@ -287,11 +298,11 @@ describe('fonts', () => {
     expect(fontStyle(mixed, 'semiBold')).toEqual({
       fontFamily: 'Inter-SemiBold',
     });
-    expect(fontStyle(buildTokens(), 'medium')).toEqual({
+    expect(fontStyle(buildTokens(INTER_FONTS), 'medium')).toEqual({
       fontFamily: 'Inter-Medium',
     });
-    expect(fontStyle(buildTokens(SYSTEM_FONTS), 'medium')).toEqual({
-      fontWeight: '500',
-    });
+    expect(
+      fontStyle(buildTokens({ ...INTER_FONTS, ...SYSTEM_FONTS }), 'medium')
+    ).toEqual({ fontWeight: '500' });
   });
 });

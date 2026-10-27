@@ -1,4 +1,4 @@
-import type { TimeFormat } from './types';
+import type { TimeFormat, Weekday } from './types';
 
 /**
  * Locale defaults, read from the platform's Intl. Each helper falls back to a
@@ -80,4 +80,41 @@ export const deriveTimeFormat = (locale: string): TimeFormat => {
   } catch {
     return '12h';
   }
+};
+
+// Regions whose week doesn't start on Monday, from CLDR 48 week data. Kept as a
+// table because Intl's week info isn't available on every engine (Hermes).
+const FRIDAY_REGIONS = new Set(['MV']);
+const SATURDAY_REGIONS = new Set(
+  'AF BH DJ DZ EG IQ IR JO KW LY OM QA SD SY'.split(' ')
+);
+const SUNDAY_REGIONS = new Set(
+  (
+    'AG AS BD BR BS BT BW BZ CA CO DM DO ET GT GU HK HN ID IL IN IS JM JP KE ' +
+    'KH KR LA MH MM MO MT MX MZ NI NP PA PE PH PK PR PT PY SA SG SV TH TT TW ' +
+    'UM US VE VI WS YE ZA ZW'
+  ).split(' ')
+);
+
+/** The region subtag of a BCP-47 tag ('US' in 'en-US', 'TW' in 'zh-Hant-TW'), or null. */
+const regionOf = (locale: string): string | null => {
+  for (const part of locale.split(/[-_]/).slice(1)) {
+    if (part.length === 1) break; // an extension ('-u-…') starts here
+    if (/^([A-Za-z]{2}|\d{3})$/.test(part)) return part.toUpperCase();
+  }
+  return null;
+};
+
+/**
+ * The first day of the week in the locale's region (1 = Monday … 7 = Sunday):
+ * Sunday for en-US, Monday for en-GB and de-DE, Saturday for ar-EG. A tag
+ * without a region ('en', 'fr') falls back to Sunday.
+ */
+export const deriveFirstDayOfWeek = (locale: string): Weekday => {
+  const region = typeof locale === 'string' ? regionOf(locale) : null;
+  if (!region) return 7;
+  if (SUNDAY_REGIONS.has(region)) return 7;
+  if (SATURDAY_REGIONS.has(region)) return 6;
+  if (FRIDAY_REGIONS.has(region)) return 5;
+  return 1;
 };
