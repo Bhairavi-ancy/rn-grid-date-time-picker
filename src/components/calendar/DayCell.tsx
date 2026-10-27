@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { CalendarDate } from '../../core/types';
 import type { PickerStyles } from '../theme/styleKeys';
 import { DAY_HIT_SLOP, MAX_FONT_SCALE } from '../theme/a11y';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildCalendarStyles } from './calendarStyles';
 
@@ -54,6 +55,7 @@ const DayCell: React.FC<Props> = ({
   styles,
   testID,
 }) => {
+  const digits = useNumerals();
   const s = buildCalendarStyles(tokens);
   const filled =
     isSelected &&
@@ -109,14 +111,14 @@ const DayCell: React.FC<Props> = ({
             filled && [s.selectedText, styles?.selectedText],
           ]}
         >
-          {label ?? date.day}
+          {digits(String(label ?? date.day))}
         </Text>
         {subLabel ? (
           <Text
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             style={[s.subLabel, styles?.daySubLabel, filled && s.selectedText]}
           >
-            {subLabel}
+            {digits(subLabel)}
           </Text>
         ) : null}
       </Pressable>

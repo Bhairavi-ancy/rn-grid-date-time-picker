@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { PickerStyles, StyleKey } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildCalendarStyles } from './calendarStyles';
 
@@ -64,6 +65,7 @@ const PeriodGrid: React.FC<Props> = ({
   styles,
   testID,
 }) => {
+  const digits = useNumerals();
   const s = buildCalendarStyles(tokens);
   const k = KEYS[kind];
   return (
@@ -101,7 +103,7 @@ const PeriodGrid: React.FC<Props> = ({
                   item.selected && s.gridSelectedText,
                 ]}
               >
-                {item.label}
+                {digits(item.label)}
               </Text>
             )}
           </Pressable>

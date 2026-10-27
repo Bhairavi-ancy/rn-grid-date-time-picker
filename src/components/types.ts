@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 import type { Constraints, TimeBounds } from '../core/constraints';
+import type { Numerals } from '../core/numerals';
 import type {
   CalendarDate,
   PickerType,
@@ -281,6 +282,8 @@ export interface DateTimePickerProps {
   calendarSystem?: 'gregory' | 'dual' | 'hijri';
   /** Any BCP-47 tag; decides names, the date order and the clock. Default: the device locale. */
   locale?: string;
+  /** 'locale' draws every number in the locale's own digits (١٢٣ for 'ar-SA'). Values stay 0–9. Default 'latin'. */
+  numerals?: Numerals;
   /** IANA zone for date-time values and "today". Default: the device zone. */
   timeZone?: string;
   /** The current time, for "today" and a new day's time. Default `() => new Date()`. */

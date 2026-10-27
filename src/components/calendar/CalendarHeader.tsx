@@ -18,6 +18,7 @@ import {
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { buildCalendarStyles } from './calendarStyles';
@@ -58,6 +59,7 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
   styles,
   testID,
 }) => {
+  const digits = useNumerals();
   const s = buildCalendarStyles(tokens);
   const ico = resolveIcons(icons);
   const arrow = (
@@ -113,7 +115,7 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
           maxFontSizeMultiplier={MAX_FONT_SCALE}
           style={[s.yearButtonText, styles?.yearButtonText]}
         >
-          {title}
+          {digits(title)}
         </Text>
         <View style={s.caret}>
           {renderIcon(

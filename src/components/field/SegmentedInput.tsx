@@ -17,6 +17,7 @@ import type { Period, SegmentKey, SegmentSpec } from '../../core/segments';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildFieldStyles } from './fieldStyles';
 
@@ -106,6 +107,7 @@ const SegmentedInput: React.FC<Props> = ({
   fieldLabel,
   testID,
 }) => {
+  const digits = useNumerals();
   // Each box's text as last rendered, and as it last reported. Fast input (a
   // hardware keyboard, autofill) sends the next character before React has
   // re-rendered, and the native box may ignore React's reset while it's
@@ -189,7 +191,7 @@ const SegmentedInput: React.FC<Props> = ({
           }}
           testID={testID ? `${testID}-segment-${spec.key}` : undefined}
           accessibilityLabel={labels[spec.key]}
-          value={text}
+          value={digits(text)}
           placeholder={placeholders[spec.key]}
           placeholderTextColor={tokens.placeholder}
           keyboardType="number-pad"

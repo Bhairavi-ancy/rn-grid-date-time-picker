@@ -15,6 +15,7 @@ import type { Time, TimeFormat } from '../../core/types';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { buildTimeStyles } from './timeStyles';
@@ -83,6 +84,7 @@ const WheelColumnBase: React.FC<ColumnProps> = ({
   styles,
   testID,
 }) => {
+  const digits = useNumerals();
   const s = buildTimeStyles(tokens);
   const ref = useRef<ScrollViewRef>(null);
   const reduceMotion = useReduceMotion();
@@ -216,7 +218,7 @@ const WheelColumnBase: React.FC<ColumnProps> = ({
                 ],
               ]}
             >
-              {item.label}
+              {digits(item.label)}
             </Text>
           </View>
         ))}
