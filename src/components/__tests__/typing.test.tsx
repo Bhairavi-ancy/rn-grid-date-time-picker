@@ -223,3 +223,46 @@ describe('typed segments', () => {
     expect(seg(tree, 'f', 'month').props.value).toBe('');
   });
 });
+
+describe('digits from an Arabic or Persian number pad', () => {
+  it('the on-screen field reads ٢٥ ١٠ ٢٠٢٦ as 25-10-2026', () => {
+    const log = jest.fn();
+    const tree = mount(<Screen log={log} type="date" />);
+    typeIn(tree, 'dp-trigger', [
+      ['day', '٢٥'],
+      ['month', '١٠'],
+      ['year', '٢٠٢٦'],
+    ]);
+    expect(log).toHaveBeenLastCalledWith('2026-10-25');
+  });
+
+  it('the time boxes read ۱۱ as 11', () => {
+    const log = jest.fn();
+    const tree = mount(
+      <DateTimePicker
+        type="datetime"
+        presentation="inline"
+        now={now}
+        timeZone="UTC"
+        timeFormat="24h"
+        testID="dp"
+        value="2026-10-25T09:30:00.000Z"
+        onChange={log}
+      />
+    );
+    const hour = () =>
+      tree.root
+        .findAllByType(TextInput)
+        .find((i) => i.props.testID === 'dp-time-hour')!;
+    act(() => hour().props.onFocus());
+    act(() => hour().props.onChangeText('۱۱'));
+    act(() =>
+      tree.root
+        .findAll(
+          (n) => n.props.testID === 'dp-confirm' && typeof n.type !== 'string'
+        )[0]!
+        .props.onPress()
+    );
+    expect(log).toHaveBeenLastCalledWith('2026-10-25T11:30:00.000Z');
+  });
+});

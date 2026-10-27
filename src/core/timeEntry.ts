@@ -1,3 +1,4 @@
+import { toLatinDigits } from './digits';
 import type { TimeBounds } from './constraints';
 import {
   from12Hour,
@@ -213,9 +214,12 @@ export const isPeriodAllowed = (
   return true;
 };
 
-/** Digits only, at most two (what a time box accepts while typing). */
+/**
+ * Digits only, at most two (what a time box accepts while typing). Digits
+ * typed in another script count too ('٠٩' → '09').
+ */
 export const cleanBoxText = (raw: string): string =>
-  raw.replace(/\D/g, '').slice(0, 2);
+  toLatinDigits(raw).replace(/\D/g, '').slice(0, 2);
 
 /**
  * The boxes as they are saved when focus leaves them: a one-digit entry gets a

@@ -152,6 +152,11 @@ describe('timeEntry: leaving a box', () => {
     expect(cleanBoxText('')).toBe('');
   });
 
+  it('reads digits typed in another script', () => {
+    expect(cleanBoxText('٠٩')).toBe('09');
+    expect(cleanBoxText('۱۲')).toBe('12');
+  });
+
   it('pads a single digit and counts empty minutes as 00', () => {
     expect(
       completeTimeEntry({ hour: '9', minute: '', period: 'PM' }, '12h')

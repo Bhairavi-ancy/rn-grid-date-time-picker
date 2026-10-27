@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 
 - In right-to-left layouts the month arrows and the caret next to the year pointed the wrong way (down / up instead of back / forward). The built-in chevrons now draw the same in both directions.
+- Digits typed from an Arabic, Persian or other non-Latin number pad (for example ٢٥ on an iPhone set to Arabic) were ignored. The field segments and time boxes now read them as 0–9.
 
 ## [1.0.0] - 2026-10-27
 
