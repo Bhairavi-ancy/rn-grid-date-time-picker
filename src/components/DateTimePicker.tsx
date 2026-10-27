@@ -150,7 +150,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     validate,
     yearRange: yearRangeProp = DEFAULT_YEAR_RANGE,
     locale,
-    numerals = 'latin',
+    numerals: numeralsProp,
     timeZone,
     now,
     timeFormat: timeFormatProp,
@@ -183,14 +183,20 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     [stringOverrides]
   );
   const loc = useMemo(() => locale ?? defaultLocale(), [locale]);
-  const digits = useMemo(
-    () => (numerals === 'locale' ? localeDigits(loc) : latinDigits),
-    [numerals, loc]
-  );
   const firstDayOfWeek = firstDayProp ?? deriveFirstDayOfWeek(loc);
   // Month and year picks are for single dates only.
   const precision =
     type === 'date' && mode === 'single' ? precisionProp : 'day';
+  // Month and year picks are Gregorian whatever the calendar system.
+  const system =
+    precision === 'day' ? resolveCalendarSystem(calendarSystem) : 'gregory';
+  // A Hijri calendar shows the language's own digits unless told otherwise,
+  // as the platform does ('ar-SA' → ١٢٣, 'en-US' → 123).
+  const numerals = numeralsProp ?? (system === 'gregory' ? 'latin' : 'locale');
+  const digits = useMemo(
+    () => (numerals === 'locale' ? localeDigits(loc) : latinDigits),
+    [numerals, loc]
+  );
   const monthNames = useMemo(() => localeNames(loc).monthsLong, [loc]);
   /** A month or year pick shown as text: "March 2026" or "2026". */
   const periodText = (v: DateTimeValue | null): string => {
@@ -1134,10 +1140,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       showHolidays={showHolidays}
       yearRange={yearRange}
       locale={loc}
-      // Month and year picks are Gregorian whatever the calendar system.
-      calendarSystem={
-        precision === 'day' ? resolveCalendarSystem(calendarSystem) : 'gregory'
-      }
+      calendarSystem={system}
       initialView={initialView}
       precision={precision}
       enableMonthSwipe={enableMonthSwipe}

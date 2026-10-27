@@ -241,7 +241,7 @@ const epochMs: ValueAdapter = {
 | `showToday` | `boolean` | `false` |
 | `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'` |
 | `locale` | BCP-47 tag | the device locale |
-| `numerals` | `'latin' \| 'locale'` | `'latin'`: `'locale'` draws every number in the locale's own digits (١٢٣ for `ar-SA`) |
+| `numerals` | `'latin' \| 'locale'` | `'locale'` with a Hijri or dual calendar, else `'latin'`. `'locale'` draws every number in the locale's own digits (١٢٣ for `ar-SA`) |
 | `timeZone` | IANA zone | the device zone |
 | `now` | `() => Date` | `() => new Date()` |
 
@@ -442,7 +442,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 
 - **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) the default `timeFormat` (the locale's hour cycle, else `'12h'`) and the default `firstDayOfWeek` (the region's first day from CLDR week data: Sunday for `en-US`, Monday for `en-GB` and `de-DE`, Saturday for `ar-EG`; Sunday when the tag has no region).
 - **RTL**: layouts use start/end, so they flip with `I18nManager`. The chevrons point the right way, and swipe directions are mirrored. Typed dates and times keep their left-to-right digit order.
-- **Digits**: numbers show as 0–9 by default. `numerals="locale"` draws the day numbers, years, field text, typed segments, time boxes and wheel in the locale's own digits, as `Intl` writes them: `ar-SA` gives ١٢٣, `fa-IR` gives ۱۲۳, and a locale that writes 0–9 (`ar-AE`, `en-US`) keeps them. Values passed to `onChange` stay 0–9. Typed digits are read in any script, so ٢٥ typed on an Arabic number pad is 25 either way. Your own `renderDay`, `renderYearCell` and `renderMonthCell` get plain numbers, so they choose their digits.
+- **Digits**: a Hijri or dual calendar draws numbers in the language's own digits, as the platform does: Arabic Hijri shows ١٤٤٨, English Hijri shows 1448. A Gregorian calendar shows 0–9. `numerals` overrides either way: `'latin'` keeps 0–9 in an Arabic Hijri calendar, and `'locale'` draws the day numbers, years, field text, typed segments, time boxes and wheel in the locale's own digits, as `Intl` writes them: `ar-SA` gives ١٢٣, `fa-IR` gives ۱۲۳, and a locale that writes 0–9 (`ar-AE`, `en-US`) keeps them. Values passed to `onChange` stay 0–9. Typed digits are read in any script, so ٢٥ typed on an Arabic number pad is 25 either way. Your own `renderDay`, `renderYearCell` and `renderMonthCell` get plain numbers, so they choose their digits.
 - **Hijri**: `calendarSystem="dual"` shows the Hijri day under each Gregorian day; `"hijri"` lays out Hijri (Umm al-Qura) months, years and day numbers. Values stay Gregorian either way. Hijri dates come from the platform's `Intl` (`islamic-umalqura`). Some JS engines and devices ship without that calendar, for example some Hermes / Android builds. The picker checks once, and if it isn't available it falls back to `'gregory'`. The default is always `'gregory'`, whatever the locale.
 
 ## Theming

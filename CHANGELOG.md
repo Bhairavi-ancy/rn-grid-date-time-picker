@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- `numerals="locale"` draws every number (day numbers, years, the field text, typed segments, time boxes and the wheel) in the locale's own digits, for example ١٢٣ for `ar-SA`. The default `'latin'` keeps 0–9, and values stay 0–9 either way.
+- Numbers in the locale's own digits, for example ١٢٣ for `ar-SA`: the day numbers, years, field text, typed segments, time boxes and wheel. A Hijri or dual calendar does this by default (an English one keeps 0–9, as the platform does). The `numerals` prop sets it either way: `'latin'` for 0–9, `'locale'` for the language's digits with any calendar. Values stay 0–9.
 
 ### Fixed
 

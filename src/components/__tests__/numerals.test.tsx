@@ -49,10 +49,26 @@ describe('numerals', () => {
     expect(input(tree, 'dp-time-minute').props.value).toBe('٣٠');
   });
 
-  it("'latin' (the default) keeps 0–9 in an Arabic locale", () => {
+  it('a Gregorian calendar keeps 0–9 by default in an Arabic locale', () => {
     const tree = picker({});
     expect(texts(tree)).toContain('27');
     expect(input(tree, 'dp-time-hour').props.value).toBe('09');
+  });
+
+  it("a Hijri or dual calendar uses the language's digits by default", () => {
+    const hijri = texts(picker({ calendarSystem: 'hijri' }));
+    expect(hijri).toContain('١٤٤٨');
+    expect(hijri).toContain('١٦'); // 16 Jumada I is today
+    expect(texts(picker({ calendarSystem: 'dual' }))).toContain('٢٧');
+  });
+
+  it("an English Hijri calendar keeps 0–9, and numerals='latin' overrides the default", () => {
+    expect(
+      texts(picker({ calendarSystem: 'hijri', locale: 'en-US' }))
+    ).toContain('1448');
+    const latin = picker({ calendarSystem: 'hijri', numerals: 'latin' });
+    expect(texts(latin)).toContain('1448');
+    expect(input(latin, 'dp-time-hour').props.value).toBe('09');
   });
 
   it('the on-screen field and renderField get the text in those digits; the value stays 0–9', () => {
