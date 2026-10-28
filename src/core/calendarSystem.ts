@@ -2,6 +2,7 @@ import { addDays, addMonths, daysInMonth } from './calendarDate';
 import type { CalendarDate, Weekday } from './types';
 import { weekdayOf } from './calendarDate';
 import { toLatinDigits } from './digits';
+import { withCalendar } from './locale';
 
 /**
  * Calendar systems for the picker. Saved values are always Gregorian; a
@@ -58,16 +59,9 @@ const utcDate = (
   return d;
 };
 
-/**
- * The locale with the Umm al-Qura calendar, keeping any Unicode extension it
- * already has ('ar-SA-u-nu-arab' → 'ar-SA-u-ca-islamic-umalqura-nu-arab').
- */
-const withHijriCalendar = (locale: string): string => {
-  const [base, ext] = locale.split(/-u-/i);
-  if (ext === undefined) return `${locale}-u-ca-islamic-umalqura`;
-  const rest = ext.replace(/(^|-)ca(-[a-z0-9]{3,8})+/i, '').replace(/^-/, '');
-  return `${base}-u-ca-islamic-umalqura${rest ? `-${rest}` : ''}`;
-};
+/** The locale with the Umm al-Qura calendar ('ar-SA-u-nu-arab' → 'ar-SA-u-ca-islamic-umalqura-nu-arab'). */
+const withHijriCalendar = (locale: string): string =>
+  withCalendar(locale, 'islamic-umalqura');
 
 const readParts = (
   f: Intl.DateTimeFormat,

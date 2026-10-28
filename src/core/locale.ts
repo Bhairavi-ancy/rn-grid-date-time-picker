@@ -16,6 +16,18 @@ const DATE_TOKENS: Partial<Record<string, string>> = {
   yearName: 'yyyy',
 };
 
+/**
+ * The locale with a calendar, keeping any Unicode extension it already has
+ * ('ar-SA-u-nu-arab' → 'ar-SA-u-ca-gregory-nu-arab'). Some engines write a
+ * locale in its own calendar by default (iOS: Hijri for 'ar-SA').
+ */
+export const withCalendar = (locale: string, calendar: string): string => {
+  const [base, ext] = locale.split(/-u-/i);
+  if (ext === undefined) return `${locale}-u-ca-${calendar}`;
+  const rest = ext.replace(/(^|-)ca(-[a-z0-9]{3,8})+/i, '').replace(/^-/, '');
+  return `${base}-u-ca-${calendar}${rest ? `-${rest}` : ''}`;
+};
+
 /** The device locale (a BCP-47 tag), or 'en-US'. */
 export const defaultLocale = (): string => {
   try {
@@ -33,7 +45,7 @@ export const defaultLocale = (): string => {
  */
 export const deriveDateFormat = (locale: string): string => {
   try {
-    const parts = new Intl.DateTimeFormat(locale, {
+    const parts = new Intl.DateTimeFormat(withCalendar(locale, 'gregory'), {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
