@@ -326,8 +326,10 @@ export interface DateTimePickerProps {
   /** Any BCP-47 tag; decides names, the date order and the clock. Default: the device locale. */
   locale?: string;
   /**
-   * 'locale' draws every number in the locale's own digits (١٢٣ for 'ar-SA'), 'latin' in 0–9. Values stay 0–9.
-   * Default: 'locale' for a Hijri calendar and a date picked in it, 'latin' for a Gregorian one.
+   * The digits every number is drawn in: 'latin' (0–9), 'arabic' (١٢٣ in any
+   * language) or 'locale' (the language's own: ١٢٣ for 'ar-SA', ۱۲۳ for
+   * 'fa-IR', 123 for 'en-US'). Values stay 0–9. Default: 'arabic' for a Hijri
+   * calendar and a date picked in it, 'latin' for a Gregorian one.
    */
   numerals?: Numerals;
   /** IANA zone for date-time values and "today". Default: the device zone. */

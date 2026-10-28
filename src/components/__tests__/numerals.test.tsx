@@ -64,10 +64,18 @@ describe('numerals', () => {
     expect(dual).not.toContain('٢٧');
   });
 
-  it("an English Hijri calendar keeps 0–9, and numerals='latin' overrides the default", () => {
+  it("Hijri uses Arabic digits in any language; numerals='latin' or 'locale' overrides it", () => {
     expect(
       texts(picker({ calendarSystem: 'hijri', locale: 'en-US' }))
+    ).toContain('١٤٤٨');
+    expect(
+      texts(
+        picker({ calendarSystem: 'hijri', locale: 'en-US', numerals: 'locale' })
+      )
     ).toContain('1448');
+    expect(
+      texts(picker({ calendarSystem: 'hijri', locale: 'fa-IR' }))
+    ).toContain('١٤٤٨');
     const latin = picker({ calendarSystem: 'hijri', numerals: 'latin' });
     expect(texts(latin)).toContain('1448');
     expect(input(latin, 'dp-time-hour').props.value).toBe('09');

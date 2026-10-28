@@ -51,8 +51,8 @@ const isSelected = (tree: ReactTestRenderer, d: number, m = 10) =>
   !!dayCell(tree, d, m)?.props.accessibilityState?.selected;
 const checked = (tree: ReactTestRenderer, id: string) =>
   find(tree, id).props.accessibilityState;
-/** The Hijri grid shows Hijri years in its header. */
-const showsHijri = (tree: ReactTestRenderer) => texts(tree).includes('1448');
+/** The Hijri grid shows Hijri years in its header, in Arabic digits. */
+const showsHijri = (tree: ReactTestRenderer) => texts(tree).includes('١٤٤٨');
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -250,8 +250,8 @@ describe('the calendar a date was picked in', () => {
     });
     act(() => state.open());
     tap(tree, 20);
-    expect(state.displayText).toBe('Jumada I 9, 1448 AH');
-    expect(texts(tree)).toContain('Jumada I 9, 1448 AH');
+    expect(state.displayText).toBe('Jumada I ٩, ١٤٤٨ AH');
+    expect(texts(tree)).toContain('Jumada I ٩, ١٤٤٨ AH');
 
     press(tree, 'dp-dual-tabs-gregory');
     tap(tree, 21);
@@ -266,7 +266,7 @@ describe('the calendar a date was picked in', () => {
   it('a value from outside counts as picked in the calendar the picker opens on', () => {
     const hijri = mount({ calendarSystem: 'hijri', value: '2026-10-20' });
     expect(isSelected(hijri, 20)).toBe(true);
-    expect(texts(hijri)).toContain('Jumada I 9, 1448 AH');
+    expect(texts(hijri)).toContain('Jumada I ٩, ١٤٤٨ AH');
     const dual = mount({ calendarSystem: 'dual', value: '2026-10-20' });
     expect(isSelected(dual, 20)).toBe(true);
     expect(texts(dual)).toContain('20/10/2026');

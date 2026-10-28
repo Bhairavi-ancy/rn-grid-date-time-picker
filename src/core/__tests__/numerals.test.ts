@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { latinDigits, localeDigits } from '../numerals';
+import { arabicDigits, latinDigits, localeDigits } from '../numerals';
 
 describe('localeDigits', () => {
   it("uses the locale's own digits", () => {
@@ -16,5 +16,12 @@ describe('localeDigits', () => {
   it("keeps 0–9 for a tag Intl can't read", () => {
     expect(localeDigits('not a locale!')('12')).toBe('12');
     expect(latinDigits('12')).toBe('12');
+  });
+});
+
+describe('arabicDigits', () => {
+  it('uses Arabic-Indic digits whatever the text', () => {
+    expect(arabicDigits('Jumada I 9, 1448 AH')).toBe('Jumada I ٩, ١٤٤٨ AH');
+    expect(arabicDigits('0123456789')).toBe('٠١٢٣٤٥٦٧٨٩');
   });
 });

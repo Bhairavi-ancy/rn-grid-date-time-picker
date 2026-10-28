@@ -33,7 +33,7 @@ import {
   deriveTimeFormat,
   normalizeDateFormat,
 } from '../core/locale';
-import { latinDigits, localeDigits } from '../core/numerals';
+import { arabicDigits, latinDigits, localeDigits } from '../core/numerals';
 import { withSelectionRules } from '../core/selectionRules';
 import type { ParsedSegments } from '../core/segments';
 import { checkTime, type TimeEntryIssue } from '../core/timeEntry';
@@ -253,13 +253,14 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const hijriInPlay = switchSystems !== null || system !== 'gregory';
   /**
    * The digits for one calendar: a Hijri calendar (and a date picked in it)
-   * shows the language's own digits, as the platform does ('ar-SA' → ١٢٣,
-   * 'en-US' → 123); a Gregorian one shows 0–9. `numerals` sets both.
+   * shows Arabic digits (١٢٣) in any language; a Gregorian one shows 0–9.
+   * `numerals` sets both.
    */
-  const digitsFor = (sys: 'gregory' | 'hijri') =>
-    (numeralsProp ?? (sys === 'hijri' ? 'locale' : 'latin')) === 'locale'
-      ? localeDigits(loc)
-      : latinDigits;
+  const digitsFor = (sys: 'gregory' | 'hijri') => {
+    const kind = numeralsProp ?? (sys === 'hijri' ? 'arabic' : 'latin');
+    if (kind === 'arabic') return arabicDigits;
+    return kind === 'locale' ? localeDigits(loc) : latinDigits;
+  };
   const monthNames = useMemo(() => localeNames(loc).monthsLong, [loc]);
   /** A month or year pick shown as text: "March 2026" or "2026". */
   const periodText = (v: DateTimeValue | null): string => {

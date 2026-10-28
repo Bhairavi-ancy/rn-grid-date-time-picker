@@ -1,7 +1,14 @@
-/** Which digits the picker shows: always 0–9, or the locale's own (١٢٣ for 'ar-SA'). */
-export type Numerals = 'latin' | 'locale';
+/**
+ * Which digits the picker shows: 0–9, Arabic-Indic (١٢٣) in any language, or
+ * the locale's own (١٢٣ for 'ar-SA', ۱۲۳ for 'fa-IR', 123 for 'en-US').
+ */
+export type Numerals = 'latin' | 'arabic' | 'locale';
 
 export const latinDigits = (text: string): string => text;
+
+/** Swaps 0–9 in a text for Arabic-Indic digits (٠–٩). */
+export const arabicDigits = (text: string): string =>
+  text.replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d)));
 
 const cache = new Map<string, (text: string) => string>();
 
