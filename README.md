@@ -710,7 +710,7 @@ For Jest, no transform changes are needed: `main` points to the CommonJS build. 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, scripts and the example app, and the [code of conduct](CODE_OF_CONDUCT.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, scripts and the example app.
 
 ## License
 
