@@ -55,11 +55,13 @@ describe('numerals', () => {
     expect(input(tree, 'dp-time-hour').props.value).toBe('09');
   });
 
-  it("a Hijri or dual calendar uses the language's digits by default", () => {
+  it("a Hijri calendar uses the language's digits by default; Gregorian keeps 0–9", () => {
     const hijri = texts(picker({ calendarSystem: 'hijri' }));
     expect(hijri).toContain('١٤٤٨');
     expect(hijri).toContain('١٦'); // 16 Jumada I is today
-    expect(texts(picker({ calendarSystem: 'dual' }))).toContain('٢٧');
+    const dual = texts(picker({ calendarSystem: 'dual' }));
+    expect(dual).toContain('27');
+    expect(dual).not.toContain('٢٧');
   });
 
   it("an English Hijri calendar keeps 0–9, and numerals='latin' overrides the default", () => {

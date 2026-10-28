@@ -251,14 +251,15 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const openingSystem = system === 'dual' ? dualDefaultTab : system;
   // Picks say which calendar they were made in only when one can be Hijri.
   const hijriInPlay = switchSystems !== null || system !== 'gregory';
-  // A Hijri calendar shows the language's own digits unless told otherwise,
-  // as the platform does ('ar-SA' → ١٢٣, 'en-US' → 123). Decided by what can
-  // show, so the digits don't change with the switch or the tabs.
-  const numerals = numeralsProp ?? (hijriInPlay ? 'locale' : 'latin');
-  const digits = useMemo(
-    () => (numerals === 'locale' ? localeDigits(loc) : latinDigits),
-    [numerals, loc]
-  );
+  /**
+   * The digits for one calendar: a Hijri calendar (and a date picked in it)
+   * shows the language's own digits, as the platform does ('ar-SA' → ١٢٣,
+   * 'en-US' → 123); a Gregorian one shows 0–9. `numerals` sets both.
+   */
+  const digitsFor = (sys: 'gregory' | 'hijri') =>
+    (numeralsProp ?? (sys === 'hijri' ? 'locale' : 'latin')) === 'locale'
+      ? localeDigits(loc)
+      : latinDigits;
   const monthNames = useMemo(() => localeNames(loc).monthsLong, [loc]);
   /** A month or year pick shown as text: "March 2026" or "2026". */
   const periodText = (v: DateTimeValue | null): string => {
@@ -1094,7 +1095,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     type,
     mode,
     value,
-    displayText: digits(
+    displayText: digitsFor(savedSystem)(
       savedText ??
         formatValueText(
           savedSingle,
@@ -1405,11 +1406,19 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       ? validation.message
       : null;
 
+  // The field and the time row write the date in the digits of the calendar
+  // it was picked in; the calendar uses its own.
   const sheetContent = (
     <>
-      {sheetField}
-      {calendar}
-      {timeRow}
+      <NumeralsContext.Provider value={digitsFor(draftSystem)}>
+        {sheetField}
+      </NumeralsContext.Provider>
+      <NumeralsContext.Provider value={digitsFor(shownSystem)}>
+        {calendar}
+      </NumeralsContext.Provider>
+      <NumeralsContext.Provider value={digitsFor(draftSystem)}>
+        {timeRow}
+      </NumeralsContext.Provider>
       {validationMessage ? (
         <FieldMessages
           error={validationMessage}
@@ -1425,7 +1434,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   );
 
   return (
-    <NumeralsContext.Provider value={digits}>
+    <NumeralsContext.Provider value={digitsFor(savedSystem)}>
       {trigger}
       <PickerContainer
         presentation={presentation}

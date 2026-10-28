@@ -279,10 +279,37 @@ describe('the calendar a date was picked in', () => {
     expect(onChange.mock.calls[0]).toEqual(['2026-10-20']);
   });
 
-  it("keeps the language's digits whichever tab shows", () => {
+  it("Gregorian shows 0–9 and Hijri the language's digits, in the calendar and in the field", () => {
     const tree = mount({ calendarSystem: 'dual', locale: 'ar-SA' });
-    expect(texts(tree)).toContain('٢٧');
+    const field = () =>
+      texts(tree).find((t) => t.includes('/') || t.includes('هـ'));
+    expect(texts(tree)).toContain('27');
+    expect(texts(tree)).not.toContain('٢٧');
+    tap(tree, 20);
+    expect(field()).toBe('20/10/2026');
+
     press(tree, 'dp-dual-tabs-hijri');
     expect(texts(tree)).toContain('١٦');
+    expect(texts(tree)).not.toContain('16');
+    // The Gregorian pick keeps its 0–9 text while the Hijri tab shows.
+    expect(field()).toBe('20/10/2026');
+    tap(tree, 21);
+    expect(field()).toBe('١٠ جمادى الأولى ١٤٤٨ هـ');
+  });
+
+  it('numerals sets the digits of both calendars', () => {
+    const tree = mount({
+      calendarSystem: 'dual',
+      locale: 'ar-SA',
+      numerals: 'locale',
+    });
+    expect(texts(tree)).toContain('٢٧');
+    press(tree, 'dp-dual-tabs-hijri');
+    const latin = mount({
+      calendarSystem: 'hijri',
+      locale: 'ar-SA',
+      numerals: 'latin',
+    });
+    expect(texts(latin)).toContain('1448');
   });
 });

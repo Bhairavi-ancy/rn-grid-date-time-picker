@@ -327,7 +327,7 @@ export interface DateTimePickerProps {
   locale?: string;
   /**
    * 'locale' draws every number in the locale's own digits (١٢٣ for 'ar-SA'), 'latin' in 0–9. Values stay 0–9.
-   * Default: 'locale' when the picker can show a Hijri calendar, else 'latin'.
+   * Default: 'locale' for a Hijri calendar and a date picked in it, 'latin' for a Gregorian one.
    */
   numerals?: Numerals;
   /** IANA zone for date-time values and "today". Default: the device zone. */
