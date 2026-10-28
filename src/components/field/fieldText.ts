@@ -26,14 +26,18 @@ export const formatTimeText = (
   return `${pad2(hour12)}:${pad2(minute)} ${hour < 12 ? 'AM' : 'PM'}`;
 };
 
+/** Writes a value's date some other way, e.g. as a Hijri date. */
+export type DateTextFormatter = (value: DateTimeValue) => string;
+
 export const formatValueText = (
   value: DateTimeValue | null,
   type: PickerType,
   dateFormat: string,
-  timeFormat: TimeFormat
+  timeFormat: TimeFormat,
+  dateText?: DateTextFormatter
 ): string => {
   if (!value) return '';
-  const date = formatDateText(value, dateFormat);
+  const date = dateText ? dateText(value) : formatDateText(value, dateFormat);
   return type === 'datetime' && value.time
     ? `${date} ${formatTimeText(value, timeFormat)}`
     : date;
@@ -46,11 +50,12 @@ export const formatRangeText = (
   type: PickerType,
   dateFormat: string,
   timeFormat: TimeFormat,
-  separator: string = ' – '
+  separator: string = ' – ',
+  dateText?: DateTextFormatter
 ): string => {
   if (!from && !to) return '';
-  const a = formatValueText(from, type, dateFormat, timeFormat);
-  const b = formatValueText(to, type, dateFormat, timeFormat);
+  const a = formatValueText(from, type, dateFormat, timeFormat, dateText);
+  const b = formatValueText(to, type, dateFormat, timeFormat, dateText);
   return `${a}${separator}${b}`.trim();
 };
 
@@ -59,11 +64,12 @@ export const formatMultipleText = (
   values: (DateTimeValue | null)[],
   type: PickerType,
   dateFormat: string,
-  timeFormat: TimeFormat
+  timeFormat: TimeFormat,
+  dateText?: DateTextFormatter
 ): string =>
   values
     .filter((v): v is DateTimeValue => !!v)
-    .map((v) => formatValueText(v, type, dateFormat, timeFormat))
+    .map((v) => formatValueText(v, type, dateFormat, timeFormat, dateText))
     .join(', ');
 
 /** 'DD-MM-YYYY' or 'DD-MM-YYYY hh:mm AM', from the placeholder strings. */

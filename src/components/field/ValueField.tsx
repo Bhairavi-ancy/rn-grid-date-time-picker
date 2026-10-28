@@ -21,6 +21,7 @@ import {
   formatValueText,
   placeholderText,
   segmentErrorText,
+  type DateTextFormatter,
 } from './fieldText';
 import { buildFieldStyles } from './fieldStyles';
 import SegmentedInput from './SegmentedInput';
@@ -33,6 +34,8 @@ export interface ValueFieldProps {
   displayText?: string;
   /** Date format, e.g. 'dd/MM/yyyy'. */
   dateFormat: string;
+  /** Writes the shown date another way (as a Hijri date). Not used while typing. */
+  dateText?: DateTextFormatter;
   timeFormat: TimeFormat;
   yearRange?: { first: number; last: number };
   /** Typed date + time segments. Otherwise the field shows text and opens the picker on tap. */
@@ -130,6 +133,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     value,
     displayText,
     dateFormat,
+    dateText,
     timeFormat,
     yearRange,
     allowTyping,
@@ -205,7 +209,8 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
   const error = typedError || errorMessage || '';
   const hasValue = typing ? !state.parsed.isEmpty : !!value || !!displayText;
   const text =
-    displayText ?? formatValueText(value, type, dateFormat, timeFormat);
+    displayText ??
+    formatValueText(value, type, dateFormat, timeFormat, dateText);
 
   const clear = () => {
     dispatch({ type: 'reset', value: null });

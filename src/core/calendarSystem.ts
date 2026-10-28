@@ -1,6 +1,7 @@
 import { addDays, addMonths, daysInMonth } from './calendarDate';
 import type { CalendarDate, Weekday } from './types';
 import { weekdayOf } from './calendarDate';
+import { toLatinDigits } from './digits';
 
 /**
  * Calendar systems for the picker grid. Saved values are always Gregorian;
@@ -161,6 +162,9 @@ export const hijriMonthNames = (locale: string): string[] => {
       timeZone: 'UTC',
       month: 'long',
     });
+    // A locale Intl doesn't know drops the calendar and would give Gregorian names.
+    if (f.resolvedOptions().calendar !== 'islamic-umalqura')
+      return HIJRI_MONTHS_EN;
     return HIJRI_MONTHS_EN.map((fallback, i) => {
       const start = hijriMonthStart(1448, i + 1);
       const name = f.format(
@@ -171,6 +175,45 @@ export const hijriMonthNames = (locale: string): string[] => {
   } catch {
     return HIJRI_MONTHS_EN;
   }
+};
+
+const dateTextFormats = new Map<string, Intl.DateTimeFormat | null>();
+
+/**
+ * A Gregorian day written as a Hijri date in the user's language, in 0–9
+ * ('16 Jumada I 1448 AH', '16 جمادى الأولى 1448 هـ'), or null when unsupported.
+ */
+export const hijriDateText = (
+  d: CalendarDate,
+  locale: string
+): string | null => {
+  const h = toHijri(d);
+  if (!h) return null;
+  if (!dateTextFormats.has(locale)) {
+    let f: Intl.DateTimeFormat | null = null;
+    try {
+      f = new Intl.DateTimeFormat(withHijriCalendar(locale), {
+        timeZone: 'UTC',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch {
+      f = null;
+    }
+    // A locale Intl doesn't know drops the calendar: build the text instead.
+    dateTextFormats.set(
+      locale,
+      f?.resolvedOptions().calendar === 'islamic-umalqura' ? f : null
+    );
+  }
+  const f = dateTextFormats.get(locale);
+  const text = f
+    ? toLatinDigits(f.format(utcDate(d.year, d.month - 1, d.day, 12)))
+    : '';
+  // An engine that ignores the calendar writes the Gregorian year: build it instead.
+  if (text.includes(String(h.year))) return text;
+  return `${h.day} ${hijriMonthNames(locale)[h.month - 1]} ${h.year}`;
 };
 
 /**

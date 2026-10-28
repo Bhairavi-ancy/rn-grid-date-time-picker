@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
+import type { CalendarSystem } from '../core/calendarSystem';
 import type { Constraints, TimeBounds } from '../core/constraints';
 import type { Numerals } from '../core/numerals';
 import type {
@@ -119,6 +120,27 @@ export interface SheetOptions {
   fieldIcon?: boolean;
 }
 
+/**
+ * The second argument of `onChange` when the picker can show a Hijri calendar:
+ * the calendar the date was picked in. The value itself is always Gregorian.
+ * The picker remembers it while mounted; to show a stored value back the same
+ * way later, store this too and pass it as `dualDefaultTab` (dual) or
+ * `calendarSystem`.
+ */
+export interface ChangeInfo {
+  calendarSystem: 'gregory' | 'hijri';
+}
+
+/** What `renderCalendarSwitch` receives. */
+export interface CalendarSwitchRenderProps {
+  /** The choices, in order. */
+  systems: CalendarSystem[];
+  selected: CalendarSystem;
+  onSelect: (system: CalendarSystem) => void;
+  tokens: ThemeTokens;
+  strings: PickerStrings;
+}
+
 /** What `renderLabel` receives. */
 export interface LabelRenderProps {
   label?: string;
@@ -168,8 +190,10 @@ export interface DateTimePickerProps {
   /**
    * A value was saved: on Confirm; as it's edited with commitMode 'instant';
    * when typing in the on-screen field pauses; or '' on clear. Never on close.
+   * When the picker can show a Hijri calendar, `info` says which calendar the
+   * date was picked in.
    */
-  onChange: (value: PickerValue) => void;
+  onChange: (value: PickerValue, info?: ChangeInfo) => void;
   /**
    * Right after every onChange that saves a value (Confirm, an 'instant' edit,
    * on-screen typing), like a form field losing focus. Not on clear.
@@ -278,13 +302,32 @@ export interface DateTimePickerProps {
   initialVisibleDate?: CalendarDate;
   enableMonthSwipe?: boolean;
   showToday?: boolean;
-  /** Default 'gregory'. Falls back to 'gregory' when the platform has no Hijri calendar. */
-  calendarSystem?: 'gregory' | 'dual' | 'hijri';
+  /**
+   * The calendar the grid uses: 'gregory', 'hijri' (Umm al-Qura), or 'dual':
+   * Gregorian and Hijri tabs, one calendar at a time. A day is shown selected
+   * only in the calendar it was picked in, and the field writes it in that
+   * calendar. With `calendarSwitch`, this is the one shown first. Default
+   * 'gregory'; anything Hijri falls back to 'gregory' when the platform has no
+   * Hijri calendar.
+   */
+  calendarSystem?: CalendarSystem;
+  /**
+   * A Gregorian / Hijri / Dual switch above the calendar. true shows all three;
+   * a list shows those, in that order (e.g. ['hijri', 'gregory']). Not shown for
+   * month and year picks, or when the platform has no Hijri calendar. Default false.
+   */
+  calendarSwitch?: boolean | CalendarSystem[];
+  /** The user picked another calendar in the switch. */
+  onCalendarSystemChange?: (system: CalendarSystem) => void;
+  /** The tab a dual calendar opens on, each time it opens. Default 'gregory'. */
+  dualDefaultTab?: 'gregory' | 'hijri';
+  /** Replaces the built-in calendar switch. */
+  renderCalendarSwitch?: (p: CalendarSwitchRenderProps) => React.ReactNode;
   /** Any BCP-47 tag; decides names, the date order and the clock. Default: the device locale. */
   locale?: string;
   /**
    * 'locale' draws every number in the locale's own digits (١٢٣ for 'ar-SA'), 'latin' in 0–9. Values stay 0–9.
-   * Default: 'locale' with a Hijri or dual calendar, else 'latin'.
+   * Default: 'locale' when the picker can show a Hijri calendar, else 'latin'.
    */
   numerals?: Numerals;
   /** IANA zone for date-time values and "today". Default: the device zone. */

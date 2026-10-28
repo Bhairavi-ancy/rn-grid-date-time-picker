@@ -56,6 +56,8 @@ export type {
   TimeBounds,
 } from './core/constraints';
 export type {
+  CalendarSwitchRenderProps,
+  ChangeInfo,
   ConstraintContext,
   DateTimePickerProps,
   InstructionRenderProps,
@@ -67,6 +69,7 @@ export type {
   SheetSize,
   Slot,
 } from './components/types';
+export type { CalendarSystem } from './core/calendarSystem';
 export type { Numerals } from './core/numerals';
 export type { PickerStrings } from './components/theme/defaultStrings';
 export type { PickerStyles } from './components/theme/styleKeys';

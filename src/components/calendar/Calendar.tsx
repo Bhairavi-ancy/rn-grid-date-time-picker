@@ -48,6 +48,11 @@ export interface CalendarProps {
   showToday?: boolean;
   /** Gregorian year and month of the first day shown (also in the Hijri grid). */
   onVisibleMonthChange?: (year: number, month: number) => void;
+  /**
+   * A day in the month now shown (today when it's there, else the middle), so
+   * the other calendar system can open on the same days.
+   */
+  onAnchorChange?: (day: CalendarDate) => void;
   /** Second line under each day (default: the Hijri day in 'dual'; none in 'hijri', which shows only the Hijri day). */
   subLabel?: (day: CalendarDate) => string | null;
   renderDay?: (state: DayCellState, onPress: () => void) => React.ReactNode;
@@ -162,6 +167,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     enableMonthSwipe = true,
     showToday,
     onVisibleMonthChange,
+    onAnchorChange,
     subLabel,
     renderDay,
     renderWeekday,
@@ -213,8 +219,13 @@ const Calendar: React.FC<CalendarProps> = (props) => {
       );
       const start = sys.monthStart(clamped);
       onVisibleMonthChange?.(start.year, start.month);
+      onAnchorChange?.(
+        cmpMonth(sys.monthOf(today), clamped) === 0
+          ? today
+          : addDays(start, Math.min(14, sys.monthLength(clamped) - 1))
+      );
     },
-    [limits, sys, names, onVisibleMonthChange]
+    [limits, sys, names, today, onVisibleMonthChange, onAnchorChange]
   );
 
   // A tap on a day of the previous / next month (the muted outside days) selects it

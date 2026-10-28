@@ -52,6 +52,18 @@ export const STYLE_KEYS = [
   'monthChipText',
   'monthChipSelected',
   'monthChipDisabled',
+  // calendar switch (calendarSwitch prop)
+  'calendarSwitch',
+  'calendarSwitchSegment',
+  'calendarSwitchSegmentSelected',
+  'calendarSwitchText',
+  'calendarSwitchTextSelected',
+  /** The Gregorian / Hijri tabs of a dual calendar. */
+  'dualTabs',
+  'dualTab',
+  'dualTabSelected',
+  'dualTabText',
+  'dualTabTextSelected',
   // weekdays
   'weekdayRow',
   'weekdayText',
@@ -73,7 +85,7 @@ export const STYLE_KEYS = [
   'disabledText',
   'holiday',
   'holidayText',
-  /** The small Hijri day under the Gregorian one ('dual'). */
+  /** A second line under the day number. Not drawn by the picker any more; kept so styles that set it still compile. */
   'daySubLabel',
   // grids
   'yearGrid',

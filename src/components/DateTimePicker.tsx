@@ -10,6 +10,7 @@ import { resolveAdapter } from '../adapters';
 import { daysBetween, isSameDay } from '../core/calendarDate';
 import { createConstraints } from '../core/constraints';
 import {
+  clearDraft as emptied,
   createDraft,
   DEFAULT_TIME,
   draftToWire,
@@ -19,7 +20,12 @@ import {
   type DraftOptions,
   type DraftTarget,
 } from '../core/draft';
-import { resolveCalendarSystem } from '../core/calendarSystem';
+import {
+  hijriDateText,
+  isHijriSupported,
+  resolveCalendarSystem,
+  type CalendarSystem,
+} from '../core/calendarSystem';
 import {
   defaultLocale,
   deriveDateFormat,
@@ -39,14 +45,17 @@ import type {
   ValueAdapter,
 } from '../core/types';
 import Calendar from './calendar/Calendar';
+import CalendarSwitch from './calendar/CalendarSwitch';
 import { localeNames } from './calendar/localeNames';
 import { NumeralsContext } from './theme/numerals';
-import type { CalendarSelection } from './calendar/selection';
+import { firstSelectedDay, type CalendarSelection } from './calendar/selection';
 import PickerContainer from './container/PickerContainer';
 import {
+  formatDateText,
   formatMultipleText,
   formatRangeText,
   formatValueText,
+  type DateTextFormatter,
 } from './field/fieldText';
 import FieldMessages from './field/FieldMessages';
 import RangeFields, { type RangeEnd } from './field/RangeFields';
@@ -69,6 +78,16 @@ const sameValue = (a: DateTimeValue, b: DateTimeValue): boolean =>
   isSameDay(a.date, b.date) &&
   (a.time?.hour ?? -1) === (b.time?.hour ?? -1) &&
   (a.time?.minute ?? -1) === (b.time?.minute ?? -1);
+
+const ALL_SYSTEMS: CalendarSystem[] = ['gregory', 'hijri', 'dual'];
+
+/** The same kind of selection with nothing in it. */
+const emptySelection = (sel: CalendarSelection): CalendarSelection =>
+  sel.kind === 'single'
+    ? { kind: 'single', day: null }
+    : sel.kind === 'range'
+      ? { kind: 'range', from: null, to: null }
+      : { ...sel, days: [] };
 
 /** Minute steps that divide the hour. */
 const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
@@ -143,6 +162,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     initialVisibleDate,
     enableMonthSwipe = true,
     calendarSystem,
+    calendarSwitch,
+    onCalendarSystemChange,
+    dualDefaultTab = 'gregory',
+    renderCalendarSwitch,
     showToday = false,
     showHolidays = true,
     onVisibleMonthChange,
@@ -187,12 +210,51 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // Month and year picks are for single dates only.
   const precision =
     type === 'date' && mode === 'single' ? precisionProp : 'day';
+  // The calendars the switch offers: none for month and year picks (always
+  // Gregorian), or when the platform has no Hijri calendar.
+  const switchKey = Array.isArray(calendarSwitch)
+    ? calendarSwitch.join(',')
+    : String(!!calendarSwitch);
+  const switchSystems = useMemo((): CalendarSystem[] | null => {
+    if (!calendarSwitch || precision !== 'day' || !isHijriSupported())
+      return null;
+    const list =
+      calendarSwitch === true
+        ? ALL_SYSTEMS
+        : ALL_SYSTEMS.filter((x) => calendarSwitch.includes(x)).sort(
+            (a, b) => calendarSwitch.indexOf(a) - calendarSwitch.indexOf(b)
+          );
+    return list.length > 1 ? list : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the list is compared by content
+  }, [switchKey, precision]);
+  const startSystem = (): CalendarSystem => {
+    const wanted = calendarSystem ?? 'gregory';
+    return switchSystems && !switchSystems.includes(wanted)
+      ? (switchSystems[0] ?? wanted)
+      : wanted;
+  };
+  // The switch changes this; a new calendarSystem prop starts over from it.
+  const [chosenSystem, setChosenSystem] = useState(startSystem);
+  useEffect(
+    () => setChosenSystem(startSystem()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the props change
+    [calendarSystem, switchKey]
+  );
   // Month and year picks are Gregorian whatever the calendar system.
   const system =
-    precision === 'day' ? resolveCalendarSystem(calendarSystem) : 'gregory';
+    precision === 'day' ? resolveCalendarSystem(chosenSystem) : 'gregory';
+  // A dual calendar shows one of its two tabs; each open starts on dualDefaultTab.
+  const [dualTab, setDualTab] = useState(dualDefaultTab);
+  /** The calendar on screen. */
+  const shownSystem = system === 'dual' ? dualTab : system;
+  /** The calendar a value from outside counts as picked in. */
+  const openingSystem = system === 'dual' ? dualDefaultTab : system;
+  // Picks say which calendar they were made in only when one can be Hijri.
+  const hijriInPlay = switchSystems !== null || system !== 'gregory';
   // A Hijri calendar shows the language's own digits unless told otherwise,
-  // as the platform does ('ar-SA' → ١٢٣, 'en-US' → 123).
-  const numerals = numeralsProp ?? (system === 'gregory' ? 'latin' : 'locale');
+  // as the platform does ('ar-SA' → ١٢٣, 'en-US' → 123). Decided by what can
+  // show, so the digits don't change with the switch or the tabs.
+  const numerals = numeralsProp ?? (hijriInPlay ? 'locale' : 'latin');
   const digits = useMemo(
     () => (numerals === 'locale' ? localeDigits(loc) : latinDigits),
     [numerals, loc]
@@ -463,8 +525,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     setActiveEnd('from');
     setActiveDay(null);
   }, []);
+  // A day in the month the calendar last showed, so a switch to the other
+  // calendar opens on the same days. Each open starts from the value again.
+  const shownAnchor = useRef<CalendarDate | null>(null);
   // Opening or closing starts fresh: nothing edited, nothing blocked.
   useEffect(() => {
+    shownAnchor.current = null;
     edited.current = false;
     setTypingBlocks({});
     setTimeCheck(0);
@@ -542,6 +608,39 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   latest.current = { validate, onError, value };
   const valueKey = JSON.stringify(value ?? '');
 
+  // A selection belongs to the calendar it was picked in (Gregorian or Hijri):
+  // it shows only there, and the field writes it in that calendar. A saved
+  // value remembers its calendar; one from outside counts as picked in the
+  // calendar the picker opens on.
+  const savedSystemRef = useRef<{
+    key: string;
+    system: 'gregory' | 'hijri';
+  } | null>(null);
+  const savedSystem =
+    savedSystemRef.current?.key === valueKey
+      ? savedSystemRef.current.system
+      : openingSystem;
+  const [draftSystem, setDraftSystem] = useState(savedSystem);
+  useEffect(
+    () => setDraftSystem(savedSystem),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the draft is rebuilt on open and on a new value
+    [isOpen, valueKey]
+  );
+  useEffect(() => setDualTab(dualDefaultTab), [isOpen, dualDefaultTab]);
+  const selectionShown = draftSystem === shownSystem;
+  /** Saves a value: with the calendar it was picked in, when one can be Hijri. */
+  const emitChange = useCallback(
+    (wire: PickerValue, picked: 'gregory' | 'hijri') => {
+      savedSystemRef.current = {
+        key: JSON.stringify(wire ?? ''),
+        system: picked,
+      };
+      if (hijriInPlay) onChange(wire, { calendarSystem: picked });
+      else onChange(wire);
+    },
+    [hijriInPlay, onChange]
+  );
+
   /**
    * Whether a draft can be saved as it stands: complete, every day allowed,
    * every time allowed and on the minute step, and nothing being typed or
@@ -568,10 +667,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // Every save: Confirm, an 'instant' edit (onConfirm is added by `confirm`).
   const commit = useCallback(
     (wire: PickerValue) => {
-      onChange(wire);
+      emitChange(wire, draftSystem);
       onBlur?.();
     },
-    [onChange, onBlur]
+    [emitChange, draftSystem, onBlur]
   );
 
   const confirm = useCallback(() => {
@@ -609,8 +708,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     draft.clear();
     resetSelectionUi();
     edited.current = false;
-    onChange('');
-  }, [draft, onChange, resetSelectionUi]);
+    emitChange('', draftSystem);
+  }, [draft, emitChange, draftSystem, resetSelectionUi]);
 
   const clearDraft = useCallback(() => {
     edited.current = true;
@@ -679,6 +778,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const onSheetTyped = (parsed: ParsedSegments) => {
     edited.current = true;
+    setDraftSystem(shownSystem);
     const typed = withFilledTime(parsed, 'single');
     setTypingBlock('single', !parsed.isEmpty && !typed);
     if (typed) draft.setValue(typed, 'single');
@@ -687,6 +787,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const onRangeTyped = (end: RangeEnd, parsed: ParsedSegments) => {
     edited.current = true;
+    setDraftSystem(shownSystem);
     const typed = withFilledTime(parsed, end);
     setTypingBlock(end, !parsed.isEmpty && !typed);
     if (typed || parsed.isEmpty) draft.setValue(typed, end);
@@ -708,32 +809,42 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const onSelectDay = useCallback(
     (day: CalendarDate) => {
       edited.current = true;
-      if (d.mode === 'range') {
+      // A pick in the other calendar starts over: the selection is one calendar's.
+      const fresh =
+        draftSystem !== shownSystem && valuesOf(d).some((v) => v !== null);
+      setDraftSystem(shownSystem);
+      const cur = fresh ? emptied(d) : d;
+      const end0: RangeEnd = fresh ? 'from' : activeEnd;
+      const dayInEdit = fresh ? null : activeDay;
+      const times: PendingTimes = fresh ? {} : pending;
+      if (fresh) {
+        draft.clear();
+        resetSelectionUi();
+      }
+      if (cur.mode === 'range') {
         if (rangeLayout === 'fromTo') {
           // The tapped day replaces whatever was typed in this end only.
-          setTypingBlock(activeEnd, false);
-          draft.setRangeEnd(
-            day,
-            activeEnd,
-            fixedTime ?? pending[activeEnd] ?? nowTime()
-          );
-          if (activeEnd === 'from') setActiveEnd('to');
+          setTypingBlock(end0, false);
+          draft.setRangeEnd(day, end0, fixedTime ?? times[end0] ?? nowTime());
+          if (end0 === 'from') setActiveEnd('to');
           return;
         }
         // The single field: the first tap is the start, the next one the end.
         const startsOver =
-          !d.from.value ||
-          (!!d.to.value && range?.reselect !== 'moveNearestEnd');
+          !cur.from.value ||
+          (!!cur.to.value && range?.reselect !== 'moveNearestEnd');
         const end: RangeEnd = startsOver ? 'from' : 'to';
         setTypingBlock('single', false);
-        draft.selectDay(day, fixedTime ?? pending[end] ?? nowTime());
+        draft.selectDay(day, fixedTime ?? times[end] ?? nowTime());
         return;
       }
-      if (d.mode === 'multiple') {
+      if (cur.mode === 'multiple') {
         const perDate = type === 'datetime' && multipleTimeMode === 'perDate';
-        const picked = d.slots.some((slot) => isSameDay(slot.value?.date, day));
+        const picked = cur.slots.some((slot) =>
+          isSameDay(slot.value?.date, day)
+        );
         // perDate: a tap on a picked day first makes it the one the time row edits.
-        if (perDate && picked && !isSameDay(activeDay, day)) {
+        if (perDate && picked && !isSameDay(dayInEdit, day)) {
           setActiveDay(day);
           return;
         }
@@ -742,8 +853,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         return;
       }
       setTypingBlock('single', false);
-      draft.selectDay(day, fixedTime ?? pending.single ?? nowTime());
+      draft.selectDay(day, fixedTime ?? times.single ?? nowTime());
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- valuesOf reads only `d` and props listed here
     [
       d,
       draft,
@@ -757,6 +869,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       type,
       multipleTimeMode,
       setTypingBlock,
+      draftSystem,
+      shownSystem,
+      resetSelectionUi,
     ]
   );
 
@@ -887,9 +1002,19 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       return;
     }
     setTriggerError('');
-    onChange(wire);
+    emitChange(wire, openingSystem);
     onBlur?.();
   };
+
+  /** A value's date in the calendar it was picked in: Hijri text, or none for the dateFormat. */
+  const dateTextFor = (
+    picked: 'gregory' | 'hijri'
+  ): DateTextFormatter | undefined =>
+    picked === 'hijri'
+      ? (v) => hijriDateText(v.date, loc) ?? formatDateText(v, dateFormat)
+      : undefined;
+  const savedDateText = dateTextFor(savedSystem);
+  const draftDateText = dateTextFor(draftSystem);
 
   // What the on-screen field shows: the saved value, never the draft.
   const savedKey = valueKey;
@@ -907,14 +1032,16 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           type,
           dateFormat,
           timeFormat,
-          strings.rangeSeparator
+          strings.rangeSeparator,
+          savedDateText
         )
       : saved.mode === 'multiple'
         ? formatMultipleText(
             saved.slots.map((slot) => slot.value),
             type,
             dateFormat,
-            timeFormat
+            timeFormat,
+            savedDateText
           )
         : precision !== 'day'
           ? periodText(savedSingle)
@@ -968,7 +1095,14 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     mode,
     value,
     displayText: digits(
-      savedText ?? formatValueText(savedSingle, type, dateFormat, timeFormat)
+      savedText ??
+        formatValueText(
+          savedSingle,
+          type,
+          dateFormat,
+          timeFormat,
+          savedDateText
+        )
     ),
     disabled,
     readOnly,
@@ -1035,6 +1169,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         {...fieldCommon}
         value={savedSingle}
         displayText={savedText}
+        dateText={savedDateText}
         allowTyping={
           mode === 'single' && precision === 'day' && allowFieldTyping
         }
@@ -1078,6 +1213,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         {...fieldCommon}
         value={sheetValue}
         displayText={precision !== 'day' ? periodText(sheetValue) : undefined}
+        dateText={draftDateText}
         placeholder={sheetOptions?.fieldPlaceholder ?? periodPlaceholder}
         allowTyping={allowTyping && precision === 'day'}
         onTyped={onSheetTyped}
@@ -1093,6 +1229,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       <RangeFields
         {...fieldCommon}
         layout={rangeLayout}
+        dateText={draftDateText}
         showIcon={sheetOptions?.fieldIcon}
         from={d.from.value}
         to={d.to.value}
@@ -1116,7 +1253,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           draftValues,
           type,
           dateFormat,
-          timeFormat
+          timeFormat,
+          draftDateText
         )}
         placeholder={sheetOptions?.fieldPlaceholder}
         allowClear={allowClear}
@@ -1128,37 +1266,101 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       />
     ) : null;
 
-  const calendar = folded ? null : (
-    <Calendar
-      constraints={calendarConstraints}
-      today={today}
-      initialVisibleDate={initialVisibleDate}
-      selection={selection}
-      onSelectDay={onSelectDay}
-      firstDayOfWeek={firstDayOfWeek}
-      showOutsideDays={showOutsideDays}
-      showHolidays={showHolidays}
-      yearRange={yearRange}
-      locale={loc}
-      calendarSystem={system}
-      initialView={initialView}
-      precision={precision}
-      enableMonthSwipe={enableMonthSwipe}
-      showToday={showToday}
-      onVisibleMonthChange={handleVisibleMonth}
-      renderDay={renderDay}
-      renderWeekday={renderWeekday}
-      renderMonthChip={renderMonthChip}
-      renderYearCell={renderYearCell}
-      renderMonthCell={renderMonthCell}
-      renderEmptyState={renderEmptyState}
-      icons={icons}
-      iconProps={iconProps}
+  const systemLabels: Record<CalendarSystem, string> = {
+    gregory: strings.calendarGregorian,
+    hijri: strings.calendarHijri,
+    dual: strings.calendarDual,
+  };
+  const chooseSystem = (next: CalendarSystem) => {
+    if (next === system) return;
+    setChosenSystem(next);
+    if (next === 'dual') setDualTab(dualDefaultTab);
+    onCalendarSystemChange?.(next);
+  };
+  const calendarSwitchNode = !switchSystems ? null : renderCalendarSwitch ? (
+    renderCalendarSwitch({
+      systems: switchSystems,
+      selected: system,
+      onSelect: chooseSystem,
+      tokens,
+      strings,
+    })
+  ) : (
+    <CalendarSwitch
+      variant="switch"
+      options={switchSystems.map((v) => {
+        return { value: v, label: systemLabels[v] };
+      })}
+      selected={system}
+      onSelect={chooseSystem}
+      accessibilityLabel={strings.a11yCalendarSystem}
       tokens={tokens}
       styles={styles}
-      strings={strings}
-      testID={testID}
+      testID={testID ? `${testID}-calendar-switch` : undefined}
     />
+  );
+  const dualTabs =
+    system !== 'dual' ? null : (
+      <CalendarSwitch
+        variant="tabs"
+        options={[
+          { value: 'gregory', label: strings.calendarGregorian },
+          { value: 'hijri', label: strings.calendarHijri },
+        ]}
+        selected={dualTab}
+        onSelect={setDualTab}
+        accessibilityLabel={strings.a11yCalendarSystem}
+        tokens={tokens}
+        styles={styles}
+        testID={testID ? `${testID}-dual-tabs` : undefined}
+      />
+    );
+  // Another calendar opens on the days the last one showed, else on the
+  // selection (shown or not), else where the picker would open.
+  const calendarAnchor =
+    shownAnchor.current ??
+    (selectionShown ? null : firstSelectedDay(selection)) ??
+    initialVisibleDate;
+
+  const calendar = folded ? null : (
+    <>
+      {calendarSwitchNode}
+      {dualTabs}
+      <Calendar
+        key={shownSystem}
+        constraints={selectionShown ? calendarConstraints : constraints}
+        today={today}
+        initialVisibleDate={calendarAnchor}
+        selection={selectionShown ? selection : emptySelection(selection)}
+        onSelectDay={onSelectDay}
+        firstDayOfWeek={firstDayOfWeek}
+        showOutsideDays={showOutsideDays}
+        showHolidays={showHolidays}
+        yearRange={yearRange}
+        locale={loc}
+        calendarSystem={shownSystem}
+        initialView={initialView}
+        precision={precision}
+        enableMonthSwipe={enableMonthSwipe}
+        showToday={showToday}
+        onVisibleMonthChange={handleVisibleMonth}
+        onAnchorChange={(day) => {
+          shownAnchor.current = day;
+        }}
+        renderDay={renderDay}
+        renderWeekday={renderWeekday}
+        renderMonthChip={renderMonthChip}
+        renderYearCell={renderYearCell}
+        renderMonthCell={renderMonthCell}
+        renderEmptyState={renderEmptyState}
+        icons={icons}
+        iconProps={iconProps}
+        tokens={tokens}
+        styles={styles}
+        strings={strings}
+        testID={testID}
+      />
+    </>
   );
 
   const timeRow =

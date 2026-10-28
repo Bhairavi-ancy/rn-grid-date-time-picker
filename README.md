@@ -47,7 +47,7 @@ A flexible, themeable date & time picker for React Native: single, multiple and 
 - **Typed or tapped**: type the date and time as segments, or pick them on the calendar and a time row (typed boxes or a scrolling wheel, 12- or 24-hour, minute steps).
 - **Limits**: min / max days with edge times, disabled weekdays, holidays (marked or disabled, loaded per year), custom checks, per-day time bounds, or your own constraint engine.
 - **Calendar**: day, month and year views, month swipe, a Today button, outside days, any first day of the week, years 1900–2200.
-- **Hijri**: Gregorian, Gregorian with Hijri days, or a Hijri (Umm al-Qura) grid.
+- **Hijri**: a Gregorian or Hijri (Umm al-Qura) calendar, or both as tabs, with an optional Gregorian / Hijri / Dual switch.
 - **Exact commits**: `onChange` fires once per Confirm. Closing fires nothing.
 - **Accessible and RTL-aware**: every control is labelled, reduce motion is respected, font scaling is capped, and chevrons mirror in RTL.
 - **Yours to restyle**: theme tokens, a `styles` key for every part, every string, and render props for the sheet, field, label, days, cells and time row.
@@ -174,7 +174,7 @@ const epochMs: ValueAdapter = {
 | `type` | `'date' \| 'datetime'` | required | |
 | `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | |
 | `value` | `PickerValue` | required | See [Values](#values). |
-| `onChange` | `(value: PickerValue) => void` | required | Once per Confirm, or with `''` on clear. |
+| `onChange` | `(value: PickerValue, info?: ChangeInfo) => void` | required | Once per Confirm, or with `''` on clear. When a Hijri calendar can show, `info.calendarSystem` (`'gregory'` or `'hijri'`) says which calendar the date was picked in. |
 | `onBlur` | `() => void` | – | Right after every `onChange` that saves a value (Confirm, an `'instant'` edit, typing in the on-screen field), like a form field losing focus. Not on clear. |
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
@@ -225,6 +225,7 @@ const epochMs: ValueAdapter = {
 | `renderMonthChip` | `(month: number, state: { selected; disabled }) => ReactNode` | |
 | `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
 | `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
+| `renderCalendarSwitch` | `(p: CalendarSwitchRenderProps) => ReactNode` | Replaces the calendar switch: draw `p.systems`, mark `p.selected`, call `p.onSelect(system)`. |
 | `renderTimeRow` | `(state: PickerState) => ReactNode` | Replaces the time row. Read `state.time` (ranges: `state.rangeTimes`) and change it with `state.setTime(time, end?)`, which works like the built-in row, including before a day is picked. |
 
 ### Calendar
@@ -239,9 +240,12 @@ const epochMs: ValueAdapter = {
 | `initialVisibleDate` | `CalendarDate` | today: with no value, the calendar opens on this day's month without selecting it (e.g. `{ year: 2000, month: 1, day: 1 }` for a date of birth); a value's month always wins |
 | `enableMonthSwipe` | `boolean` | `true` |
 | `showToday` | `boolean` | `false` |
-| `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'` |
+| `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'`. `'dual'` shows Gregorian and Hijri tabs. With `calendarSwitch`, the calendar shown first. See [Hijri](#locale-rtl--hijri). |
+| `calendarSwitch` | `boolean \| CalendarSystem[]` | `false`. A Gregorian / Hijri / Dual switch above the calendar; a list picks which ones and their order, e.g. `['hijri', 'gregory']` |
+| `onCalendarSystemChange` | `(system: CalendarSystem) => void` | – |
+| `dualDefaultTab` | `'gregory' \| 'hijri'` | `'gregory'`: the tab a dual calendar opens on, each time it opens |
 | `locale` | BCP-47 tag | the device locale |
-| `numerals` | `'latin' \| 'locale'` | `'locale'` with a Hijri or dual calendar, else `'latin'`. `'locale'` draws every number in the locale's own digits (١٢٣ for `ar-SA`) |
+| `numerals` | `'latin' \| 'locale'` | `'locale'` when a Hijri calendar can show (Hijri, dual, or a switch), else `'latin'`. `'locale'` draws every number in the locale's own digits (١٢٣ for `ar-SA`) |
 | `timeZone` | IANA zone | the device zone |
 | `now` | `() => Date` | `() => new Date()` |
 
@@ -442,8 +446,28 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 
 - **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) the default `timeFormat` (the locale's hour cycle, else `'12h'`) and the default `firstDayOfWeek` (the region's first day from CLDR week data: Sunday for `en-US`, Monday for `en-GB` and `de-DE`, Saturday for `ar-EG`; Sunday when the tag has no region).
 - **RTL**: layouts use start/end, so they flip with `I18nManager`. The chevrons point the right way, and swipe directions are mirrored. Typed dates and times keep their left-to-right digit order.
-- **Digits**: a Hijri or dual calendar draws numbers in the language's own digits, as the platform does: Arabic Hijri shows ١٤٤٨, English Hijri shows 1448. A Gregorian calendar shows 0–9. `numerals` overrides either way: `'latin'` keeps 0–9 in an Arabic Hijri calendar, and `'locale'` draws the day numbers, years, field text, typed segments, time boxes and wheel in the locale's own digits, as `Intl` writes them: `ar-SA` gives ١٢٣, `fa-IR` gives ۱۲۳, and a locale that writes 0–9 (`ar-AE`, `en-US`) keeps them. Values passed to `onChange` stay 0–9. Typed digits are read in any script, so ٢٥ typed on an Arabic number pad is 25 either way. Your own `renderDay`, `renderYearCell` and `renderMonthCell` get plain numbers, so they choose their digits.
-- **Hijri**: `calendarSystem="dual"` shows the Hijri day under each Gregorian day; `"hijri"` lays out Hijri (Umm al-Qura) months, years and day numbers. Values stay Gregorian either way. Hijri dates come from the platform's `Intl` (`islamic-umalqura`). Some JS engines and devices ship without that calendar, for example some Hermes / Android builds. The picker checks once, and if it isn't available it falls back to `'gregory'`. The default is always `'gregory'`, whatever the locale.
+- **Digits**: a picker that can show a Hijri calendar (Hijri, dual, or with the switch) draws numbers in the language's own digits, as the platform does, on every tab: Arabic Hijri shows ١٤٤٨, English Hijri shows 1448. A Gregorian calendar shows 0–9. `numerals` overrides either way: `'latin'` keeps 0–9 in an Arabic Hijri calendar, and `'locale'` draws the day numbers, years, field text, typed segments, time boxes and wheel in the locale's own digits, as `Intl` writes them: `ar-SA` gives ١٢٣, `fa-IR` gives ۱۲۳, and a locale that writes 0–9 (`ar-AE`, `en-US`) keeps them. Values passed to `onChange` stay 0–9. Typed digits are read in any script, so ٢٥ typed on an Arabic number pad is 25 either way. Your own `renderDay`, `renderYearCell` and `renderMonthCell` get plain numbers, so they choose their digits.
+- **Hijri**: `calendarSystem="hijri"` lays out Hijri (Umm al-Qura) months, years and day numbers. `"dual"` shows Gregorian and Hijri as two tabs, one calendar at a time; it opens on `dualDefaultTab` (Gregorian by default) and the user taps the other tab to switch. Values stay Gregorian either way.
+  - **A date belongs to the calendar it was picked in.** It shows selected only there, and the field writes it in that calendar: "21/10/2026" when picked in Gregorian, "Jumada I 9, 1448 AH" (`ar-SA`: "٩ جمادى الأولى ١٤٤٨ هـ") when picked in Hijri. A tap in the other calendar starts the selection over, so a range or a set of dates is always picked in one calendar. `onChange` gets the Gregorian value plus `{ calendarSystem: 'gregory' | 'hijri' }`. A value passed in from outside counts as picked in the calendar the picker opens on, so to show a stored value back the way it was picked, store `info.calendarSystem` with it and pass it as `dualDefaultTab` (dual) or `calendarSystem`. Typed segments stay Gregorian `dateFormat` in either calendar.
+  - **The switch**: `calendarSwitch` adds a Gregorian / Hijri / Dual switch above the calendar (`true` for all three, or a list such as `['hijri', 'gregory']`). `calendarSystem` is the one it starts on, and `onCalendarSystemChange` reports each change. Labels come from `strings.calendarGregorian`, `calendarHijri` and `calendarDual`. Each part has its own `styles` key, and `renderCalendarSwitch` replaces it. It isn't shown for month and year picks.
+
+  ```tsx
+  <DateTimePicker
+    type="date"
+    value={value}
+    onChange={(v, info) => save(v, info?.calendarSystem)}
+    locale="ar-SA"
+    calendarSwitch
+    dualDefaultTab="hijri"
+    strings={{ calendarGregorian: 'ميلادي', calendarHijri: 'هجري', calendarDual: 'كلاهما' }}
+    styles={{
+      calendarSwitchSegmentSelected: { backgroundColor: '#8B6B2E' },
+      dualTabSelected: { borderBottomColor: '#8B6B2E' },
+    }}
+  />
+  ```
+
+  Hijri dates come from the platform's `Intl` (`islamic-umalqura`). Some JS engines and devices ship without that calendar, for example some Hermes / Android builds. The picker checks once, and if it isn't available it falls back to `'gregory'`. The default is always `'gregory'`, whatever the locale.
 
 ## Theming
 
@@ -471,7 +495,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `holiday` | `#DC2626` | Holiday days |
 | `fontFamily` | `undefined` (system font) | One family for all text, at weight 400 / 500 / 600 as each part needs |
 | `fontRegular`, `fontMedium`, `fontSemiBold` | `undefined` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `INTER_FONTS` sets all four to Inter, `SYSTEM_FONTS` clears them |
-| `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field (the Hijri day under a dual cell is 75% of it) |
+| `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field |
 | `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, time boxes, AM / PM toggle |
 | `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time label, wheel |
 | `radius` | `8` | Field and button corners (the sheet uses `radius * 2`) |
@@ -526,8 +550,9 @@ To change a single part, pass a text style through `styles` (for example `styles
 
 - **Containers**: `container`, `sheet`, `sheetBackdrop`, `header`, `title`, `resetButton`, `resetText`, `body`, `footer`, `confirmButton`, `confirmText`.
 - **Field**: `field`, `fieldFocused`, `fieldError`, `fieldDisabled`, `fieldText`, `fieldTextDisabled` (the value while disabled; the placeholder keeps its colour), `fieldPlaceholder`, `fieldSegment`, `fieldSegmentFocused`, `fieldSeparator`, `fieldPeriod`, `fieldPeriodSelected`, `fieldPeriodText`, `fieldIcon`, `clearIcon`, `label`, `mandatoryMark`, `helperText`, `instructionText`, `errorText`, `validationText`.
+- **Calendar switch and dual tabs**: `calendarSwitch`, `calendarSwitchSegment`, `calendarSwitchSegmentSelected`, `calendarSwitchText`, `calendarSwitchTextSelected`, `dualTabs`, `dualTab`, `dualTabSelected`, `dualTabText`, `dualTabTextSelected`.
 - **Calendar header**: `calendarHeader`, `navArrow`, `navArrowDisabled`, `yearButton`, `yearButtonText`, `monthChipRow`, `monthChip`, `monthChipText`, `monthChipSelected`, `monthChipDisabled`.
-- **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (the Hijri day in a dual cell).
+- **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (no longer drawn; kept so existing styles compile).
 - **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `yearCellCurrent`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`, `monthCellCurrent` (the outlined current year / month in a `precision` pick).
 - **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
 - **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`.

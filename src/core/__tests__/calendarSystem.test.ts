@@ -5,6 +5,7 @@ import {
   buildSystemGrid,
   GREGORIAN,
   HIJRI,
+  hijriDateText,
   hijriMonthLength,
   hijriMonthNames,
   hijriMonthStart,
@@ -113,5 +114,30 @@ describe('Hijri edge inputs', () => {
     expect(toHijri({ year: 50, month: 6, day: 1 })).not.toEqual(
       toHijri({ year: 1950, month: 6, day: 1 })
     );
+  });
+});
+
+describe('hijriDateText', () => {
+  const day = { year: 2026, month: 10, day: 20 };
+
+  it('writes the date as the language does, in 0–9', () => {
+    expect(hijriDateText(day, 'en-US')).toBe('Jumada I 9, 1448 AH');
+    expect(hijriDateText(day, 'en-GB')).toBe('9 Jumada I 1448 AH');
+    expect(hijriDateText(day, 'ar-SA')).toBe('9 جمادى الأولى 1448 هـ');
+  });
+
+  it('builds the text when Intl does not know the language', () => {
+    expect(hijriDateText(day, 'xx-YY')).toBe('9 Jumada I 1448');
+    expect(hijriMonthNames('xx-YY')[4]).toBe('Jumada I');
+  });
+
+  it('is null without a Hijri calendar', () => {
+    resetHijriSupportCache();
+    jest.spyOn(Intl, 'DateTimeFormat').mockImplementation((() => {
+      throw new RangeError('no calendar');
+    }) as never);
+    expect(hijriDateText(day, 'en-US')).toBeNull();
+    jest.restoreAllMocks();
+    resetHijriSupportCache();
   });
 });

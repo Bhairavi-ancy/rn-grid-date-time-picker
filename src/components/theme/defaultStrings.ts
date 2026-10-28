@@ -39,6 +39,11 @@ export interface PickerStrings {
   errorRangeTooShort: (days: number) => string;
   errorRangeTooLong: (days: number) => string;
   nothingSelectable: string;
+  /** The calendar switch and the dual tabs. */
+  calendarGregorian: string;
+  calendarHijri: string;
+  calendarDual: string;
+  a11yCalendarSystem: string;
   a11yClear: string;
   a11yOpen: string;
   a11yDay: string;
@@ -91,6 +96,10 @@ export const DEFAULT_STRINGS: PickerStrings = {
   errorRangeTooShort: (n) => `Choose a range of at least ${n} days`,
   errorRangeTooLong: (n) => `Choose a range of at most ${n} days`,
   nothingSelectable: 'No dates are available',
+  calendarGregorian: 'Gregorian',
+  calendarHijri: 'Hijri',
+  calendarDual: 'Dual',
+  a11yCalendarSystem: 'Calendar',
   a11yClear: 'Clear date',
   a11yOpen: 'Open date picker',
   a11yDay: 'Day',

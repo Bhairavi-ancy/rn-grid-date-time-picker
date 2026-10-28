@@ -8,7 +8,7 @@ import type { PickerStyles } from '../theme/styleKeys';
 import type { ThemeTokens } from '../theme/tokens';
 import type { LabelRenderProps } from '../types';
 import FieldMessages from './FieldMessages';
-import { formatRangeText } from './fieldText';
+import { formatRangeText, type DateTextFormatter } from './fieldText';
 import ValueField from './ValueField';
 
 export type RangeEnd = 'from' | 'to';
@@ -30,6 +30,8 @@ interface Props {
   errorMessage?: string;
   type: PickerType;
   dateFormat: string;
+  /** Writes the shown dates another way (as Hijri dates). Not used while typing. */
+  dateText?: DateTextFormatter;
   timeFormat: TimeFormat;
   yearRange?: { first: number; last: number };
   disabled?: boolean;
@@ -70,6 +72,7 @@ const RangeFields: React.FC<Props> = (props) => {
     errorMessage,
     type,
     dateFormat,
+    dateText,
     timeFormat,
     yearRange,
     disabled,
@@ -86,6 +89,7 @@ const RangeFields: React.FC<Props> = (props) => {
   const common = {
     type,
     dateFormat,
+    dateText,
     timeFormat,
     yearRange,
     renderLabel,
@@ -108,7 +112,8 @@ const RangeFields: React.FC<Props> = (props) => {
           type,
           dateFormat,
           timeFormat,
-          strings.rangeSeparator
+          strings.rangeSeparator,
+          dateText
         )}
         placeholder={placeholder}
         allowClear={allowClear}
