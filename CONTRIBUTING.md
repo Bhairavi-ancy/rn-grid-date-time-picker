@@ -83,7 +83,7 @@ yarn test:tz
 
 ### Example app
 
-The [example app](/example/) is an Expo app with one demo per feature (each shows its current value). It imports the library from `src/`, so changes show up without a rebuild. Run it in Expo Go with `yarn example start`. To check that it bundles for both platforms:
+The [example app](/example/) is the playground, [`example/snack/App.tsx`](example/snack/App.tsx): one file with every option, the saved value, the events and the code to copy. The same file is the Expo Snack. It imports the library from `src/`, so changes show up without a rebuild. Run it in Expo Go with `yarn example start`. To check that it bundles for both platforms:
 
 ```sh
 yarn example expo export --platform ios --platform android
@@ -135,9 +135,7 @@ To release:
 
 ### Live demo (Expo Snack)
 
-The playground for the Snack is one file, [`example/snack/App.tsx`](example/snack/App.tsx): every option (type, mode, Hijri and the calendar switch, digits, limits, theme, light and dark) with the saved value, the events and the code to copy.
-
-To try it locally, change the import in `example/index.js` to `./snack/App` and run `yarn example start` (put it back before committing). It imports the library from `src/`, like the example app.
+The Snack is the example app's playground, [`example/snack/App.tsx`](example/snack/App.tsx): every option (type, mode, Hijri and the calendar switch, digits, limits, theme, light and dark) with the saved value, the events and the code to copy.
 
 Snack installs packages from npm, so the Snack only works with a published version that has every prop the playground uses (`calendarSwitch`, `dualDefaultTab`, `hijriLocale`, `numerals="arabic"` came after 1.0.0).
 
