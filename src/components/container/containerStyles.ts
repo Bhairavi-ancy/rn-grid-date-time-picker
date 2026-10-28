@@ -30,7 +30,8 @@ const create = (t: ThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingTop: 8,
+      // Room between the sheet's top edge and the title.
+      paddingTop: 24,
       paddingBottom: 12,
     },
     title: {

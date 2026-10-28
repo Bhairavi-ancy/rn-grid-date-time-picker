@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import * as calendarSystem from '../../core/calendarSystem';
 import DateTimePicker from '../DateTimePicker';
@@ -344,5 +344,56 @@ describe('a Hijri calendar is written in Arabic', () => {
     });
     expect(texts(tree)).toContain('Jumada I');
     expect(texts(tree)).toContain('Jumada I ٩, ١٤٤٨ AH');
+  });
+});
+
+describe('styling the tabs and the title', () => {
+  it('each part of the dual tabs takes its own style', () => {
+    const tree = mount({
+      calendarSystem: 'dual',
+      styles: {
+        dualTabs: { borderBottomWidth: 0 },
+        dualTab: { minHeight: 36 },
+        dualTabSelected: { backgroundColor: '#F3E8FF' },
+        dualTabTextSelected: { color: 'purple' },
+      },
+    });
+    const style = (id: string) =>
+      StyleSheet.flatten(find(tree, id).props.style);
+    const box = tree.root.findAll(
+      (n) => n.props.testID === 'dp-dual-tabs' && n.type === View
+    )[0]!;
+    expect(StyleSheet.flatten(box.props.style)).toMatchObject({
+      borderBottomWidth: 0,
+    });
+    expect(style('dp-dual-tabs-gregory')).toMatchObject({
+      minHeight: 36,
+      backgroundColor: '#F3E8FF',
+    });
+    expect(style('dp-dual-tabs-hijri').backgroundColor).toBeUndefined();
+  });
+
+  it('the sheet title has 24 pt above it, and styles.header changes it', () => {
+    const header = (props: Partial<DateTimePickerProps>) => {
+      let state!: PickerState;
+      const tree = mount({
+        presentation: 'sheet',
+        renderSheet: (p) => <View>{p.body}</View>,
+        renderField: (p) => {
+          state = p;
+          return null;
+        },
+        ...props,
+      });
+      act(() => state.open());
+      const title = tree.root.findAll(
+        (n) => n.props.accessibilityRole === 'header' && n.type === Text
+      )[0]!;
+      return StyleSheet.flatten(title.parent!.props.style);
+    };
+    expect(header({}).paddingTop).toBe(24);
+    expect(header({ styles: { header: { paddingTop: 16 } } }).paddingTop).toBe(
+      16
+    );
   });
 });
