@@ -185,7 +185,7 @@ describe('range: single field', () => {
 });
 
 describe('range: From / To fields', () => {
-  it('taps fill the active field, then move to To; days before the start are greyed for To', () => {
+  it('taps fill the active field, then move to To; a tap before the start moves the start', () => {
     const onChange = jest.fn();
     const tree = mount({
       mode: 'range',
@@ -199,18 +199,85 @@ describe('range: From / To fields', () => {
     tap(tree, 20);
     expect(find(tree, 'dp-to').props.active).toBe(true);
     expect(find(tree, 'dp-from').props.active).toBe(false);
-    expect(dayCell(tree, 19).props.disabled).toBe(true);
+    expect(dayCell(tree, 19).props.disabled).toBe(false);
+    tap(tree, 18);
+    expect(find(tree, 'dp-to').props.active).toBe(true);
+    expect(texts(tree)).toContain('18-10-2026');
     tap(tree, 24);
     // Back to From: a start after the end clears the end.
     act(() => find(tree, 'dp-from-wrap').props.onTouchStart());
     tap(tree, 26);
     expect(find(tree, 'dp-confirm').props.disabled).toBe(true);
     act(() => find(tree, 'dp-to-wrap').props.onTouchStart());
+    expect(dayCell(tree, 25).props.disabled).toBe(true);
     tap(tree, 28);
     press(tree, 'dp-confirm');
     expect(onChange).toHaveBeenCalledWith({
       from: '2026-10-26T00:00:00.000Z',
       to: '2026-10-28T00:00:00.000Z',
+    });
+  });
+
+  it('a full range greys nothing; the next tap starts a new range', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      range: { layout: 'fromTo' },
+      onChange,
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 24);
+    expect(dayCell(tree, 19).props.disabled).toBe(false);
+    tap(tree, 12);
+    expect(find(tree, 'dp-to').props.active).toBe(true);
+    expect(find(tree, 'dp-confirm').props.disabled).toBe(true);
+    tap(tree, 10);
+    tap(tree, 15);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenCalledWith({
+      from: '2026-10-10T00:00:00.000Z',
+      to: '2026-10-15T00:00:00.000Z',
+    });
+  });
+
+  it('a saved range: the first tap starts a new one', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      range: { layout: 'fromTo' },
+      value: {
+        from: '2026-10-20T00:00:00.000Z',
+        to: '2026-10-24T00:00:00.000Z',
+      },
+      onChange,
+    });
+    open(tree);
+    expect(dayCell(tree, 12).props.disabled).toBe(false);
+    tap(tree, 22);
+    tap(tree, 27);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenCalledWith({
+      from: '2026-10-22T00:00:00.000Z',
+      to: '2026-10-27T00:00:00.000Z',
+    });
+  });
+
+  it('reselect moveNearestEnd: a tap on a full range moves the nearer end', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      range: { layout: 'fromTo', reselect: 'moveNearestEnd' },
+      onChange,
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 24);
+    tap(tree, 18);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenCalledWith({
+      from: '2026-10-18T00:00:00.000Z',
+      to: '2026-10-24T00:00:00.000Z',
     });
   });
 

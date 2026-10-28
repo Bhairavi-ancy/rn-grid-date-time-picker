@@ -37,7 +37,7 @@ export interface PickerState {
   disabled: boolean;
   readOnly: boolean;
   isOpen: boolean;
-  /** The keyboard is up inside the picker; the calendar folds away. */
+  /** The keyboard is up inside the picker and `hideCalendarOnKeyboard` hid the calendar. */
   folded: boolean;
   /**
    * Confirm can be pressed: the dates are complete and allowed. A time with a
@@ -238,6 +238,11 @@ export interface DateTimePickerProps {
   readOnly?: boolean;
   /** Type date and time as segments in the field inside the sheet. */
   allowTyping?: boolean;
+  /**
+   * Hide the calendar while the keyboard is up (typing a date or a time), so
+   * the box being typed in and Confirm stay in view on small phones. Default false.
+   */
+  hideCalendarOnKeyboard?: boolean;
   /**
    * The on-screen field is typeable too. A complete, allowed value is saved
    * once, when focus leaves the field or its last box fills. Default false.

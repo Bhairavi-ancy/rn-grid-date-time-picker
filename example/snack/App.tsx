@@ -1,12 +1,13 @@
 /**
  * rn-grid-date-time-picker playground, for Expo Snack.
  *
- * Pick the options below the preview; the preview, the saved value and the
- * code update as you go. Everything is in this one file, so copy what you need.
+ * Try a setup or pick the options below the preview; the preview, the saved
+ * value and the code update as you go. Everything is in this one file, so copy what you need.
  */
 import { useMemo, useState, type ReactNode } from 'react';
 import {
   I18nManager,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -22,70 +23,52 @@ import DateTimePicker, {
   type ThemeTokens,
 } from 'rn-grid-date-time-picker';
 
-// ─── Theme: a colour, light or dark, and the corners ────────────────────────
-
-/** Everything but the colour, for dark mode. Light mode uses the defaults. */
-const DARK_TOKENS: Partial<ThemeTokens> = {
-  text: '#E4E4E7',
-  heading: '#FAFAFA',
-  mutedText: '#A1A1AA',
-  placeholder: '#71717A',
-  border: '#3F3F46',
-  inputBorder: '#3F3F46',
-  separator: '#27272A',
-  toggleTrack: '#27272A',
-  error: '#F87171',
-  background: '#18181B',
-  surface: '#27272A',
-  disabledBackground: '#27272A',
-  disabledText: '#52525B',
-  holiday: '#F87171',
-};
+// ─── Theme: a colour and the corners ────────────────────────────────────────
 
 type Shade = Pick<ThemeTokens, 'accent' | 'rangeFill'> &
   Partial<Pick<ThemeTokens, 'onAccent'>>;
 
-const COLOURS: Record<string, { label: string; light: Shade; dark: Shade }> = {
+const COLOURS: Record<string, { label: string } & Shade> = {
   blue: {
     label: 'Blue',
-    light: { accent: '#2563EB', rangeFill: '#DBEAFE' },
-    dark: { accent: '#60A5FA', rangeFill: '#1E3A5F', onAccent: '#0B1220' },
+    accent: '#2563EB',
+    rangeFill: '#DBEAFE',
   },
   coral: {
     label: 'Coral',
-    light: { accent: '#D9434B', rangeFill: '#FDE2E2' },
-    dark: { accent: '#FF7A7F', rangeFill: '#4C1D20', onAccent: '#1A0A0B' },
+    accent: '#D9434B',
+    rangeFill: '#FDE2E2',
   },
   green: {
     label: 'Green',
-    light: { accent: '#15803D', rangeFill: '#DCFCE7' },
-    dark: { accent: '#4ADE80', rangeFill: '#14432A', onAccent: '#052E16' },
+    accent: '#15803D',
+    rangeFill: '#DCFCE7',
   },
   violet: {
     label: 'Violet',
-    light: { accent: '#7C3AED', rangeFill: '#EDE9FE' },
-    dark: { accent: '#A78BFA', rangeFill: '#352760', onAccent: '#1E1036' },
+    accent: '#7C3AED',
+    rangeFill: '#EDE9FE',
   },
   teal: {
     label: 'Teal',
-    light: { accent: '#0F766E', rangeFill: '#CCFBF1' },
-    dark: { accent: '#2DD4BF', rangeFill: '#134440', onAccent: '#042F2E' },
+    accent: '#0F766E',
+    rangeFill: '#CCFBF1',
   },
   amber: {
     label: 'Amber',
-    light: { accent: '#B45309', rangeFill: '#FEF3C7' },
-    dark: { accent: '#FBBF24', rangeFill: '#4A3410', onAccent: '#1C1917' },
+    accent: '#B45309',
+    rangeFill: '#FEF3C7',
   },
   graphite: {
     label: 'Graphite',
-    light: { accent: '#18181B', rangeFill: '#E4E4E7' },
-    dark: { accent: '#E4E4E7', rangeFill: '#3F3F46', onAccent: '#18181B' },
+    accent: '#18181B',
+    rangeFill: '#E4E4E7',
   },
 };
 
 const themeTokens = (c: Config): Partial<ThemeTokens> => ({
-  ...(c.appearance === 'dark' ? DARK_TOKENS : {}),
-  ...COLOURS[c.colour]![c.appearance],
+  accent: COLOURS[c.colour]!.accent,
+  rangeFill: COLOURS[c.colour]!.rangeFill,
   ...(c.corners !== '8' ? { radius: Number(c.corners) } : {}),
 });
 
@@ -241,18 +224,13 @@ function hijriText(value: PickerValue, c: Config): string {
         ? value
         : [value.from, value.to]
   ).filter(Boolean);
-  const f = new Intl.DateTimeFormat(
-    // The digits the picker uses for Hijri: Arabic unless set otherwise.
-    // A Hijri calendar is written in Arabic whatever the language.
-    `ar-SA-u-ca-islamic-umalqura${
-      c.numerals === 'latin'
-        ? '-nu-latn'
-        : c.numerals === 'locale'
-          ? ''
-          : '-nu-arab'
-    }`,
-    { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
-  );
+  // A Hijri calendar is written in Arabic, with Arabic digits, whatever the language.
+  const f = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
   return raws
     .map((raw) => {
       // A date is the day itself; a date-time is read on this device's clock.
@@ -273,14 +251,13 @@ function hijriText(value: PickerValue, c: Config): string {
 
 interface Config {
   type: 'date' | 'datetime';
+  precision: 'day' | 'month' | 'year';
   mode: 'single' | 'multiple' | 'range';
   rangeLayout: 'singleField' | 'fromTo';
   presentation: 'sheet' | 'inline';
   language: string;
   calendar: 'gregory' | 'dual' | 'hijri';
-  calendarSwitch: boolean;
   dualTab: 'gregory' | 'hijri';
-  numerals: 'auto' | 'latin' | 'arabic' | 'locale';
   timeFormat: 'auto' | '12h' | '24h';
   timeInput: 'typed' | 'wheel';
   minuteStep: string;
@@ -289,20 +266,18 @@ interface Config {
   allowClear: boolean;
   showToday: boolean;
   colour: string;
-  appearance: 'light' | 'dark';
   corners: '4' | '8' | '16';
 }
 
 const INITIAL: Config = {
   type: 'date',
+  precision: 'day',
   mode: 'single',
   rangeLayout: 'fromTo',
   presentation: 'sheet',
   language: I18nManager.isRTL ? 'ar-SA' : 'en-US',
   calendar: I18nManager.isRTL ? 'hijri' : 'gregory',
-  calendarSwitch: false,
   dualTab: 'gregory',
-  numerals: 'auto',
   timeFormat: 'auto',
   timeInput: 'typed',
   minuteStep: '1',
@@ -311,17 +286,51 @@ const INITIAL: Config = {
   allowClear: true,
   showToday: false,
   colour: 'violet',
-  appearance: 'light',
   corners: '8',
 };
 
 const emptyValue = (mode: Config['mode']): PickerValue =>
   mode === 'multiple' ? [] : mode === 'range' ? { from: '', to: '' } : '';
 
+/** What a preset starts from: the first options, keeping the language, layout and theme. */
+const PRESET_BASE: Partial<Config> = Object.fromEntries(
+  Object.entries(INITIAL).filter(
+    ([k]) => !['language', 'presentation', 'colour', 'corners'].includes(k)
+  )
+);
+
+/** One-tap setups: real uses of the picker. */
+const PRESETS: { label: string; options: Partial<Config> }[] = [
+  {
+    label: 'Book a stay',
+    options: { mode: 'range', rangeLayout: 'fromTo', limits: 'future' },
+  },
+  {
+    label: 'Appointment',
+    options: { type: 'datetime', minuteStep: '15', limits: 'future' },
+  },
+  { label: 'Birth month', options: { precision: 'month' } },
+  { label: 'Hijri & Gregorian', options: { calendar: 'dual' } },
+  {
+    label: 'Weekdays only',
+    options: { mode: 'multiple', limits: 'weekdays' },
+  },
+];
+
+const isPreset = (c: Config, options: Partial<Config>) =>
+  Object.entries({ ...PRESET_BASE, ...options }).every(
+    ([k, v]) => c[k as keyof Config] === v
+  );
+
+/** A month or year pick: single dates only. */
+const picksPeriod = (c: Config) =>
+  c.precision !== 'day' && c.type === 'date' && c.mode === 'single';
+
 /** The picker props for a config, in the order the code shows them. */
 function buildProps(c: Config): Record<string, unknown> {
   const lang = LANGUAGES[c.language]!;
   const p: Record<string, unknown> = { type: c.type };
+  if (picksPeriod(c)) p.precision = c.precision;
   if (c.mode !== 'single') p.mode = c.mode;
   if (c.mode === 'range') p.range = { layout: c.rangeLayout };
   if (c.presentation === 'inline') p.presentation = 'inline';
@@ -329,10 +338,8 @@ function buildProps(c: Config): Record<string, unknown> {
   p.locale = c.language;
   if (lang.strings) p.strings = lang.strings;
   if (c.calendar !== 'gregory') p.calendarSystem = c.calendar;
-  if (c.calendarSwitch) p.calendarSwitch = true;
-  if ((c.calendarSwitch || c.calendar === 'dual') && c.dualTab === 'hijri')
+  if (c.calendar === 'dual' && c.dualTab === 'hijri')
     p.dualDefaultTab = 'hijri';
-  if (c.numerals !== 'auto') p.numerals = c.numerals;
   if (c.type === 'datetime') {
     if (c.timeFormat !== 'auto') p.timeFormat = c.timeFormat;
     if (c.timeInput === 'wheel') p.timeInput = 'wheel';
@@ -359,19 +366,9 @@ function toCode(c: Config, props: Record<string, unknown>): string {
     if (v === true) return `  ${key}`;
     if (typeof v === 'string') return `  ${key}="${v}"`;
     if (key === 'theme') {
-      // Dark mode spreads DARK_TOKENS (in this file), then sets the colour.
-      const shown =
-        c.appearance === 'dark'
-          ? Object.fromEntries(
-              Object.entries(v as object).filter(([k]) => !(k in DARK_TOKENS))
-            )
-          : (v as object);
-      const body = [
-        ...(c.appearance === 'dark' ? ['    ...DARK_TOKENS,'] : []),
-        ...Object.entries(shown).map(
-          ([k, t]) => `    ${k}: ${JSON.stringify(t).replace(/"/g, "'")},`
-        ),
-      ].join('\n');
+      const body = Object.entries(v as object)
+        .map(([k, t]) => `    ${k}: ${JSON.stringify(t).replace(/"/g, "'")},`)
+        .join('\n');
       return `  theme={{\n${body}\n  }}`;
     }
     const json = JSON.stringify(v)
@@ -388,8 +385,26 @@ function toCode(c: Config, props: Record<string, unknown>): string {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <Playground />
+      {Platform.OS === 'web' ? <WebNotice /> : <Playground />}
     </SafeAreaProvider>
+  );
+}
+
+// The picker is built for iOS and Android only, so the web preview says so.
+function WebNotice() {
+  const ui = UI_COLOURS;
+  return (
+    <SafeAreaView style={[styles.screen, { backgroundColor: ui.page }]}>
+      <View style={styles.webNotice}>
+        <Text style={[styles.heading, { color: ui.text }]}>
+          rn-grid-date-time-picker
+        </Text>
+        <Text style={[styles.sub, { color: ui.muted }]}>
+          This picker supports iOS and Android. Switch the preview to iOS or
+          Android, or open it on your phone in Expo Go.
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -399,13 +414,12 @@ function Playground() {
   // The calendar the value was picked in (onChange's second argument).
   const [pickedIn, setPickedIn] = useState<string>('');
   const [events, setEvents] = useState<string[]>([]);
-  const dark = config.appearance === 'dark';
-  const ui = dark ? DARK_UI : LIGHT_UI;
+  const ui = UI_COLOURS;
 
   const set = <K extends keyof Config>(key: K, next: Config[K]) => {
     setConfig((c) => ({ ...c, [key]: next }));
     // A range value doesn't fit a single picker, so the value starts again.
-    if (key === 'type' || key === 'mode') {
+    if (key === 'type' || key === 'mode' || key === 'precision') {
       setValue(
         emptyValue(key === 'mode' ? (next as Config['mode']) : config.mode)
       );
@@ -416,55 +430,96 @@ function Playground() {
   const props = useMemo(() => buildProps(config), [config]);
   const code = useMemo(() => toCode(config, props), [config, props]);
   const isDateTime = config.type === 'datetime';
-  const hijriShown =
-    (config.calendar !== 'gregory' || config.calendarSwitch) && hijriSupported;
+  const hijriShown = config.calendar !== 'gregory' && hijriSupported;
+
+  const applyPreset = (options: Partial<Config>) => {
+    setConfig((c) => ({ ...c, ...PRESET_BASE, ...options }));
+    setValue(emptyValue(options.mode ?? 'single'));
+  };
+  // In a bottom sheet the field stays at the top while the options scroll;
+  // an inline calendar is too tall for that.
+  const pinned = config.presentation === 'sheet';
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: ui.page }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle="dark-content" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        stickyHeaderIndices={pinned ? [1] : undefined}
       >
-        <Text style={[styles.heading, { color: ui.text }]}>
-          rn-grid-date-time-picker
-        </Text>
-        <Text style={[styles.sub, { color: ui.muted }]}>
-          Change the options below. The picker, its value and the code follow.
-        </Text>
+        <View>
+          <Text style={[styles.heading, { color: ui.text }]}>
+            rn-grid-date-time-picker
+          </Text>
+          <Text style={[styles.sub, { color: ui.muted }]}>
+            Try a setup or change the options. The picker, its value and the
+            code follow.
+          </Text>
+        </View>
+
+        <View style={[styles.pinned, { backgroundColor: ui.page }]}>
+          <Card ui={ui}>
+            <DateTimePicker
+              key={`${config.type}-${config.mode}-${config.precision}`}
+              {...(props as unknown as DateTimePickerProps)}
+              label={config.mode === 'range' ? undefined : 'Date'}
+              value={value}
+              onChange={(next, info) => {
+                setValue(next);
+                setPickedIn(info?.calendarSystem ?? '');
+                log('onChange');
+                // Shows in the Snack's logs panel.
+                console.log(
+                  'onChange',
+                  JSON.stringify(next),
+                  info ? `picked in ${info.calendarSystem}` : '',
+                  hijriShown ? `(Hijri: ${hijriText(next, config)})` : ''
+                );
+              }}
+              onOpen={() => log('onOpen')}
+              onClose={() => log('onClose')}
+              onError={(error) => log(`onError: ${error}`)}
+            />
+            {config.calendar !== 'gregory' && !hijriSupported ? (
+              <Text style={[styles.note, { color: ui.muted }]}>
+                This device has no Hijri calendar, so the picker shows
+                Gregorian.
+              </Text>
+            ) : null}
+          </Card>
+        </View>
 
         <Card ui={ui}>
-          <DateTimePicker
-            key={`${config.type}-${config.mode}`}
-            {...(props as unknown as DateTimePickerProps)}
-            label={config.mode === 'range' ? undefined : 'Date'}
-            value={value}
-            onChange={(next, info) => {
-              setValue(next);
-              setPickedIn(info?.calendarSystem ?? '');
-              log('onChange');
-              // Shows in the Snack's logs panel.
-              console.log(
-                'onChange',
-                JSON.stringify(next),
-                info ? `picked in ${info.calendarSystem}` : '',
-                hijriShown ? `(Hijri: ${hijriText(next, config)})` : ''
-              );
-            }}
-            onCalendarSystemChange={(system) => {
-              set('calendar', system);
-              log(`onCalendarSystemChange: ${system}`);
-            }}
-            onOpen={() => log('onOpen')}
-            onClose={() => log('onClose')}
-            onError={(error) => log(`onError: ${error}`)}
-          />
-          {(config.calendar !== 'gregory' || config.calendarSwitch) &&
-          !hijriSupported ? (
-            <Text style={[styles.note, { color: ui.muted }]}>
-              This device has no Hijri calendar, so the picker shows Gregorian.
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            Try a setup
+          </Text>
+          <View style={styles.chips}>
+            {PRESETS.map((preset) => (
+              <Chip
+                key={preset.label}
+                ui={ui}
+                label={preset.label}
+                selected={isPreset(config, preset.options)}
+                onPress={() => applyPreset(preset.options)}
+              />
+            ))}
+          </View>
+        </Card>
+
+        <Card ui={ui}>
+          <Collapsible ui={ui} title="Code">
+            <Text
+              selectable
+              style={[
+                styles.mono,
+                styles.code,
+                { color: ui.text, backgroundColor: ui.codeBg },
+              ]}
+            >
+              {code}
             </Text>
-          ) : null}
+          </Collapsible>
           <Collapsible ui={ui} title="Value and events" divider>
             <Text style={[styles.resultLabel, { color: ui.muted }]}>
               onChange value
@@ -498,50 +553,9 @@ function Playground() {
         </Card>
 
         <Card ui={ui}>
-          <Text style={[styles.cardTitle, { color: ui.text }]}>Theme</Text>
-          <Row
-            ui={ui}
-            title="Appearance"
-            value={config.appearance}
-            onChange={(v) => set('appearance', v)}
-            options={[
-              ['light', 'Light'],
-              ['dark', 'Dark'],
-            ]}
-          />
-          <View style={styles.row}>
-            <Text style={[styles.rowTitle, { color: ui.muted }]}>Colour</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.swatches}
-            >
-              {Object.entries(COLOURS).map(([key, colour]) => (
-                <Swatch
-                  key={key}
-                  label={colour.label}
-                  shade={colour[config.appearance]}
-                  selected={config.colour === key}
-                  ui={ui}
-                  onPress={() => set('colour', key)}
-                />
-              ))}
-            </ScrollView>
-          </View>
-          <Row
-            ui={ui}
-            title="Corners"
-            value={config.corners}
-            onChange={(v) => set('corners', v)}
-            options={[
-              ['4', 'Sharp'],
-              ['8', 'Default'],
-              ['16', 'Round'],
-            ]}
-          />
-        </Card>
-
-        <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            What it picks
+          </Text>
           <Row
             ui={ui}
             title="Picks"
@@ -552,6 +566,26 @@ function Playground() {
               ['datetime', 'Date & time'],
             ]}
           />
+          {config.type === 'date' && config.mode === 'single' ? (
+            <>
+              <Row
+                ui={ui}
+                title="Pick a"
+                value={config.precision}
+                onChange={(v) => set('precision', v)}
+                options={[
+                  ['day', 'Day'],
+                  ['month', 'Month & year'],
+                  ['year', 'Year'],
+                ]}
+              />
+              {config.precision !== 'day' ? (
+                <Text style={[styles.note, { color: ui.muted }]}>
+                  Saves the first day of the month or year. Always Gregorian.
+                </Text>
+              ) : null}
+            </>
+          ) : null}
           <Row
             ui={ui}
             title="Selection"
@@ -588,6 +622,48 @@ function Playground() {
         </Card>
 
         <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            Limits and options
+          </Text>
+          <Row
+            ui={ui}
+            title="Limits"
+            value={config.limits}
+            onChange={(v) => set('limits', v)}
+            options={[
+              ['none', 'None'],
+              ['future', 'From today'],
+              ['weekdays', 'Weekdays only'],
+              ['holidays', 'No holidays'],
+            ]}
+          />
+          <Text style={[styles.rowTitle, { color: ui.muted }]}>Options</Text>
+          <View style={styles.chips}>
+            <Chip
+              ui={ui}
+              label="Type in the sheet"
+              selected={config.allowTyping}
+              onPress={() => set('allowTyping', !config.allowTyping)}
+            />
+            <Chip
+              ui={ui}
+              label="Clear ×"
+              selected={config.allowClear}
+              onPress={() => set('allowClear', !config.allowClear)}
+            />
+            <Chip
+              ui={ui}
+              label="Today button"
+              selected={config.showToday}
+              onPress={() => set('showToday', !config.showToday)}
+            />
+          </View>
+        </Card>
+
+        <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            Calendar and language
+          </Text>
           <Row
             ui={ui}
             title="Language"
@@ -606,17 +682,7 @@ function Playground() {
               ['dual', 'Dual'],
             ]}
           />
-          <Row
-            ui={ui}
-            title="Calendar switch"
-            value={config.calendarSwitch ? 'on' : 'off'}
-            onChange={(v) => set('calendarSwitch', v === 'on')}
-            options={[
-              ['off', 'Off'],
-              ['on', 'In the picker'],
-            ]}
-          />
-          {config.calendarSwitch || config.calendar === 'dual' ? (
+          {config.calendar === 'dual' ? (
             <Row
               ui={ui}
               title="Dual opens on"
@@ -628,31 +694,22 @@ function Playground() {
               ]}
             />
           ) : null}
-          <Row
-            ui={ui}
-            title="Digits"
-            value={config.numerals}
-            onChange={(v) => set('numerals', v)}
-            options={[
-              ['auto', 'Auto'],
-              ['latin', '123'],
-              ['arabic', '١٢٣'],
-              ['locale', "The language's own"],
-            ]}
-          />
           <Text style={[styles.note, { color: ui.muted }]}>
-            Auto: Gregorian shows 123 and Hijri shows ١٢٣, in any language.
+            Gregorian shows 123 and Hijri shows ١٢٣, in any language.
           </Text>
-          <Text style={[styles.note, { color: ui.muted }]}>
-            Direction: {I18nManager.isRTL ? 'right to left' : 'left to right'},
-            from your phone's language. To try RTL, set Expo Go's language to
-            Arabic (Android: Settings → Apps → Expo Go → Language; iOS: Settings
-            → Expo Go → Language) and reopen it.
-          </Text>
+          <Collapsible ui={ui} title="Direction" divider>
+            <Text style={[styles.note, { color: ui.muted }]}>
+              {I18nManager.isRTL ? 'Right to left' : 'Left to right'}, from your
+              phone's language. To try RTL, set Expo Go's language to Arabic
+              (Android: Settings → Apps → Expo Go → Language; iOS: Settings →
+              Expo Go → Language) and reopen it.
+            </Text>
+          </Collapsible>
         </Card>
 
         {isDateTime ? (
           <Card ui={ui}>
+            <Text style={[styles.cardTitle, { color: ui.text }]}>Time</Text>
             <Row
               ui={ui}
               title="Clock"
@@ -690,54 +747,37 @@ function Playground() {
         ) : null}
 
         <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>Theme</Text>
+          <View style={styles.row}>
+            <Text style={[styles.rowTitle, { color: ui.muted }]}>Colour</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.swatches}
+            >
+              {Object.entries(COLOURS).map(([key, colour]) => (
+                <Swatch
+                  key={key}
+                  label={colour.label}
+                  shade={colour}
+                  selected={config.colour === key}
+                  ui={ui}
+                  onPress={() => set('colour', key)}
+                />
+              ))}
+            </ScrollView>
+          </View>
           <Row
             ui={ui}
-            title="Limits"
-            value={config.limits}
-            onChange={(v) => set('limits', v)}
+            title="Corners"
+            value={config.corners}
+            onChange={(v) => set('corners', v)}
             options={[
-              ['none', 'None'],
-              ['future', 'From today'],
-              ['weekdays', 'Weekdays only'],
-              ['holidays', 'No holidays'],
+              ['4', 'Sharp'],
+              ['8', 'Default'],
+              ['16', 'Round'],
             ]}
           />
-          <Text style={[styles.rowTitle, { color: ui.muted }]}>Options</Text>
-          <View style={styles.chips}>
-            <Chip
-              ui={ui}
-              label="Type in the sheet"
-              selected={config.allowTyping}
-              onPress={() => set('allowTyping', !config.allowTyping)}
-            />
-            <Chip
-              ui={ui}
-              label="Clear ×"
-              selected={config.allowClear}
-              onPress={() => set('allowClear', !config.allowClear)}
-            />
-            <Chip
-              ui={ui}
-              label="Today button"
-              selected={config.showToday}
-              onPress={() => set('showToday', !config.showToday)}
-            />
-          </View>
-        </Card>
-
-        <Card ui={ui}>
-          <Collapsible ui={ui} title="Code">
-            <Text
-              selectable
-              style={[
-                styles.mono,
-                styles.code,
-                { color: ui.text, backgroundColor: ui.codeBg },
-              ]}
-            >
-              {code}
-            </Text>
-          </Collapsible>
         </Card>
       </ScrollView>
     </SafeAreaView>
@@ -746,7 +786,7 @@ function Playground() {
 
 // ─── Small UI pieces ─────────────────────────────────────────────────────────
 
-const LIGHT_UI = {
+const UI_COLOURS = {
   page: '#F4F4F5',
   card: '#FFFFFF',
   text: '#18181B',
@@ -757,18 +797,7 @@ const LIGHT_UI = {
   chipOnText: '#FFFFFF',
   codeBg: '#F4F4F5',
 };
-const DARK_UI = {
-  page: '#09090B',
-  card: '#18181B',
-  text: '#F4F4F5',
-  muted: '#A1A1AA',
-  border: '#3F3F46',
-  chip: '#18181B',
-  chipOn: '#F4F4F5',
-  chipOnText: '#18181B',
-  codeBg: '#09090B',
-};
-type UI = typeof LIGHT_UI;
+type UI = typeof UI_COLOURS;
 
 function Card({ ui, children }: { ui: UI; children: ReactNode }) {
   return (
@@ -925,9 +954,12 @@ function Collapsible({
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  webNotice: { flex: 1, justifyContent: 'center', padding: 24, gap: 4 },
   content: { padding: 16, gap: 12, paddingBottom: 48 },
+  // Behind the pinned picker, so the options scroll out of sight under it.
+  pinned: { marginHorizontal: -16, paddingHorizontal: 16, paddingBottom: 4 },
   heading: { fontSize: 20, fontWeight: '700', marginTop: 4 },
-  sub: { fontSize: 14, lineHeight: 20, marginTop: -4 },
+  sub: { fontSize: 14, lineHeight: 20, marginTop: 4 },
   card: {
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,

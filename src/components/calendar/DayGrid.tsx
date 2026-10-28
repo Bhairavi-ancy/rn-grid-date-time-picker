@@ -87,6 +87,10 @@ const DayGrid: React.FC<DayGridProps> = ({
   const pan = useMemo(
     () =>
       PanResponder.create({
+        // A touch no day takes (a greyed day, a gap) is the grid's from the start,
+        // so a swipe that begins there still changes month. A day that can be
+        // picked is asked first and keeps its tap.
+        onStartShouldSetPanResponder: () => !!onSwipeRef.current,
         onMoveShouldSetPanResponder: (_, g) =>
           !!onSwipeRef.current && isSwipeStart(g.dx, g.dy),
         onPanResponderRelease: (_, g) => {

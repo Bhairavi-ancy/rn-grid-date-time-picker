@@ -64,6 +64,24 @@ describe('DayGrid', () => {
     expect(dayText(20).color).not.toBe(DEFAULT_TOKENS.disabledText);
   });
 
+  it('a day of the month before is darker than a greyed one; outsideText follows mutedText', () => {
+    const textOf = (tree: ReactTestRenderer, id: string) => {
+      const cell = tree.root.findAll(
+        (n) => n.props.testID === id && typeof n.type !== 'string'
+      )[0]!;
+      return StyleSheet.flatten(cell.findAllByType(Text)[0]!.props.style);
+    };
+    const tree = mount({});
+    expect(textOf(tree, 'g-day-2026-9-27').color).toBe(
+      DEFAULT_TOKENS.outsideText
+    );
+    expect(DEFAULT_TOKENS.outsideText).not.toBe(DEFAULT_TOKENS.disabledText);
+    expect(buildTokens({ mutedText: '#555555' }).outsideText).toBe('#555555');
+    expect(
+      buildTokens({ mutedText: '#555555', outsideText: '#777777' }).outsideText
+    ).toBe('#777777');
+  });
+
   it('draws 5 or 6 weeks and hides outside days when asked', () => {
     const withOutside = mount({});
     expect(
@@ -119,5 +137,29 @@ describe('DayGrid', () => {
     expect(swipeStep(80, false)).toBe(-1);
     expect(swipeStep(-80, true)).toBe(-1);
     expect(swipeStep(30, false)).toBe(0);
+  });
+
+  it('takes a touch no day takes, so a swipe from greyed days changes month', () => {
+    const onSwipe = jest.fn();
+    const grid = (tree: ReactTestRenderer) =>
+      tree.root.findAll(
+        (n) => n.props.testID === 'g-grid' && typeof n.type === 'string'
+      )[0]!;
+    const tree = mount({
+      onSwipe,
+      constraints: createConstraints({
+        type: 'date',
+        timeZone: 'Asia/Kolkata',
+        now: NOW,
+        minDate: { year: 2026, month: 10, day: 28 },
+      }),
+    });
+    expect(
+      grid(tree).props.onStartShouldSetResponder({ touchHistory: {} })
+    ).toBe(true);
+    // Without a swipe handler the grid leaves touches alone.
+    expect(
+      grid(mount({})).props.onStartShouldSetResponder({ touchHistory: {} })
+    ).toBe(false);
   });
 });
