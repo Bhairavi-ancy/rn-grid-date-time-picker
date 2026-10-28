@@ -7,8 +7,6 @@ import {
   hijriDateText,
   hijriMonthNames,
   monthSystemFor,
-  toHijri,
-  type CalendarSystem,
   type MonthSystem,
   type SystemMonth,
 } from '../../core/calendarSystem';
@@ -40,8 +38,8 @@ export interface CalendarProps {
   showHolidays: boolean;
   yearRange: { first: number; last: number };
   locale: string;
-  /** Already resolved (see resolveCalendarSystem). Default 'gregory'. */
-  calendarSystem?: CalendarSystem;
+  /** The grid on screen (a dual calendar shows one of the two). Default 'gregory'. */
+  calendarSystem?: 'gregory' | 'hijri';
   initialView?: CalendarView;
   /** 'month' / 'year': that grid is the last step and a tap picks the period's first day. */
   precision?: 'day' | 'month' | 'year';
@@ -54,7 +52,7 @@ export interface CalendarProps {
    * the other calendar system can open on the same days.
    */
   onAnchorChange?: (day: CalendarDate) => void;
-  /** Second line under each day (default: the Hijri day in 'dual'; none in 'hijri', which shows only the Hijri day). */
+  /** A second line under each day. None by default. */
   subLabel?: (day: CalendarDate) => string | null;
   renderDay?: (state: DayCellState, onPress: () => void) => React.ReactNode;
   renderWeekday?: (weekday: Weekday, name: string) => React.ReactNode;
@@ -240,12 +238,15 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     [sys, visible, goTo, onSelectDay]
   );
 
-  const subLabelFor = useMemo(() => {
-    if (subLabel) return subLabel;
-    if (calendarSystem === 'dual')
-      return (d: CalendarDate) => String(toHijri(d)?.day ?? '');
-    return undefined;
-  }, [subLabel, calendarSystem]);
+  // Screen readers hear a Hijri grid's days as Hijri dates.
+  const dateLabel = useMemo(
+    () =>
+      sys.kind === 'hijri'
+        ? (day: CalendarDate) =>
+            hijriDateText(day, locale) ?? fullDateLabel(locale, day)
+        : undefined,
+    [sys, locale]
+  );
 
   const { min, max } = constraints.range;
   const prevMonth = sys.addMonths(visible, -1);
@@ -457,12 +458,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
           selection={selection}
           constraints={constraints}
           locale={locale}
-          dateLabel={
-            sys.kind === 'hijri'
-              ? (day) =>
-                  hijriDateText(day, locale) ?? fullDateLabel(locale, day)
-              : undefined
-          }
+          dateLabel={dateLabel}
           onSelectDay={selectDay}
           onSwipe={
             enableMonthSwipe
@@ -472,7 +468,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
                 }
               : undefined
           }
-          subLabel={subLabelFor}
+          subLabel={subLabel}
           renderDay={renderDay}
           renderWeekday={renderWeekday}
           tokens={tokens}

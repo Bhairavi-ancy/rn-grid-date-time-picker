@@ -332,9 +332,9 @@ describe('Calendar: calendar systems', () => {
       .findAllByType(Text)
       .map((t) => String(t.props.children));
 
-  it("'dual' shows the Hijri day under each Gregorian day", () => {
-    const tree = mount({ calendarSystem: 'dual' });
-    expect(dayText(tree, 2026, 10, 21)).toEqual(['21', '10']); // 10 Jumada I 1448
+  it('subLabel draws a second line under each day', () => {
+    const tree = mount({ subLabel: (d) => `h${d.day}` });
+    expect(dayText(tree, 2026, 10, 21)).toEqual(['21', 'h21']);
   });
 
   it("'hijri' lays out Hijri months: Hijri year, month chips and day numbers", () => {

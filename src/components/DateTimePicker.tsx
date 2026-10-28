@@ -248,8 +248,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const [dualTab, setDualTab] = useState(dualDefaultTab);
   /** The calendar on screen. */
   const shownSystem = system === 'dual' ? dualTab : system;
-  /** The calendar a value from outside counts as picked in. */
-  const openingSystem = system === 'dual' ? dualDefaultTab : system;
+  // A value from outside counts as picked in the calendar the props open on,
+  // not the one the user has since chosen in the switch.
+  const propSystem =
+    precision === 'day' ? resolveCalendarSystem(startSystem()) : 'gregory';
+  const outsideSystem = propSystem === 'dual' ? dualDefaultTab : propSystem;
   // Picks say which calendar they were made in only when one can be Hijri.
   const hijriInPlay = switchSystems !== null || system !== 'gregory';
   /**
@@ -532,6 +535,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // A day in the month the calendar last showed, so a switch to the other
   // calendar opens on the same days. Each open starts from the value again.
   const shownAnchor = useRef<CalendarDate | null>(null);
+  const rememberAnchor = useCallback((day: CalendarDate) => {
+    shownAnchor.current = day;
+  }, []);
   // Opening or closing starts fresh: nothing edited, nothing blocked.
   useEffect(() => {
     shownAnchor.current = null;
@@ -616,33 +622,41 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // it shows only there, and the field writes it in that calendar. A saved
   // value remembers its calendar; one from outside counts as picked in the
   // calendar the picker opens on.
+  // The saved value as a draft, for the on-screen field and for comparing
+  // values by what they hold.
+  const saved = useMemo(
+    () => createDraft(mode, value, draftOptions),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the value is compared by content (`valueKey`)
+    [valueKey, mode, draftOptions]
+  );
+  /** A draft's days and times, so a value written another way ({to, from}) still matches. */
+  const contentOf = (dr: Draft): string => JSON.stringify(valuesOf(dr));
+  const savedContent = contentOf(saved);
   const savedSystemRef = useRef<{
-    key: string;
+    content: string;
     system: 'gregory' | 'hijri';
   } | null>(null);
   const savedSystem =
-    savedSystemRef.current?.key === valueKey
+    savedSystemRef.current?.content === savedContent
       ? savedSystemRef.current.system
-      : openingSystem;
+      : outsideSystem;
   const [draftSystem, setDraftSystem] = useState(savedSystem);
-  useEffect(
-    () => setDraftSystem(savedSystem),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the draft is rebuilt on open and on a new value
-    [isOpen, valueKey]
-  );
+  // The draft is rebuilt on open and on a new value; so is its calendar.
+  useEffect(() => setDraftSystem(savedSystem), [isOpen, valueKey, savedSystem]);
   useEffect(() => setDualTab(dualDefaultTab), [isOpen, dualDefaultTab]);
   const selectionShown = draftSystem === shownSystem;
   /** Saves a value: with the calendar it was picked in, when one can be Hijri. */
   const emitChange = useCallback(
     (wire: PickerValue, picked: 'gregory' | 'hijri') => {
       savedSystemRef.current = {
-        key: JSON.stringify(wire ?? ''),
+        content: contentOf(createDraft(mode, wire, draftOptions)),
         system: picked,
       };
       if (hijriInPlay) onChange(wire, { calendarSystem: picked });
       else onChange(wire);
     },
-    [hijriInPlay, onChange]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- contentOf reads only `type` and the options listed
+    [hijriInPlay, onChange, mode, draftOptions]
   );
 
   /**
@@ -679,10 +693,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const confirm = useCallback(() => {
     if (!canConfirm) return;
-    const { validate: check, onError: report, value: saved } = latest.current;
+    const { validate: check, onError: report, value: current } = latest.current;
     if (timeBlocked) {
       setTimeCheck((n) => n + 1);
-      report?.(timeIssue ?? 'TIME_NOT_ALLOWED', saved);
+      report?.(timeIssue ?? 'TIME_NOT_ALLOWED', current);
       return;
     }
     const wire = draftToWire(preview, draftOptions);
@@ -745,7 +759,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     if (timeIssue || !canSave(draft.draft)) return;
     const wire = draft.toWire();
     const key = JSON.stringify(wire);
-    if (key === valueKey || key === lastRejected.current) return;
+    if (key === lastRejected.current) return;
+    // The same dates picked in the same calendar aren't saved again; the same
+    // dates picked in the other calendar are.
+    const unchanged =
+      key === valueKey || contentOf(draft.draft) === savedContent;
+    if (unchanged && draftSystem === savedSystem) return;
     const message = latest.current.validate?.(wire);
     if (message) {
       lastRejected.current = key;
@@ -759,6 +778,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     commitMode,
     isOpen,
     draft.draft,
+    draftSystem,
     timeIssue,
     typingBlocked,
     wheelSpinning,
@@ -780,9 +800,15 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         }
       : null);
 
+  // Typed segments are Gregorian, so typing keeps the calendar a selection was
+  // picked in; into an empty draft, it takes the calendar on screen.
+  const adoptShownIfEmpty = () => {
+    if (valuesOf(d).every((v) => v === null)) setDraftSystem(shownSystem);
+  };
+
   const onSheetTyped = (parsed: ParsedSegments) => {
     edited.current = true;
-    setDraftSystem(shownSystem);
+    adoptShownIfEmpty();
     const typed = withFilledTime(parsed, 'single');
     setTypingBlock('single', !parsed.isEmpty && !typed);
     if (typed) draft.setValue(typed, 'single');
@@ -791,7 +817,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const onRangeTyped = (end: RangeEnd, parsed: ParsedSegments) => {
     edited.current = true;
-    setDraftSystem(shownSystem);
+    adoptShownIfEmpty();
     const typed = withFilledTime(parsed, end);
     setTypingBlock(end, !parsed.isEmpty && !typed);
     if (typed || parsed.isEmpty) draft.setValue(typed, end);
@@ -1006,7 +1032,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       return;
     }
     setTriggerError('');
-    emitChange(wire, openingSystem);
+    emitChange(wire, outsideSystem);
     onBlur?.();
   };
 
@@ -1022,12 +1048,6 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const draftDateText = dateTextFor(draftSystem);
 
   // What the on-screen field shows: the saved value, never the draft.
-  const savedKey = valueKey;
-  const saved = useMemo(
-    () => createDraft(mode, value, draftOptions),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the value is compared by content (`savedKey`)
-    [savedKey, mode, draftOptions]
-  );
   const savedSingle = saved.mode === 'single' ? saved.slot.value : null;
   const savedText =
     saved.mode === 'range'
@@ -1349,9 +1369,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         enableMonthSwipe={enableMonthSwipe}
         showToday={showToday}
         onVisibleMonthChange={handleVisibleMonth}
-        onAnchorChange={(day) => {
-          shownAnchor.current = day;
-        }}
+        onAnchorChange={rememberAnchor}
         renderDay={renderDay}
         renderWeekday={renderWeekday}
         renderMonthChip={renderMonthChip}

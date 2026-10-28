@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import * as calendarSystem from '../../core/calendarSystem';
 import DateTimePicker from '../DateTimePicker';
@@ -395,5 +395,124 @@ describe('styling the tabs and the title', () => {
     expect(header({ styles: { header: { paddingTop: 16 } } }).paddingTop).toBe(
       16
     );
+  });
+});
+
+describe('the calendar a value counts as picked in (regressions)', () => {
+  /** A sheet picker the test drives through renderField's state. */
+  const sheet = (props: Partial<DateTimePickerProps>) => {
+    const ref: { state?: PickerState } = {};
+    const tree = mount({
+      presentation: 'sheet',
+      commitMode: 'confirm',
+      renderSheet: (p) => <View>{p.body}</View>,
+      renderField: (p) => {
+        ref.state = p;
+        return null;
+      },
+      ...props,
+    });
+    return { tree, state: () => ref.state! };
+  };
+
+  it('switching calendars and closing without Confirm leaves the field as it was', () => {
+    const { tree, state } = sheet({
+      calendarSwitch: true,
+      value: '2026-10-20',
+    });
+    expect(state().displayText).toBe('20/10/2026');
+    act(() => state().open());
+    press(tree, 'dp-calendar-switch-hijri');
+    act(() => state().close());
+    expect(state().displayText).toBe('20/10/2026');
+  });
+
+  it('a new calendarSystem prop moves an untouched value to that calendar, field and grid alike', () => {
+    const tree = mount({ value: '2026-10-20' });
+    act(() =>
+      tree.update(
+        <DateTimePicker {...base} value="2026-10-20" calendarSystem="hijri" />
+      )
+    );
+    expect(isSelected(tree, 20)).toBe(true);
+    expect(texts(tree)).toContain('٩ جمادى الأولى ١٤٤٨ هـ');
+  });
+
+  it('a value handed back written another way keeps its calendar, and is not saved again', () => {
+    const onChange = jest.fn();
+    const Parent = () => {
+      const [value, setValue] = useState<DateTimePickerProps['value']>({
+        from: '',
+        to: '',
+      });
+      return (
+        <DateTimePicker
+          {...base}
+          mode="range"
+          calendarSystem="dual"
+          dualDefaultTab="hijri"
+          value={value}
+          onChange={(v, info) => {
+            onChange(v, info);
+            // The parent stores the range with its keys the other way round.
+            const r = v as { from: string; to: string };
+            setValue({ to: r.to, from: r.from } as never);
+          }}
+        />
+      );
+    };
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(<Parent />);
+    });
+    tap(tree, 20);
+    tap(tree, 25);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenLastCalledWith(
+      { from: '2026-10-20', to: '2026-10-25' },
+      { calendarSystem: 'hijri' }
+    );
+    expect(isSelected(tree, 20)).toBe(true);
+  });
+
+  it('instant mode saves the same day picked in the other calendar', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      calendarSystem: 'dual',
+      value: '2026-10-20',
+      onChange,
+    });
+    press(tree, 'dp-dual-tabs-hijri');
+    tap(tree, 20);
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-20', {
+      calendarSystem: 'hijri',
+    });
+  });
+
+  it('typing keeps the calendar a selection was picked in', () => {
+    const tree = mount({
+      calendarSystem: 'dual',
+      mode: 'range',
+      commitMode: 'confirm',
+      range: { layout: 'fromTo' },
+      allowTyping: true,
+    });
+    tap(tree, 20);
+    press(tree, 'dp-dual-tabs-hijri');
+    const typeBox = (id: string, text: string) => {
+      const input = tree.root
+        .findAllByType(TextInput)
+        .find((i) => i.props.testID === id)!;
+      act(() => input.props.onFocus());
+      act(() => input.props.onChangeText(text));
+    };
+    typeBox('dp-to-segment-day', '25');
+    typeBox('dp-to-segment-month', '10');
+    typeBox('dp-to-segment-year', '2026');
+    // Still a Gregorian selection: hidden in the Hijri tab, back in the Gregorian one.
+    expect(isSelected(tree, 25)).toBe(false);
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(isSelected(tree, 20)).toBe(true);
+    expect(isSelected(tree, 25)).toBe(true);
   });
 });

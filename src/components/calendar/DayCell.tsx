@@ -20,7 +20,7 @@ export interface DayCellState {
   rangeRole: RangeRole;
   /** The number to show, when it isn't the Gregorian day (Hijri grid). */
   label?: number;
-  /** Second line under the day number (Hijri day in 'dual' mode). */
+  /** A second line under the day number. Null unless a `subLabel` is given. */
   subLabel?: string | null;
   a11yLabel: string;
 }

@@ -4,11 +4,11 @@ import { weekdayOf } from './calendarDate';
 import { toLatinDigits } from './digits';
 
 /**
- * Calendar systems for the picker grid. Saved values are always Gregorian;
- * a system only changes how months are laid out and labelled.
+ * Calendar systems for the picker. Saved values are always Gregorian; a
+ * system only changes how months are laid out and labelled.
  * - 'gregory': the normal grid;
- * - 'dual':    the Gregorian grid with the Hijri day under each day;
- * - 'hijri':   a Hijri (Umm al-Qura) grid showing only the Hijri day.
+ * - 'hijri':   a Hijri (Umm al-Qura) grid showing the Hijri day;
+ * - 'dual':    both, as Gregorian and Hijri tabs showing one grid at a time.
  *
  * Hijri dates come from the platform's Intl ('islamic-umalqura'). When Intl
  * can't do it (checked once; some JS engines ship without that calendar) the
@@ -155,8 +155,18 @@ export const HIJRI_MONTHS_EN = [
   'Dhuʻl-Hijjah',
 ];
 
+const monthNameCache = new Map<string, string[]>();
+
 /** Hijri month names in the user's language (Intl), English otherwise. */
 export const hijriMonthNames = (locale: string): string[] => {
+  const hit = monthNameCache.get(locale);
+  if (hit) return hit;
+  const names = readHijriMonthNames(locale);
+  monthNameCache.set(locale, names);
+  return names;
+};
+
+const readHijriMonthNames = (locale: string): string[] => {
   try {
     const f = new Intl.DateTimeFormat(withHijriCalendar(locale), {
       timeZone: 'UTC',
