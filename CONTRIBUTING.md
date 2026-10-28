@@ -135,10 +135,13 @@ To release:
 
 ### Live demo (Expo Snack)
 
-Snack installs packages from npm, so the demo can only be made after a version is published.
+The playground for the Snack is one file, [`example/snack/App.tsx`](example/snack/App.tsx): every option (type, mode, Hijri and the calendar switch, digits, limits, theme, light and dark) with the saved value, the events and the code to copy.
+
+To try it locally, change the import in `example/index.js` to `./snack/App` and run `yarn example start` (put it back before committing). It imports the library from `src/`, like the example app.
+
+Snack installs packages from npm, so the Snack only works with a published version that has every prop the playground uses (`calendarSwitch`, `dualDefaultTab`, `hijriLocale`, `numerals="arabic"` came after 1.0.0).
 
 1. Open https://snack.expo.dev, sign in, and pick the newest Expo SDK it offers.
-2. Replace `App.js` with `example/src/App.tsx` (rename it `App.tsx`), and add the `example/src/playground/` folder next to it (`config.ts`, `fixtures.tsx`, `ui.tsx`, `CodeSheet.tsx`). Snack adds the imported packages (`rn-grid-date-time-picker`, `expo-font`, `@expo-google-fonts/inter`, `expo-status-bar`, `expo-clipboard`, `react-native-safe-area-context`) to its dependencies; check that `rn-grid-date-time-picker` is at the published version.
-3. Run it on the iOS, Android and Web previews, then save it as public with a name like `rn-grid-date-time-picker`.
+2. Replace `App.js` with `example/snack/App.tsx` (named `App.tsx`). Snack adds the imported packages (`rn-grid-date-time-picker`, `react-native-safe-area-context`) to its dependencies; check that `rn-grid-date-time-picker` is at the published version.
+3. Run it on the iOS and Android previews, then save it as public with a name like `rn-grid-date-time-picker`.
 4. Put the Snack's URL in the "Live demo" link at the top of `README.md` and uncomment it.
-
