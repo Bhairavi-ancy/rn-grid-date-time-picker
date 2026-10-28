@@ -165,6 +165,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     calendarSwitch,
     onCalendarSystemChange,
     dualDefaultTab = 'gregory',
+    hijriLocale = 'ar-SA',
     renderCalendarSwitch,
     showToday = false,
     showHolidays = true,
@@ -259,7 +260,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const digitsFor = (sys: 'gregory' | 'hijri') => {
     const kind = numeralsProp ?? (sys === 'hijri' ? 'arabic' : 'latin');
     if (kind === 'arabic') return arabicDigits;
-    return kind === 'locale' ? localeDigits(loc) : latinDigits;
+    if (kind === 'latin') return latinDigits;
+    return localeDigits(sys === 'hijri' ? hijriLocale : loc);
   };
   const monthNames = useMemo(() => localeNames(loc).monthsLong, [loc]);
   /** A month or year pick shown as text: "March 2026" or "2026". */
@@ -1013,7 +1015,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     picked: 'gregory' | 'hijri'
   ): DateTextFormatter | undefined =>
     picked === 'hijri'
-      ? (v) => hijriDateText(v.date, loc) ?? formatDateText(v, dateFormat)
+      ? (v) =>
+          hijriDateText(v.date, hijriLocale) ?? formatDateText(v, dateFormat)
       : undefined;
   const savedDateText = dateTextFor(savedSystem);
   const draftDateText = dateTextFor(draftSystem);
@@ -1339,7 +1342,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         showOutsideDays={showOutsideDays}
         showHolidays={showHolidays}
         yearRange={yearRange}
-        locale={loc}
+        locale={shownSystem === 'hijri' ? hijriLocale : loc}
         calendarSystem={shownSystem}
         initialView={initialView}
         precision={precision}

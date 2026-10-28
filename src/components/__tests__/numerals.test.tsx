@@ -70,7 +70,12 @@ describe('numerals', () => {
     ).toContain('١٤٤٨');
     expect(
       texts(
-        picker({ calendarSystem: 'hijri', locale: 'en-US', numerals: 'locale' })
+        picker({
+          calendarSystem: 'hijri',
+          locale: 'ar-SA',
+          hijriLocale: 'en-US',
+          numerals: 'locale',
+        })
       )
     ).toContain('1448');
     expect(

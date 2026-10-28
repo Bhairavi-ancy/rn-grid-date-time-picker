@@ -4,6 +4,7 @@ import { addDays, compareCalendarDates } from '../../core/calendarDate';
 import {
   buildSystemGrid,
   daysOfMonth,
+  hijriDateText,
   hijriMonthNames,
   monthSystemFor,
   toHijri,
@@ -21,7 +22,7 @@ import { buildCalendarStyles } from './calendarStyles';
 import { CalendarHeader, MonthChips } from './CalendarHeader';
 import type { DayCellState } from './DayCell';
 import DayGrid from './DayGrid';
-import { localeNames } from './localeNames';
+import { fullDateLabel, localeNames } from './localeNames';
 import PeriodGrid, { type PeriodItem } from './PeriodGrid';
 import { firstSelectedDay, type CalendarSelection } from './selection';
 
@@ -456,6 +457,12 @@ const Calendar: React.FC<CalendarProps> = (props) => {
           selection={selection}
           constraints={constraints}
           locale={locale}
+          dateLabel={
+            sys.kind === 'hijri'
+              ? (day) =>
+                  hijriDateText(day, locale) ?? fullDateLabel(locale, day)
+              : undefined
+          }
           onSelectDay={selectDay}
           onSwipe={
             enableMonthSwipe

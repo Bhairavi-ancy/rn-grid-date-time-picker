@@ -319,6 +319,12 @@ export interface DateTimePickerProps {
   calendarSwitch?: boolean | CalendarSystem[];
   /** The user picked another calendar in the switch. */
   onCalendarSystemChange?: (system: CalendarSystem) => void;
+  /**
+   * The language a Hijri calendar is written in, whatever `locale` is: its
+   * month and weekday names, the Hijri date in the field, and what screen
+   * readers say. Default 'ar-SA' (Arabic).
+   */
+  hijriLocale?: string;
   /** The tab a dual calendar opens on, each time it opens. Default 'gregory'. */
   dualDefaultTab?: 'gregory' | 'hijri';
   /** Replaces the built-in calendar switch. */

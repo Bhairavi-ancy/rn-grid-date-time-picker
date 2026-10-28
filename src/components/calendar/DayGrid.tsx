@@ -30,6 +30,8 @@ export interface DayGridProps {
   selection: CalendarSelection;
   constraints: Constraints;
   locale: string;
+  /** What a screen reader says for a day. Default: the Gregorian date in `locale`. */
+  dateLabel?: (day: CalendarDate) => string;
   onSelectDay: (day: CalendarDate) => void;
   /** Swipe left / right to change month. */
   onSwipe?: (step: 1 | -1) => void;
@@ -66,6 +68,7 @@ const DayGrid: React.FC<DayGridProps> = ({
   selection,
   constraints,
   locale,
+  dateLabel,
   onSelectDay,
   onSwipe,
   subLabel,
@@ -103,7 +106,9 @@ const DayGrid: React.FC<DayGridProps> = ({
       const isToday = isSameDay(cell.date, today);
       // Selected and unavailable are announced from the cell's state, so the
       // label only adds what the state can't say.
-      const parts = [fullDateLabel(locale, cell.date)];
+      const parts = [
+        dateLabel ? dateLabel(cell.date) : fullDateLabel(locale, cell.date),
+      ];
       if (isToday) parts.push(strings.a11yToday);
       if (role === 'start') parts.push(strings.a11yRangeStart);
       if (role === 'end') parts.push(strings.a11yRangeEnd);

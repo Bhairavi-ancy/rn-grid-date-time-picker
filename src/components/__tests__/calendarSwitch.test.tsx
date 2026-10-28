@@ -250,8 +250,8 @@ describe('the calendar a date was picked in', () => {
     });
     act(() => state.open());
     tap(tree, 20);
-    expect(state.displayText).toBe('Jumada I ٩, ١٤٤٨ AH');
-    expect(texts(tree)).toContain('Jumada I ٩, ١٤٤٨ AH');
+    expect(state.displayText).toBe('٩ جمادى الأولى ١٤٤٨ هـ');
+    expect(texts(tree)).toContain('٩ جمادى الأولى ١٤٤٨ هـ');
 
     press(tree, 'dp-dual-tabs-gregory');
     tap(tree, 21);
@@ -266,7 +266,7 @@ describe('the calendar a date was picked in', () => {
   it('a value from outside counts as picked in the calendar the picker opens on', () => {
     const hijri = mount({ calendarSystem: 'hijri', value: '2026-10-20' });
     expect(isSelected(hijri, 20)).toBe(true);
-    expect(texts(hijri)).toContain('Jumada I ٩, ١٤٤٨ AH');
+    expect(texts(hijri)).toContain('٩ جمادى الأولى ١٤٤٨ هـ');
     const dual = mount({ calendarSystem: 'dual', value: '2026-10-20' });
     expect(isSelected(dual, 20)).toBe(true);
     expect(texts(dual)).toContain('20/10/2026');
@@ -311,5 +311,38 @@ describe('the calendar a date was picked in', () => {
       numerals: 'latin',
     });
     expect(texts(latin)).toContain('1448');
+  });
+});
+
+describe('a Hijri calendar is written in Arabic', () => {
+  it('whatever the app language: month and weekday names, digits and the field', () => {
+    const tree = mount({ calendarSystem: 'dual', locale: 'en-US' });
+    expect(texts(tree)).toContain('Oct');
+    expect(texts(tree)).toContain('Su');
+    press(tree, 'dp-dual-tabs-hijri');
+    const shown = texts(tree);
+    expect(shown).toContain('جمادى الأولى');
+    expect(shown).toContain('الأحد');
+    expect(shown).not.toContain('Su');
+    expect(shown).toContain('١٤٤٨');
+    tap(tree, 20);
+    expect(shown.concat(texts(tree))).toContain('٩ جمادى الأولى ١٤٤٨ هـ');
+    // Screen readers hear the Hijri date.
+    expect(dayCell(tree, 20).props.accessibilityLabel).toContain(
+      'جمادى الأولى'
+    );
+    // The tabs and buttons keep the app's strings.
+    expect(texts(tree)).toContain('Gregorian');
+  });
+
+  it('hijriLocale writes it in another language', () => {
+    const tree = mount({
+      calendarSystem: 'hijri',
+      locale: 'ar-SA',
+      hijriLocale: 'en-US',
+      value: '2026-10-20',
+    });
+    expect(texts(tree)).toContain('Jumada I');
+    expect(texts(tree)).toContain('Jumada I ٩, ١٤٤٨ AH');
   });
 });
