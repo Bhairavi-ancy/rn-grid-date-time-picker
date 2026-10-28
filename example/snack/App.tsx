@@ -1,12 +1,13 @@
 /**
  * rn-grid-date-time-picker playground, for Expo Snack.
  *
- * Pick the options below the preview; the preview, the saved value and the
- * code update as you go. Everything is in this one file, so copy what you need.
+ * Try a setup or pick the options below the preview; the preview, the saved
+ * value and the code update as you go. Everything is in this one file, so copy what you need.
  */
 import { useMemo, useState, type ReactNode } from 'react';
 import {
   I18nManager,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -291,6 +292,36 @@ const INITIAL: Config = {
 const emptyValue = (mode: Config['mode']): PickerValue =>
   mode === 'multiple' ? [] : mode === 'range' ? { from: '', to: '' } : '';
 
+/** What a preset starts from: the first options, keeping the language, layout and theme. */
+const PRESET_BASE: Partial<Config> = Object.fromEntries(
+  Object.entries(INITIAL).filter(
+    ([k]) => !['language', 'presentation', 'colour', 'corners'].includes(k)
+  )
+);
+
+/** One-tap setups: real uses of the picker. */
+const PRESETS: { label: string; options: Partial<Config> }[] = [
+  {
+    label: 'Book a stay',
+    options: { mode: 'range', rangeLayout: 'fromTo', limits: 'future' },
+  },
+  {
+    label: 'Appointment',
+    options: { type: 'datetime', minuteStep: '15', limits: 'future' },
+  },
+  { label: 'Birth month', options: { precision: 'month' } },
+  { label: 'Hijri & Gregorian', options: { calendar: 'dual' } },
+  {
+    label: 'Weekdays only',
+    options: { mode: 'multiple', limits: 'weekdays' },
+  },
+];
+
+const isPreset = (c: Config, options: Partial<Config>) =>
+  Object.entries({ ...PRESET_BASE, ...options }).every(
+    ([k, v]) => c[k as keyof Config] === v
+  );
+
 /** A month or year pick: single dates only. */
 const picksPeriod = (c: Config) =>
   c.precision !== 'day' && c.type === 'date' && c.mode === 'single';
@@ -354,8 +385,26 @@ function toCode(c: Config, props: Record<string, unknown>): string {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <Playground />
+      {Platform.OS === 'web' ? <WebNotice /> : <Playground />}
     </SafeAreaProvider>
+  );
+}
+
+// The picker is built for iOS and Android only, so the web preview says so.
+function WebNotice() {
+  const ui = UI_COLOURS;
+  return (
+    <SafeAreaView style={[styles.screen, { backgroundColor: ui.page }]}>
+      <View style={styles.webNotice}>
+        <Text style={[styles.heading, { color: ui.text }]}>
+          rn-grid-date-time-picker
+        </Text>
+        <Text style={[styles.sub, { color: ui.muted }]}>
+          This picker supports iOS and Android. Switch the preview to iOS or
+          Android, or open it on your phone in Expo Go.
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -383,47 +432,94 @@ function Playground() {
   const isDateTime = config.type === 'datetime';
   const hijriShown = config.calendar !== 'gregory' && hijriSupported;
 
+  const applyPreset = (options: Partial<Config>) => {
+    setConfig((c) => ({ ...c, ...PRESET_BASE, ...options }));
+    setValue(emptyValue(options.mode ?? 'single'));
+  };
+  // In a bottom sheet the field stays at the top while the options scroll;
+  // an inline calendar is too tall for that.
+  const pinned = config.presentation === 'sheet';
+
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: ui.page }]}>
       <StatusBar barStyle="dark-content" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        stickyHeaderIndices={pinned ? [1] : undefined}
       >
-        <Text style={[styles.heading, { color: ui.text }]}>
-          rn-grid-date-time-picker
-        </Text>
-        <Text style={[styles.sub, { color: ui.muted }]}>
-          Change the options below. The picker, its value and the code follow.
-        </Text>
+        <View>
+          <Text style={[styles.heading, { color: ui.text }]}>
+            rn-grid-date-time-picker
+          </Text>
+          <Text style={[styles.sub, { color: ui.muted }]}>
+            Try a setup or change the options. The picker, its value and the
+            code follow.
+          </Text>
+        </View>
+
+        <View style={[styles.pinned, { backgroundColor: ui.page }]}>
+          <Card ui={ui}>
+            <DateTimePicker
+              key={`${config.type}-${config.mode}-${config.precision}`}
+              {...(props as unknown as DateTimePickerProps)}
+              label={config.mode === 'range' ? undefined : 'Date'}
+              value={value}
+              onChange={(next, info) => {
+                setValue(next);
+                setPickedIn(info?.calendarSystem ?? '');
+                log('onChange');
+                // Shows in the Snack's logs panel.
+                console.log(
+                  'onChange',
+                  JSON.stringify(next),
+                  info ? `picked in ${info.calendarSystem}` : '',
+                  hijriShown ? `(Hijri: ${hijriText(next, config)})` : ''
+                );
+              }}
+              onOpen={() => log('onOpen')}
+              onClose={() => log('onClose')}
+              onError={(error) => log(`onError: ${error}`)}
+            />
+            {config.calendar !== 'gregory' && !hijriSupported ? (
+              <Text style={[styles.note, { color: ui.muted }]}>
+                This device has no Hijri calendar, so the picker shows
+                Gregorian.
+              </Text>
+            ) : null}
+          </Card>
+        </View>
 
         <Card ui={ui}>
-          <DateTimePicker
-            key={`${config.type}-${config.mode}-${config.precision}`}
-            {...(props as unknown as DateTimePickerProps)}
-            label={config.mode === 'range' ? undefined : 'Date'}
-            value={value}
-            onChange={(next, info) => {
-              setValue(next);
-              setPickedIn(info?.calendarSystem ?? '');
-              log('onChange');
-              // Shows in the Snack's logs panel.
-              console.log(
-                'onChange',
-                JSON.stringify(next),
-                info ? `picked in ${info.calendarSystem}` : '',
-                hijriShown ? `(Hijri: ${hijriText(next, config)})` : ''
-              );
-            }}
-            onOpen={() => log('onOpen')}
-            onClose={() => log('onClose')}
-            onError={(error) => log(`onError: ${error}`)}
-          />
-          {config.calendar !== 'gregory' && !hijriSupported ? (
-            <Text style={[styles.note, { color: ui.muted }]}>
-              This device has no Hijri calendar, so the picker shows Gregorian.
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            Try a setup
+          </Text>
+          <View style={styles.chips}>
+            {PRESETS.map((preset) => (
+              <Chip
+                key={preset.label}
+                ui={ui}
+                label={preset.label}
+                selected={isPreset(config, preset.options)}
+                onPress={() => applyPreset(preset.options)}
+              />
+            ))}
+          </View>
+        </Card>
+
+        <Card ui={ui}>
+          <Collapsible ui={ui} title="Code">
+            <Text
+              selectable
+              style={[
+                styles.mono,
+                styles.code,
+                { color: ui.text, backgroundColor: ui.codeBg },
+              ]}
+            >
+              {code}
             </Text>
-          ) : null}
+          </Collapsible>
           <Collapsible ui={ui} title="Value and events" divider>
             <Text style={[styles.resultLabel, { color: ui.muted }]}>
               onChange value
@@ -457,40 +553,9 @@ function Playground() {
         </Card>
 
         <Card ui={ui}>
-          <Text style={[styles.cardTitle, { color: ui.text }]}>Theme</Text>
-          <View style={styles.row}>
-            <Text style={[styles.rowTitle, { color: ui.muted }]}>Colour</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.swatches}
-            >
-              {Object.entries(COLOURS).map(([key, colour]) => (
-                <Swatch
-                  key={key}
-                  label={colour.label}
-                  shade={colour}
-                  selected={config.colour === key}
-                  ui={ui}
-                  onPress={() => set('colour', key)}
-                />
-              ))}
-            </ScrollView>
-          </View>
-          <Row
-            ui={ui}
-            title="Corners"
-            value={config.corners}
-            onChange={(v) => set('corners', v)}
-            options={[
-              ['4', 'Sharp'],
-              ['8', 'Default'],
-              ['16', 'Round'],
-            ]}
-          />
-        </Card>
-
-        <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            What it picks
+          </Text>
           <Row
             ui={ui}
             title="Picks"
@@ -557,6 +622,48 @@ function Playground() {
         </Card>
 
         <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            Limits and options
+          </Text>
+          <Row
+            ui={ui}
+            title="Limits"
+            value={config.limits}
+            onChange={(v) => set('limits', v)}
+            options={[
+              ['none', 'None'],
+              ['future', 'From today'],
+              ['weekdays', 'Weekdays only'],
+              ['holidays', 'No holidays'],
+            ]}
+          />
+          <Text style={[styles.rowTitle, { color: ui.muted }]}>Options</Text>
+          <View style={styles.chips}>
+            <Chip
+              ui={ui}
+              label="Type in the sheet"
+              selected={config.allowTyping}
+              onPress={() => set('allowTyping', !config.allowTyping)}
+            />
+            <Chip
+              ui={ui}
+              label="Clear ×"
+              selected={config.allowClear}
+              onPress={() => set('allowClear', !config.allowClear)}
+            />
+            <Chip
+              ui={ui}
+              label="Today button"
+              selected={config.showToday}
+              onPress={() => set('showToday', !config.showToday)}
+            />
+          </View>
+        </Card>
+
+        <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>
+            Calendar and language
+          </Text>
           <Row
             ui={ui}
             title="Language"
@@ -590,16 +697,19 @@ function Playground() {
           <Text style={[styles.note, { color: ui.muted }]}>
             Gregorian shows 123 and Hijri shows ١٢٣, in any language.
           </Text>
-          <Text style={[styles.note, { color: ui.muted }]}>
-            Direction: {I18nManager.isRTL ? 'right to left' : 'left to right'},
-            from your phone's language. To try RTL, set Expo Go's language to
-            Arabic (Android: Settings → Apps → Expo Go → Language; iOS: Settings
-            → Expo Go → Language) and reopen it.
-          </Text>
+          <Collapsible ui={ui} title="Direction" divider>
+            <Text style={[styles.note, { color: ui.muted }]}>
+              {I18nManager.isRTL ? 'Right to left' : 'Left to right'}, from your
+              phone's language. To try RTL, set Expo Go's language to Arabic
+              (Android: Settings → Apps → Expo Go → Language; iOS: Settings →
+              Expo Go → Language) and reopen it.
+            </Text>
+          </Collapsible>
         </Card>
 
         {isDateTime ? (
           <Card ui={ui}>
+            <Text style={[styles.cardTitle, { color: ui.text }]}>Time</Text>
             <Row
               ui={ui}
               title="Clock"
@@ -637,54 +747,37 @@ function Playground() {
         ) : null}
 
         <Card ui={ui}>
+          <Text style={[styles.cardTitle, { color: ui.text }]}>Theme</Text>
+          <View style={styles.row}>
+            <Text style={[styles.rowTitle, { color: ui.muted }]}>Colour</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.swatches}
+            >
+              {Object.entries(COLOURS).map(([key, colour]) => (
+                <Swatch
+                  key={key}
+                  label={colour.label}
+                  shade={colour}
+                  selected={config.colour === key}
+                  ui={ui}
+                  onPress={() => set('colour', key)}
+                />
+              ))}
+            </ScrollView>
+          </View>
           <Row
             ui={ui}
-            title="Limits"
-            value={config.limits}
-            onChange={(v) => set('limits', v)}
+            title="Corners"
+            value={config.corners}
+            onChange={(v) => set('corners', v)}
             options={[
-              ['none', 'None'],
-              ['future', 'From today'],
-              ['weekdays', 'Weekdays only'],
-              ['holidays', 'No holidays'],
+              ['4', 'Sharp'],
+              ['8', 'Default'],
+              ['16', 'Round'],
             ]}
           />
-          <Text style={[styles.rowTitle, { color: ui.muted }]}>Options</Text>
-          <View style={styles.chips}>
-            <Chip
-              ui={ui}
-              label="Type in the sheet"
-              selected={config.allowTyping}
-              onPress={() => set('allowTyping', !config.allowTyping)}
-            />
-            <Chip
-              ui={ui}
-              label="Clear ×"
-              selected={config.allowClear}
-              onPress={() => set('allowClear', !config.allowClear)}
-            />
-            <Chip
-              ui={ui}
-              label="Today button"
-              selected={config.showToday}
-              onPress={() => set('showToday', !config.showToday)}
-            />
-          </View>
-        </Card>
-
-        <Card ui={ui}>
-          <Collapsible ui={ui} title="Code">
-            <Text
-              selectable
-              style={[
-                styles.mono,
-                styles.code,
-                { color: ui.text, backgroundColor: ui.codeBg },
-              ]}
-            >
-              {code}
-            </Text>
-          </Collapsible>
         </Card>
       </ScrollView>
     </SafeAreaView>
@@ -861,9 +954,12 @@ function Collapsible({
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  webNotice: { flex: 1, justifyContent: 'center', padding: 24, gap: 4 },
   content: { padding: 16, gap: 12, paddingBottom: 48 },
+  // Behind the pinned picker, so the options scroll out of sight under it.
+  pinned: { marginHorizontal: -16, paddingHorizontal: 16, paddingBottom: 4 },
   heading: { fontSize: 20, fontWeight: '700', marginTop: 4 },
-  sub: { fontSize: 14, lineHeight: 20, marginTop: -4 },
+  sub: { fontSize: 14, lineHeight: 20, marginTop: 4 },
   card: {
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
