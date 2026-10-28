@@ -166,15 +166,26 @@ export const MonthChips: React.FC<ChipsProps> = ({
   // the selected one is scrolled to the middle of the row.
   const chips = useRef<Record<number, { x: number; width: number }>>({});
   const viewport = useRef(0);
-  const scrollToSelected = (animated: boolean) => {
+  const content = useRef(0);
+  // Until the row is dragged or the month changes, the selected chip is held
+  // in view: Android moves a right-to-left row to its end after the first
+  // layout, which undoes the first scroll.
+  const holding = useRef(true);
+  const first = useRef(true);
+  const selectedOffset = (): number | null => {
     const chip = chips.current[selectedMonth];
-    if (!chip || !viewport.current) return;
-    ref.current?.scrollTo({
-      x: Math.max(0, chip.x - (viewport.current - chip.width) / 2),
-      animated,
-    });
+    if (!chip || !viewport.current) return null;
+    const centred = chip.x - (viewport.current - chip.width) / 2;
+    const end = Math.max(0, content.current - viewport.current);
+    return Math.max(0, content.current ? Math.min(centred, end) : centred);
+  };
+  const scrollToSelected = (animated: boolean) => {
+    const x = selectedOffset();
+    if (x !== null) ref.current?.scrollTo({ x, animated });
   };
   useEffect(() => {
+    if (first.current) first.current = false;
+    else holding.current = false;
     scrollToSelected(!reduceMotion);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- scrolls only when the month changes
   }, [selectedMonth]);
@@ -195,6 +206,20 @@ export const MonthChips: React.FC<ChipsProps> = ({
       onLayout={(e) => {
         viewport.current = e.nativeEvent.layout.width;
         scrollToSelected(false);
+      }}
+      onContentSizeChange={(width) => {
+        content.current = width;
+        if (holding.current) scrollToSelected(false);
+      }}
+      scrollEventThrottle={16}
+      onScroll={(e) => {
+        if (!holding.current) return;
+        const x = selectedOffset();
+        if (x !== null && Math.abs(e.nativeEvent.contentOffset.x - x) > 1)
+          ref.current?.scrollTo({ x, animated: false });
+      }}
+      onScrollBeginDrag={() => {
+        holding.current = false;
       }}
     >
       {names.map((name, i) => {

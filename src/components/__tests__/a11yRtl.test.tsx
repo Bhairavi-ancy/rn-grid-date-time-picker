@@ -216,7 +216,8 @@ describe('segment labels', () => {
 });
 
 describe('month chips', () => {
-  it('centres the selected chip from its measured position', () => {
+  /** The chip row with October selected, laid out 300 wide with October at x 700. */
+  const chipRow = () => {
     const scrollTo = jest.fn();
     const names = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
     let tree!: ReactTestRenderer;
@@ -245,9 +246,43 @@ describe('month chips', () => {
     act(() =>
       chip.props.onLayout({ nativeEvent: { layout: { x: 700, width: 120 } } })
     );
-    // 700 − (300 − 120) / 2. The Jest preset's ScrollView keeps its own scrollTo.
+    // The Jest preset's ScrollView keeps its own scrollTo.
     const own = (row.instance as { scrollTo?: jest.Mock } | null)?.scrollTo;
-    const calls = [...scrollTo.mock.calls, ...(own?.mock?.calls ?? [])];
-    expect(calls.at(-1)?.[0]).toEqual({ x: 610, animated: false });
+    const calls = () => [...scrollTo.mock.calls, ...(own?.mock?.calls ?? [])];
+    const scroll = (x: number) =>
+      act(() => row.props.onScroll({ nativeEvent: { contentOffset: { x } } }));
+    return { row, calls, scroll };
+  };
+
+  it('centres the selected chip from its measured position', () => {
+    const { calls } = chipRow();
+    // 700 − (300 − 120) / 2
+    expect(calls().at(-1)?.[0]).toEqual({ x: 610, animated: false });
+  });
+
+  it('keeps the scroll inside the row', () => {
+    const { row, calls } = chipRow();
+    act(() => row.props.onContentSizeChange(800, 40));
+    // The row ends at 800 − 300.
+    expect(calls().at(-1)?.[0]).toEqual({ x: 500, animated: false });
+  });
+
+  it('scrolls back when the platform moves the row before it is dragged', () => {
+    // Android moves a right-to-left row to its end after the first layout.
+    const { calls, scroll } = chipRow();
+    const before = calls().length;
+    scroll(900);
+    expect(calls().length).toBe(before + 1);
+    expect(calls().at(-1)?.[0]).toEqual({ x: 610, animated: false });
+    scroll(610);
+    expect(calls().length).toBe(before + 1);
+  });
+
+  it('leaves the row where the user drags it', () => {
+    const { row, calls, scroll } = chipRow();
+    const before = calls().length;
+    act(() => row.props.onScrollBeginDrag());
+    scroll(50);
+    expect(calls().length).toBe(before);
   });
 });
