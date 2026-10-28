@@ -7,7 +7,8 @@ import type { CalendarDate } from './types';
  * - range: once a start is picked and the end is being chosen, days closer than
  *   `minDays` or further than `maxDays` are greyed (lengths count calendar
  *   days with both ends included, so a same-day range is 1 day); in the From/To layout, days
- *   before the start are greyed too (in the single field a tap there restarts);
+ *   before the start are greyed too once the To field is tapped (otherwise a tap
+ *   there moves the start);
  * - multiple: once `maxSelections` is reached, only selected days can be tapped.
  * Validation on Confirm (validateDraft) still checks the same rules.
  */
@@ -16,7 +17,7 @@ export interface SelectionRules {
   rangeStart?: CalendarDate | null;
   minDays?: number;
   maxDays?: number;
-  /** From/To layout editing the end: days before the start can't be the end. */
+  /** From/To layout, the To field tapped: days before the start can't be the end. */
   blockBeforeStart?: boolean;
   /** Multiple mode with the cap reached. */
   maxReached?: boolean;

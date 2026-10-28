@@ -7,7 +7,11 @@ import React, {
 } from 'react';
 import { DateTime } from 'luxon';
 import { resolveAdapter } from '../adapters';
-import { daysBetween, isSameDay } from '../core/calendarDate';
+import {
+  compareCalendarDates,
+  daysBetween,
+  isSameDay,
+} from '../core/calendarDate';
 import { createConstraints } from '../core/constraints';
 import {
   clearDraft as emptied,
@@ -131,6 +135,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     disabled = false,
     readOnly = false,
     allowTyping,
+    hideCalendarOnKeyboard = false,
     allowFieldTyping,
     allowClear,
     errorMessage,
@@ -364,7 +369,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     onClose,
   });
   const isOpen = isInline || sheetOpen;
-  const keyboardUp = useKeyboardFold(isOpen);
+  const keyboardUp = useKeyboardFold(isOpen && hideCalendarOnKeyboard);
   // The picker's own boxes that have focus. Inline, another field on the
   // screen can raise the keyboard, so the calendar folds only for these.
   const [focusedParts, setFocusedParts] = useState<Record<string, boolean>>({});
@@ -526,10 +531,17 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const [wheelSpinning, setWheelSpinning] = useState(false);
   // From/To layout: the end that calendar taps fill. perDate: the day the time row edits.
   const [activeEnd, setActiveEnd] = useState<RangeEnd>('from');
+  // From/To layout: a From or To field was tapped, so the next day tap edits that end only.
+  const [endPicked, setEndPicked] = useState(false);
+  const activateEnd = useCallback((end: RangeEnd) => {
+    setActiveEnd(end);
+    setEndPicked(true);
+  }, []);
   const [activeDay, setActiveDay] = useState<CalendarDate | null>(null);
   const resetSelectionUi = useCallback(() => {
     setPendingTimes({});
     setActiveEnd('from');
+    setEndPicked(false);
     setActiveDay(null);
   }, []);
   // A day in the month the calendar last showed, so a switch to the other
@@ -853,9 +865,33 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       }
       if (cur.mode === 'range') {
         if (rangeLayout === 'fromTo') {
+          setEndPicked(false);
+          // A full range: the tap starts a new one (or moves the nearest end).
+          if (!endPicked && cur.from.value && cur.to.value) {
+            const moveNearest = range?.reselect === 'moveNearestEnd';
+            const nearest: RangeEnd =
+              Math.abs(daysBetween(cur.from.value.date, day)) <
+              Math.abs(daysBetween(cur.to.value.date, day))
+                ? 'from'
+                : 'to';
+            const end = moveNearest ? nearest : 'from';
+            setTypingBlock('from', false);
+            setTypingBlock('to', false);
+            draft.selectDay(day, fixedTime ?? times[end] ?? nowTime());
+            setActiveEnd(moveNearest ? nearest : 'to');
+            return;
+          }
+          // Choosing the end after a start tap: a day before the start moves the start.
+          const end1: RangeEnd =
+            end0 === 'to' &&
+            !endPicked &&
+            cur.from.value &&
+            compareCalendarDates(day, cur.from.value.date) < 0
+              ? 'from'
+              : end0;
           // The tapped day replaces whatever was typed in this end only.
-          setTypingBlock(end0, false);
-          draft.setRangeEnd(day, end0, fixedTime ?? times[end0] ?? nowTime());
+          setTypingBlock(end1, false);
+          draft.setRangeEnd(day, end1, fixedTime ?? times[end1] ?? nowTime());
           if (end0 === 'from') setActiveEnd('to');
           return;
         }
@@ -902,21 +938,24 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       draftSystem,
       shownSystem,
       resetSelectionUi,
+      endPicked,
     ]
   );
 
   // Greying that depends on what's picked: range length, From/To order, the multiple cap.
   const calendarConstraints = useMemo(() => {
     if (d.mode === 'range') {
+      // A full From/To range greys nothing: the next tap starts a new one.
       const choosingEnd =
         rangeLayout === 'fromTo'
-          ? activeEnd === 'to'
+          ? activeEnd === 'to' && (endPicked || !d.to.value)
           : !!d.from.value && !d.to.value;
       return withSelectionRules(constraints, {
         rangeStart: choosingEnd ? d.from.value?.date : null,
         minDays: range?.minDays,
         maxDays: range?.maxDays,
-        blockBeforeStart: rangeLayout === 'fromTo',
+        // Only an end chosen from the To field can't go before the start.
+        blockBeforeStart: rangeLayout === 'fromTo' && endPicked,
       });
     }
     if (d.mode === 'multiple') {
@@ -933,6 +972,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     d,
     rangeLayout,
     activeEnd,
+    endPicked,
     range?.minDays,
     range?.maxDays,
     multiple?.maxSelections,
@@ -1260,7 +1300,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         to={d.to.value}
         placeholder={sheetOptions?.fieldPlaceholder}
         activeEnd={activeEnd}
-        onActivate={setActiveEnd}
+        onActivate={activateEnd}
         allowTyping={allowTyping}
         onTyped={onRangeTyped}
         onFocusChange={(end, f) => reportFocus(`value-${end}`, f)}

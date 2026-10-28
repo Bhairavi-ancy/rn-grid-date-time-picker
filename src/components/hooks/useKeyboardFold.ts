@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
 
 /**
- * True while the keyboard is up and the picker is open. The picker folds the
- * calendar away then, so the box being typed in (and Confirm) stay visible on
+ * True while the keyboard is up and the picker is open. With
+ * `hideCalendarOnKeyboard` the picker folds the calendar away then, so the box being typed in (and Confirm) stay visible on
  * small phones; inline, it folds only while one of its own boxes has focus,
  * since another field on the screen can raise the keyboard too.
  */

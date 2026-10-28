@@ -9,6 +9,8 @@ export interface ThemeTokens {
   /** Headings in the sheet: the year title and the time label. */
   heading: string;
   mutedText: string;
+  /** Days of the months before and after, which can still be picked. */
+  outsideText: string;
   placeholder: string;
   border: string;
   /** Typed time boxes. */
@@ -52,6 +54,7 @@ export const DEFAULT_TOKENS: ThemeTokens = {
   text: '#111827',
   heading: '#111827',
   mutedText: '#6B7280',
+  outsideText: '#6B7280',
   placeholder: '#9CA3AF',
   border: '#D1D5DB',
   inputBorder: '#D1D5DB',
@@ -109,6 +112,7 @@ export const buildTokens = (overrides?: Partial<ThemeTokens>): ThemeTokens => {
   return {
     ...DEFAULT_TOKENS,
     ...(overrides?.accent ? { borderFocused: overrides.accent } : null),
+    ...(overrides?.mutedText ? { outsideText: overrides.mutedText } : null),
     ...overrides,
   };
 };

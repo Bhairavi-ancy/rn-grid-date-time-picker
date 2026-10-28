@@ -179,7 +179,7 @@ const epochMs: ValueAdapter = {
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
 | `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
-| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. `minDays` / `maxDays` count calendar days with both ends included (the 1st to the 3rd is 3 days; a same-day range is 1). |
+| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. `minDays` / `maxDays` count calendar days with both ends included (the 1st to the 3rd is 3 days; a same-day range is 1). With `layout: 'fromTo'`, taps fill From, then To; a tap before the start while picking To moves the start. Once both are set nothing is greyed, and the next tap starts a new range (`reselect: 'moveNearestEnd'` moves the nearer end instead). Tapping the From or To field first edits that end only (after a To field tap, days before the start are greyed). |
 
 ### Presentation
 
@@ -201,6 +201,7 @@ const epochMs: ValueAdapter = {
 | `isMandatory` | `boolean` | `false` | Adds ` *` to the label. |
 | `disabled`, `readOnly` | `boolean` | `false` | Neither opens; disabled also greys the field. |
 | `allowTyping` | `boolean` | `false` | Type in the field inside the sheet. |
+| `hideCalendarOnKeyboard` | `boolean` | `false` | Hide the calendar while the keyboard is up (typing a date or a time), so the box being typed in and Confirm stay in view on small phones. Inline, only while one of the picker's own boxes has focus. |
 | `allowFieldTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
 | `allowClear` | `boolean` | `false` | Shows × when there is a value. |
 | `errorMessage` | `string` | – | Your error, shown under the field. |
@@ -428,7 +429,7 @@ Everything inside the sheet can be set from props:
 
 The on-screen field shows the saved value (never the draft) in `dateFormat`, with an optional ×, label, helper text, instruction and error. Tap it, or its calendar icon, to open the picker.
 
-With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. While the keyboard is up, the calendar folds away so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
+With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. With `hideCalendarOnKeyboard`, the calendar folds away while the keyboard is up so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
 
 `allowFieldTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
 
@@ -481,6 +482,7 @@ A newly picked day on an empty date-time starts at the current time, rounded up 
 | `text` | `#111827` | Values and day numbers |
 | `heading` | `#111827` | Year title, time label and boxes |
 | `mutedText` | `#6B7280` | Weekdays, helper text, chevrons, × |
+| `outsideText` | `mutedText` | Days of the months before and after (still pickable); darker than `disabledText` |
 | `placeholder` | `#9CA3AF` | Placeholders |
 | `border` | `#D1D5DB` | Field border |
 | `inputBorder` | `#D1D5DB` | Time box border |

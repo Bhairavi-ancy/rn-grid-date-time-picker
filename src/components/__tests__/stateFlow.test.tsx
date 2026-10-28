@@ -331,7 +331,12 @@ describe('keyboard folding inline', () => {
       return { remove: () => {} };
     }) as never);
     const tree = mount(
-      <Screen log={jest.fn()} presentation="inline" allowTyping />
+      <Screen
+        log={jest.fn()}
+        presentation="inline"
+        allowTyping
+        hideCalendarOnKeyboard
+      />
     );
     const showEvent = Object.keys(listeners).find((k) => k.endsWith('Show'))!;
     // Another field on the screen raises the keyboard.
