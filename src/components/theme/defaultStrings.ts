@@ -18,6 +18,8 @@ export interface PickerStrings {
   /** Between the two ends of a range in the field text. */
   rangeSeparator: string;
   pm: string;
+  /** Between the date and the time in the field text and its placeholder. */
+  dateTimeSeparator?: string;
   /** Placeholders of the typed date segments and time boxes, and of the empty field. */
   placeholderDay: string;
   placeholderMonth: string;
@@ -79,6 +81,7 @@ export const DEFAULT_STRINGS: Required<PickerStrings> = {
   am: 'AM',
   rangeSeparator: ' – ',
   pm: 'PM',
+  dateTimeSeparator: ' ',
   placeholderDay: 'DD',
   placeholderMonth: 'MM',
   placeholderYear: 'YYYY',

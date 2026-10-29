@@ -27,6 +27,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - `info.calendarSystem` in `onChange`: the calendar a date was picked in.
 - `hideCalendarOnKeyboard` (on by default, as the calendar folded in 1.0.0; `false` keeps it in view) and `sheet.keyboardMaxHeight`.
 - `strings.a11yClose` for the sheet backdrop's screen-reader label, which was always English.
+- `strings.dateTimeSeparator` (default `' '`): what goes between the date and the time in the field text and its placeholder.
 - `hijriDateText` and `arabicDigits`, the helpers the field uses to write a Hijri date and Arabic digits, so an app's own text (filter chips, summaries) matches the field.
 - New optional keys: `ThemeTokens.outsideText` and the `PickerStrings` keys `calendarGregorian`, `calendarHijri`, `calendarDual`, `a11yCalendarSystem` and `a11yClose`. A full 1.0.0 `ThemeTokens` or `PickerStrings` object still compiles.
 - Exported types: `ChangeInfo`, `CalendarSwitchRenderProps`, `CalendarSystem`, `Numerals`, `RangeRole`, `StyleKey`, `PickerStyleValue`.

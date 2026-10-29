@@ -47,6 +47,19 @@ describe('fieldText', () => {
     );
   });
 
+  it('puts strings.dateTimeSeparator between the date and the time', () => {
+    const wide = { ...strings, dateTimeSeparator: '   ' };
+    expect(
+      formatValueText(value, 'datetime', 'dd-MM-yyyy', '12h', undefined, wide)
+    ).toBe('21-10-2026   03:05 PM');
+    expect(
+      formatValueText(value, 'date', 'dd-MM-yyyy', '12h', undefined, wide)
+    ).toBe('21-10-2026');
+    expect(placeholderText('datetime', 'dd-MM-yyyy', '24h', wide)).toBe(
+      'DD-MM-YYYY   HH:mm'
+    );
+  });
+
   it('picks the message for the first typing problem', () => {
     expect(segmentErrorText([{ key: 'year', code: 'REQUIRED' }], strings)).toBe(
       strings.errorIncomplete

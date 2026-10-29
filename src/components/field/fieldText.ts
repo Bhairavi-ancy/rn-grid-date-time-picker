@@ -14,8 +14,11 @@ export const formatDateText = (
     .replace('MM', pad2(value.date.month))
     .replace('dd', pad2(value.date.day));
 
-/** The AM / PM labels, from `strings`. */
-export type PeriodLabels = Pick<PickerStrings, 'am' | 'pm'>;
+/** The AM / PM labels and the date-time separator, from `strings`. */
+export type PeriodLabels = Pick<
+  PickerStrings,
+  'am' | 'pm' | 'dateTimeSeparator'
+>;
 
 /** '03:45 PM' (12-hour) or '15:45' (24-hour). Always shows AM/PM in 12-hour mode. */
 export const formatTimeText = (
@@ -44,7 +47,7 @@ export const formatValueText = (
   if (!value) return '';
   const date = dateText ? dateText(value) : formatDateText(value, dateFormat);
   return type === 'datetime' && value.time
-    ? `${date} ${formatTimeText(value, timeFormat, periods)}`
+    ? `${date}${periods.dateTimeSeparator ?? ' '}${formatTimeText(value, timeFormat, periods)}`
     : date;
 };
 
@@ -113,7 +116,7 @@ export const placeholderText = (
     timeFormat === '24h'
       ? `${strings.placeholderHour24}:${strings.placeholderMinute}`
       : `${strings.placeholderHour}:${strings.placeholderMinute} ${strings.am}`;
-  return `${date} ${time}`;
+  return `${date}${strings.dateTimeSeparator ?? ' '}${time}`;
 };
 
 const TIME_KEYS = ['hour', 'minute', 'period'];
