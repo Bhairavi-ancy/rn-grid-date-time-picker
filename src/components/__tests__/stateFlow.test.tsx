@@ -386,6 +386,41 @@ describe('keyboard folding inline', () => {
     expect(shown(tree)).toBe(true);
     expect(find(tree, 'dp-day-2026-12-15')).toBeTruthy();
   });
+
+  it('a date typed while folded brings the calendar to its month', () => {
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      event: string,
+      cb: () => void
+    ) => {
+      listeners[event] = cb;
+      return { remove: () => {} };
+    }) as never);
+    const tree = mount(
+      <Screen
+        log={jest.fn()}
+        initial="2026-10-15"
+        allowTyping
+        hideCalendarOnKeyboard
+      />
+    );
+    open(tree);
+    press(tree, 'dp-chip-12');
+    const showEvent = Object.keys(listeners).find((k) => k.endsWith('Show'))!;
+    const hideEvent = Object.keys(listeners).find((k) => k.endsWith('Hide'))!;
+    act(() => listeners[showEvent]!());
+    type(tree, 'dp-value-segment-day', '20');
+    type(tree, 'dp-value-segment-month', '11');
+    blur(tree, 'dp-value-segment-year');
+    act(() => listeners[hideEvent]!());
+    const cell = tree.root.findAll(
+      (n) =>
+        n.props.testID === 'dp-day-2026-11-20' &&
+        n.props.accessibilityRole === 'button' &&
+        typeof n.type !== 'string'
+    )[0];
+    expect(cell?.props.accessibilityState?.selected).toBe(true);
+    expect(find(tree, 'dp-day-2026-12-15')).toBeUndefined();
+  });
 });
 
 describe('limits and opening month', () => {

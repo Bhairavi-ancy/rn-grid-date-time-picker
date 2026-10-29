@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import { addDays, compareCalendarDates } from '../../core/calendarDate';
 import {
@@ -22,7 +28,11 @@ import type { DayCellState } from './DayCell';
 import DayGrid from './DayGrid';
 import { fullDateLabel, localeNames } from './localeNames';
 import PeriodGrid, { type PeriodItem } from './PeriodGrid';
-import { firstSelectedDay, type CalendarSelection } from './selection';
+import {
+  firstSelectedDay,
+  selectedDays,
+  type CalendarSelection,
+} from './selection';
 
 export type CalendarView = 'day' | 'month' | 'year';
 
@@ -226,6 +236,20 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     },
     [limits, sys, names, today, onVisibleMonthChange, onAnchorChange]
   );
+
+  // A day newly picked outside the month on screen (typed in the field, say)
+  // brings the calendar to its month; picks in the month shown leave it be.
+  const dayKey = (d: CalendarDate) => `${d.year}-${d.month}-${d.day}`;
+  const shownPicks = useRef(new Set(selectedDays(selection).map(dayKey)));
+  useEffect(() => {
+    const days = selectedDays(selection);
+    const fresh = days.filter((d) => !shownPicks.current.has(dayKey(d)));
+    shownPicks.current = new Set(days.map(dayKey));
+    const last = fresh[fresh.length - 1];
+    if (last && cmpMonth(sys.monthOf(last), visible) !== 0)
+      goTo(sys.monthOf(last));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- when the selection changes
+  }, [selection]);
 
   // A tap on a day of the previous / next month (the muted outside days) selects it
   // and moves the calendar to that month.
