@@ -76,7 +76,7 @@ Everything inside the sheet can be set from props:
 
 ## Field and typing
 
-The on-screen field shows the saved value (never the draft) in `dateFormat`, with an optional ×, label, helper text, instruction and error. Tap it, or its calendar icon, to open the picker.
+The on-screen field shows the saved value (never the draft) in `dateFormat`, or as a Hijri date when it was picked in a Hijri calendar, with an optional ×, label, helper text, instruction and error. Tap it, or its calendar icon, to open the picker.
 
 With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. With `hideCalendarOnKeyboard`, the calendar folds away while the keyboard is up so the field and Confirm stay visible. On iOS every box's number pad has a Done button that closes the keyboard; its label comes from `strings.done` on React Native 0.79 and later (earlier versions show iOS's own "Done"). Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
 

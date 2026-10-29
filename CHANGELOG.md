@@ -8,12 +8,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Upgrading from 1.0.0
 
-- **`calendarSystem="dual"`** shows Gregorian and Hijri as two tabs, one calendar at a time; it no longer writes the Hijri day under each Gregorian day. `styles.daySubLabel` is no longer drawn, and `renderDay` gets `subLabel: null`. Use `dualDefaultTab` to choose the tab it opens on.
+- **`calendarSystem="dual"`** shows Gregorian and Hijri as two tabs, one calendar at a time; it no longer writes the Hijri day under each Gregorian day. `styles.daySubLabel` is no longer drawn, and `renderDay` gets `subLabel: null`. Use `dualDefaultTab` to choose the tab it opens on. A date shows selected only in the tab it was picked in, and a tap in the other tab starts the selection over.
 - **The calendar no longer folds away while the keyboard is up.** Pass `hideCalendarOnKeyboard` to keep the 1.0.0 behaviour. A folded calendar now stays mounted but hidden, so a test that checks `dp-calendar` is gone while folded should check that it's hidden instead.
-- **`calendarSystem="hijri"` is written in Arabic** (month and weekday names, Arabic digits, the Hijri date in the field), whatever the app's `locale`. Pass `hijriLocale={locale}` and `numerals="latin"` for the 1.0.0 look.
+- **`calendarSystem="hijri"` is written in Arabic** (month and weekday names, Arabic digits), whatever the app's `locale`, and **the field shows the Hijri date** (e.g. "١٥ جمادى الأولى ١٤٤٨ هـ") instead of the Gregorian date in `dateFormat`. `hijriLocale={locale}` and `numerals="latin"` bring back 1.0.0's language and digits; the field still writes the date in Hijri. Values passed to `onChange` stay Gregorian.
 - **`onChange` gets a second argument**, `{ calendarSystem }`, when a Hijri calendar can show. Tests asserting `toHaveBeenCalledWith(value)` need `expect.anything()` added.
 - **New required keys** in full `ThemeTokens` objects (`outsideText`) and full `PickerStrings` objects (`calendarGregorian`, `calendarHijri`, `calendarDual`, `a11yCalendarSystem`, `a11yClose`). `Partial<…>`, as the docs use, is unaffected.
-- **Stored values must start with a full `YYYY-MM-DD` day.** Strings such as `'2026-10'`, `'2026'` or `'10:30'` now read as empty instead of being guessed.
+- **Stored values must start with a full `YYYY-MM-DD` day.** Strings such as `'2026-10'`, `'2026'` or `'10:30'` now read as empty instead of being guessed, and so do a leading space, a lowercase `t` and six-digit years (`+002026-…`).
 - **Days outside `yearRange` are greyed**, like days outside `minDate` / `maxDate`.
 - **Outside days** (from the months before and after) use the new `outsideText` token, which follows `mutedText`, instead of `placeholder`.
 - **The built-in sheet's padding** is 8 at the bottom (was 24) and 24 above the title (was 8). If you add a safe-area inset, use `paddingBottom: 8 + insets.bottom`.
@@ -27,19 +27,25 @@ All notable changes to this project are documented here. The format follows [Kee
 - `info.calendarSystem` in `onChange`: the calendar a date was picked in.
 - `hideCalendarOnKeyboard` and `sheet.keyboardMaxHeight`.
 - `strings.a11yClose` for the sheet backdrop's screen-reader label, which was always English.
-- Exported types: `ChangeInfo`, `CalendarSwitchRenderProps`, `CalendarSystem`, `Numerals`.
+- Exported types: `ChangeInfo`, `CalendarSwitchRenderProps`, `CalendarSystem`, `Numerals`, `RangeRole`, `StyleKey`, `PickerStyleValue`.
 
 ### Changed
 
 - A range end picked on the start's day starts an hour after the start (within the day's `timeBounds`), so a same-day date-time range isn't out of order before the user touches the time.
 - With `commitMode="instant"`, each value is saved once, and typing in the sheet's field saves when focus leaves it or its last box fills.
 - A controlled `visible` waits for the keyboard to close before opening, like the built-in open.
+- The sheet's body scrolls without a scroll bar, and day cells are read out from the platform's own month and weekday names.
+- `getConstraints` gets `yearRange` in `ctx.limits.minDate` / `maxDate`.
+- Time boxes and wheel columns are read out with their row's label ("Start time, Hour"), and a custom `renderMonthChip` keeps the chip's role, name and state.
 - A date typed in another month brings the calendar to that month; browsing without picking leaves it on the month you browsed to, folded or not.
 
 ### Fixed
 
+- A date typed or pasted with separators and no padding (`1/12/2025`) reads as 1 December, not 11 February.
+- The field writes AM / PM with `strings.am` / `strings.pm`, like the time row.
+- A minute off the wheel's step shows at the nearest row, not 00.
 - Multiple dates saved with different times keep them on Confirm; before, every date took the first date's time. A day listed twice counts once.
-- Instant mode no longer saves twice on a tap, again on parent re-renders while `value` catches up, or values half-way through typing.
+- Instant mode no longer saves twice on a tap, again on parent re-renders while `value` catches up, or values half-way through typing; a date still being typed is saved when the sheet closes.
 - A controlled `calendarSystem` fed from `onCalendarSystemChange` keeps each selection in one calendar, and typing in the on-screen field keeps the saved date's calendar.
 - Limits built with `dependsOnNow` refresh every minute while the picker is open.
 - Holidays load for the next or previous year when the grid shows its days (a Hijri month running into January, December's outside days).

@@ -34,7 +34,7 @@ Every part gets a testID built from the `testID` prop (`dp` here):
 | `dp-year-{y}`, `dp-month-{m}` | Year and month grid cells |
 | `dp-today`, `dp-empty` | The Today button and the empty state |
 | `dp-time`, `dp-time-from`, `dp-time-to` | Time rows (one row, or start / end) |
-| `dp-time-hour`, `dp-time-minute`, `dp-time-am`, `dp-time-pm` | Typed time boxes and AM / PM |
-| `dp-time-wheel`, `dp-time-wheel-{hour,minute,period}`, `…-scroll` | Wheel columns and their scroll views |
+| `dp-time-hour`, `dp-time-minute`, `dp-time-am`, `dp-time-pm` | Typed time boxes and AM / PM (ranges: `dp-time-from-hour`, `dp-time-to-pm`, …) |
+| `dp-time-wheel`, `dp-time-wheel-{hour,minute,period}`, `…-scroll` | Wheel columns and their scroll views (ranges: `dp-time-from-wheel-…`, `dp-time-to-wheel-…`) |
 
 For Jest, no transform changes are needed: `main` points to the CommonJS build. To pin the clock and zone in tests, pass `now` and `timeZone`.

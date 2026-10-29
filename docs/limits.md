@@ -86,4 +86,4 @@ Every built-in message can be reworded through `strings` (`errorNotAllowed`, `er
 />
 ```
 
-A message keeps the sheet open, saves nothing, calls `onError('VALIDATION', value)`, and shows above the footer (`testID` `${testID}-validation-error`). It is styled by `errorText`, then `validationText`, and disappears as soon as the selection changes. With `commitMode="instant"`, `validate` runs before each save. To stop days or times from being picked at all, use the limit props (`minDate`, `timeBounds`, `disabledDates` …); `validate` is for rules you'd rather explain than grey out.
+A message keeps the sheet open, saves nothing, calls `onError('VALIDATION', value)`, and shows above the footer (`testID` `${testID}-validation-error`). It is styled by `errorText`, then `validationText`, and disappears as soon as the selection changes. With `commitMode="instant"`, and for a finished entry in the on-screen field (`allowFieldTyping`), `validate` runs before each save. To stop days or times from being picked at all, use the limit props (`minDate`, `timeBounds`, `disabledDates` …); `validate` is for rules you'd rather explain than grey out.
