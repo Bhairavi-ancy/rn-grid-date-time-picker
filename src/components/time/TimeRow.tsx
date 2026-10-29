@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Text, View } from 'react-native';
 import type { TextInputRef } from '../nativeTypes';
 import type { TimeBounds } from '../../core/constraints';
@@ -244,6 +250,20 @@ const TimeRow: React.FC<TimeRowProps> = ({
   const setRef = useCallback((key: TimeKey, r: TextInputRef | null) => {
     refs.current[key] = r;
   }, []);
+  // 'Start time, Hour' and 'End time, Hour' read differently, as the typed
+  // date field's segments do.
+  const boxStrings = useMemo(
+    () =>
+      label
+        ? {
+            ...strings,
+            a11yHour: `${label}, ${strings.a11yHour}`,
+            a11yMinute: `${label}, ${strings.a11yMinute}`,
+            a11yPeriod: `${label}, ${strings.a11yPeriod}`,
+          }
+        : strings,
+    [label, strings]
+  );
 
   return (
     <View style={s.wrapper} testID={testID}>
@@ -263,7 +283,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
             disabled={disabled}
             tokens={tokens}
             styles={styles}
-            strings={strings}
+            strings={boxStrings}
             testID={testID ? `${testID}-wheel` : undefined}
           />
         ) : (
@@ -282,7 +302,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
             disabled={disabled}
             tokens={tokens}
             styles={styles}
-            strings={strings}
+            strings={boxStrings}
             testID={testID}
           />
         )}

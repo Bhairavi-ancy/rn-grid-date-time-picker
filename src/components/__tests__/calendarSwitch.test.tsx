@@ -669,3 +669,28 @@ describe('a tap redraws only what changed', () => {
       }
   });
 });
+
+describe('accessibility of custom parts', () => {
+  it('a custom month chip keeps its role, name, state and testID', () => {
+    const tree = mount({
+      maxDate: { year: 2026, month: 11, day: 30 },
+      renderMonthChip: (month) => <Text>{month}</Text>,
+    });
+    const chip = find(tree, 'dp-chip-12');
+    expect(chip.props.accessibilityRole).toBe('button');
+    expect(chip.props.accessibilityLabel).toBe('December');
+    expect(chip.props.accessibilityState).toEqual({
+      selected: false,
+      disabled: true,
+    });
+  });
+
+  it('range time boxes say which end they are', () => {
+    const tree = mount({ type: 'datetime', mode: 'range' });
+    const labels = tree.root
+      .findAllByType(TextInput)
+      .map((i) => i.props.accessibilityLabel as string)
+      .filter((l) => /Hour/.test(l));
+    expect(labels).toEqual(['Start time, Hour', 'End time, Hour']);
+  });
+});
