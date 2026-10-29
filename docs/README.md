@@ -16,7 +16,7 @@
 
 - **iOS and Android** are the supported targets. The package is pure JS, so it runs in Expo Go.
 - **Web** is untested.
-- The keyboard's **Done button** is iOS-only: React Native adds it above each box's number pad (`returnKeyType="done"`). Android's number pad has its own.
+- The keyboard's **Done button** is iOS-only: React Native adds it above each box's number pad (`returnKeyType="done"`). Android's number pad has its own. Its label follows `strings.done` on React Native 0.79 and later; earlier versions show iOS's own "Done".
 - **Hijri** needs `Intl` support for `islamic-umalqura` and falls back to Gregorian without it (see [Hijri](localization.md#hijri)).
 - The built-in sheet doesn't add a safe-area inset; use `styles.sheet.paddingBottom` or `renderSheet`.
 - A `minuteStep` that doesn't divide 60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.

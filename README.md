@@ -26,7 +26,7 @@ A themeable date and time picker for React Native: one date, several dates or a 
 - **Every kind of pick**: one date, several dates, or a range in one field or as From / To, with or without a time. Month-and-year and year-only picks too.
 - **Typed or tapped**: users type the date and time, or pick them on the calendar. Time is typed boxes or a scrolling wheel, 12- or 24-hour, in minute steps.
 - **Only the days you allow**: block past dates, weekends, holidays loaded from your server, booked days, or hours outside opening times.
-- **Saves only on Confirm**: `onChange` fires once, when the user confirms. Closing the sheet never touches your value.
+- **Saves only on Confirm**: by default `onChange` fires once, when the user confirms, and closing the sheet never touches your value. `commitMode="instant"` saves each edit instead.
 - **Gregorian, Hijri or both**: a Hijri (Umm al-Qura) calendar written in Arabic, Gregorian and Hijri tabs, or a switch between them. Layouts mirror in RTL.
 - **Your design**: colours, fonts, corners and every text, a style for every part, or your own field, sheet and day cells.
 - **Accessible and light**: every control is labelled for screen readers, reduce motion is respected, and the only dependency is [Luxon](https://moment.github.io/luxon/).

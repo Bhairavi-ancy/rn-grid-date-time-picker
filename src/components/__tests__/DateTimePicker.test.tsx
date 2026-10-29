@@ -427,6 +427,19 @@ describe('DateTimePicker: limits', () => {
   });
 });
 
+describe('DateTimePicker: the built-in sheet', () => {
+  it("the backdrop's screen-reader label comes from strings", () => {
+    const tree = mount({
+      renderSheet: undefined,
+      strings: { a11yClose: 'إغلاق' },
+    });
+    openSheet(tree);
+    expect(find(tree, 'dp-sheet-backdrop').props.accessibilityLabel).toBe(
+      'إغلاق'
+    );
+  });
+});
+
 describe('DateTimePicker: keyboard wait before opening', () => {
   afterEach(() => {
     jest.useRealTimers();

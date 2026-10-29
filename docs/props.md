@@ -11,7 +11,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `type` | `'date' \| 'datetime'` | required | |
 | `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | |
 | `value` | `PickerValue` | required | See [Values](values.md). |
-| `onChange` | `(value: PickerValue, info?: ChangeInfo) => void` | required | Once per Confirm, or with `''` on clear. When a Hijri calendar can show, `info.calendarSystem` (`'gregory'` or `'hijri'`) says which calendar the date was picked in. |
+| `onChange` | `(value: PickerValue, info?: ChangeInfo) => void` | required | Once per Confirm (or per edit with `commitMode="instant"`, and per finished entry with `allowFieldTyping`), or with `''` on clear. When a Hijri calendar can show, `info.calendarSystem` (`'gregory'` or `'hijri'`) says which calendar the date was picked in. |
 | `onBlur` | `() => void` | – | Right after every `onChange` that saves a value (Confirm, an `'instant'` edit, typing in the on-screen field), like a form field losing focus. Not on clear. |
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit once (typing in the field above the calendar saves when focus leaves it or its last box fills), and × in that field clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
@@ -99,7 +99,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `timeInput` | `'typed' \| 'wheel'` | `'typed'` | |
 | `timeFormat` | `'12h' \| '24h'` | from `locale`, else `'12h'` | |
 | `minuteStep` | `number` | `1` | A step that divides the hour: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. Off-step minutes are flagged on Confirm, never rounded silently. |
-| `newDayTime` | `Time` | – | Every newly picked day gets this time. It wins over a time typed before the day and over the current time. |
+| `newDayTime` | `Time` | – | A day picked with no time yet gets this time; a time already set is kept. It wins over a time typed before the day and over the current time. |
 
 ## Limits
 
@@ -125,5 +125,5 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `strings` | `Partial<PickerStrings>` | See [Strings / i18n](localization.md#strings--i18n). |
 | `testID` | `string` | The prefix for every part; see [Testing](testing.md#testing). |
 | `onVisibleMonthChange` | `(year, month) => void` | The Gregorian month of the first day shown. |
-| `onError` | `(code: PickerErrorCode, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. |
-| `validate` | `(value: PickerValue) => string \| null \| undefined` | Your own check on Confirm, after the built-in ones. Return a message to show it inside the picker and save nothing; `null` to save. See [Your own validation](limits.md#your-own-validation). |
+| `onError` | `(code: PickerErrorCode, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. `'VALIDATION'` when `validate` returns a message, with the value it was given. |
+| `validate` | `(value: PickerValue) => string \| null \| undefined` | Your own check before each save (Confirm, an `'instant'` edit, a finished entry in the on-screen field), after the built-in ones. Return a message to show it inside the picker and save nothing; `null` to save. See [Your own validation](limits.md#your-own-validation). |

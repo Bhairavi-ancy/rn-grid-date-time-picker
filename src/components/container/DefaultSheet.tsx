@@ -17,14 +17,16 @@ interface Props extends SheetRenderProps {
   height?: SheetSize;
   maxHeight?: SheetSize;
   keyboardMaxHeight?: SheetSize;
+  /** The backdrop's screen-reader label. */
+  closeLabel: string;
   tokens: ThemeTokens;
   styles?: PickerStyles;
 }
 
-/** Points for a size given in points or as a percentage of the screen. */
 /** The least room the sheet gets while the keyboard is up, in points. */
 const MIN_ROOM = 160;
 
+/** Points for a size given in points or as a percentage of the screen. */
 const toPoints = (size: SheetSize, screen: number): number =>
   typeof size === 'number' ? size : (screen * parseFloat(size)) / 100;
 
@@ -44,6 +46,7 @@ const DefaultSheet: React.FC<Props> = ({
   height,
   maxHeight = '90%',
   keyboardMaxHeight = maxHeight,
+  closeLabel,
   tokens,
   styles,
 }) => {
@@ -82,7 +85,7 @@ const DefaultSheet: React.FC<Props> = ({
         <Pressable
           testID={testID ? `${testID}-backdrop` : undefined}
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={closeLabel}
           onPress={onRequestClose}
           style={[s.sheetBackdrop, styles?.sheetBackdrop]}
         />

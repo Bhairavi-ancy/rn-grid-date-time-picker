@@ -24,6 +24,7 @@ const mount = (
         body={<Text>the body</Text>}
         footer={<Text>the footer</Text>}
         testID="s"
+        closeLabel="Close"
         tokens={buildTokens()}
         styles={styles}
         {...sizes}

@@ -22,8 +22,9 @@ Every part gets a testID built from the `testID` prop (`dp` here):
 | `dp-inline` | The inline container |
 | `dp-scroll` | The sheet's scrolling body |
 | `dp-reset`, `dp-confirm` | Reset and Confirm |
-| `dp-value`, `dp-value-field`, `dp-value-segment-…`, `dp-value-clear`, `dp-value-error` | The field inside the sheet |
-| `dp-from`, `dp-to`, `dp-from-wrap`, `dp-to-wrap`, `dp-from-segment-…`, `dp-range-error` | From / To range fields |
+| `dp-value-field`, `dp-value-segment-…`, `dp-value-clear`, `dp-value-error` | The field inside the sheet: `-field` while it shows text, the segments with `allowTyping` |
+| `dp-from-wrap` / `dp-to-wrap`, `dp-from-label` / `dp-to-label`, `dp-from-field` / `dp-to-field`, `dp-from-segment-…` / `dp-to-segment-…`, `dp-range-error` | From / To range fields |
+| `dp-validation-error` | The `validate` message above the footer |
 | `dp-calendar`, `dp-grid` | The calendar and its day grid |
 | `dp-prev`, `dp-next`, `dp-prev-left` / `-right`, `dp-next-left` / `-right`, `dp-title` | Header arrows (the suffix tells which way the chevron points) and the year title |
 | `dp-calendar-switch`, `dp-calendar-switch-{gregory,hijri,dual}` | The calendar switch and its segments |
