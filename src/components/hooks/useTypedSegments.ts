@@ -17,12 +17,13 @@ const valueKey = (v: DateTimeValue | null): string =>
 /**
  * State for the typed field. Re-syncs from `value` when it changes from outside
  * (a calendar tap, a clear) while no segment is focused, and reports every
- * parse result to `onParsed`.
+ * parse result to `onParsed`, saying whether it came from such a value
+ * (`fromOutside`) rather than from typing.
  */
 export const useTypedSegments = (
   value: DateTimeValue | null,
   options: SegmentEditorOptions,
-  onParsed?: (parsed: ParsedSegments) => void
+  onParsed?: (parsed: ParsedSegments, fromOutside: boolean) => void
 ): {
   state: SegmentEditorState;
   dispatch: (action: SegmentEditorAction) => void;
@@ -51,9 +52,12 @@ export const useTypedSegments = (
   // Fast typing (a hardware keyboard, autofill) sends the next character
   // before React re-renders, so inputs compare against this, not `state`.
   const latest = useRef(state);
+  // Whether the last action was a value set from outside, not typing.
+  const lastWasReset = useRef(false);
   const dispatch = useCallback(
     (action: SegmentEditorAction) => {
       latest.current = reducer(latest.current, action);
+      lastWasReset.current = action.type === 'reset';
       reactDispatch(action);
     },
     [reducer]
@@ -93,7 +97,7 @@ export const useTypedSegments = (
       // What's typed is newer than anything that was waiting to be shown.
       resetOnLeave.current = false;
     }
-    onParsedRef.current?.(state.parsed);
+    onParsedRef.current?.(state.parsed, lastWasReset.current);
   }, [state.parsed]);
 
   return { state, dispatch, getState };

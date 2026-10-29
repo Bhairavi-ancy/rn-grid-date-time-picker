@@ -750,10 +750,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   // × in the field above the calendar. 'instant' saves every edit, so it
   // clears the saved value too (once; an empty value isn't saved again).
+  const hasSaved = valuesOf(saved).some((v) => v !== null);
   const clearInSheet = useCallback(() => {
-    if (commitMode === 'instant' && valueKey !== '""') clearValue();
+    if (commitMode === 'instant' && hasSaved) clearValue();
     else clearDraft();
-  }, [commitMode, valueKey, clearValue, clearDraft]);
+  }, [commitMode, hasSaved, clearValue, clearDraft]);
 
   // Opening or closing starts without the last `validate` message.
   useEffect(() => setValidation(null), [isOpen]);
@@ -764,15 +765,26 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // An edit equal to the saved value isn't saved again; one `validate`
   // rejected waits until the selection or the saved value changes.
   const lastRejected = useRef<string | null>(null);
+  // The last value saved: not saved again while the parent's `value` catches
+  // up (a slow store, a server round trip) or when it never does.
+  const lastEmitted = useRef<string | null>(null);
   useEffect(() => {
     lastRejected.current = null;
-  }, [valueKey]);
+    lastEmitted.current = null;
+  }, [valueKey, isOpen]);
+  // The field in the sheet saves once typing there is done (focus leaves it),
+  // so 09:30 isn't saved as 09:00 and 09:03 on the way.
+  const sheetTyping = !!(
+    focusedParts.value ||
+    focusedParts['value-from'] ||
+    focusedParts['value-to']
+  );
   useEffect(() => {
     if (commitMode !== 'instant' || !isOpen || !edited.current) return;
-    if (timeIssue || !canSave(draft.draft)) return;
+    if (sheetTyping || timeIssue || !canSave(draft.draft)) return;
     const wire = draft.toWire();
     const key = JSON.stringify(wire);
-    if (key === lastRejected.current) return;
+    if (key === lastRejected.current || key === lastEmitted.current) return;
     // The same dates picked in the same calendar aren't saved again; the same
     // dates picked in the other calendar are.
     const unchanged =
@@ -785,11 +797,13 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       latest.current.onError?.('VALIDATION', wire);
       return;
     }
+    lastEmitted.current = key;
     commit(wire);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- when the draft or what blocks it changes, not when callbacks are re-created
   }, [
     commitMode,
     isOpen,
+    sheetTyping,
     draft.draft,
     draftSystem,
     timeIssue,

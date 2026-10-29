@@ -168,9 +168,10 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
   const { state, dispatch, getState } = useTypedSegments(
     value,
     { dateFormat, type, timeFormat, yearRange },
-    (parsed) => {
+    (parsed, fromOutside) => {
       setLastParsed(parsed);
-      onTyped?.(parsed);
+      // A value shown from outside (a calendar tap) isn't an edit.
+      if (!fromOutside) onTyped?.(parsed);
     }
   );
 

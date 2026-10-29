@@ -341,6 +341,82 @@ describe('DateTimePicker: inline and instant', () => {
   });
 });
 
+describe('DateTimePicker: instant saves each edit once', () => {
+  const now = () => new Date(Date.UTC(2026, 9, 21, 6, 30));
+  const tapDay = (tree: ReactTestRenderer, d: number) =>
+    act(() =>
+      tree.root
+        .findAll(
+          (n) =>
+            n.props.testID === `dp-day-2026-10-${d}` &&
+            n.props.accessibilityRole === 'button' &&
+            typeof n.type !== 'string'
+        )[0]
+        .props.onPress()
+    );
+  const instant: Partial<DateTimePickerProps> = {
+    presentation: 'inline',
+    commitMode: 'instant',
+    now,
+  };
+
+  it('a tap saves once while the parent has not stored the value yet', () => {
+    const onChange = jest.fn();
+    const onBlur = jest.fn();
+    const tree = mount({ ...instant, onChange, onBlur });
+    tapDay(tree, 20);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-20T00:00:00.000Z');
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it('parent re-renders with inline limit props save nothing again', () => {
+    const onChange = jest.fn();
+    const props = { ...base, ...instant, onChange };
+    const tree = mount({ ...instant, onChange, disabledDates: () => false });
+    tapDay(tree, 20);
+    for (let i = 0; i < 2; i++)
+      act(() =>
+        tree.update(<DateTimePicker {...props} disabledDates={() => false} />)
+      );
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('typing in the field saves once, when typing there is done', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      ...instant,
+      value: '2026-10-15T00:00:00.000Z',
+      onChange,
+    });
+    typeSegment(tree, 'dp-value', 'day', '1');
+    typeSegment(tree, 'dp-value', 'day', '12');
+    expect(onChange).not.toHaveBeenCalled();
+    // Two digits move focus on to the month; leaving it ends the typing.
+    const month = tree.root
+      .findAllByType(TextInput)
+      .find((i) => i.props.testID === 'dp-value-segment-month')!;
+    act(() => month.props.onBlur());
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-12T00:00:00.000Z');
+  });
+
+  it('× with nothing saved saves nothing (an empty list or range)', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      ...instant,
+      mode: 'multiple',
+      value: [],
+      allowClear: true,
+      onChange,
+    });
+    tapDay(tree, 20);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    press(tree, 'dp-value-clear');
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('DateTimePicker: limits', () => {
   it('blocks Confirm and explains why when the typed day is not allowed', () => {
     const tree = mount({ minDate: { year: 2026, month: 10, day: 25 } });
