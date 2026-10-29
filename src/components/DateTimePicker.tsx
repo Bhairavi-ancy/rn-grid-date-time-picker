@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { DateTime } from 'luxon';
+import { View } from 'react-native';
 import { resolveAdapter } from '../adapters';
 import {
   compareCalendarDates,
@@ -96,6 +97,9 @@ const emptySelection = (sel: CalendarSelection): CalendarSelection =>
 
 /** Minute steps that divide the hour. */
 const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
+
+/** A folded calendar stays mounted, so it comes back on the month and view it showed. */
+const FOLDED = { display: 'none' } as const;
 
 /** The later / earlier of a limit and a bound; the bound when there's no limit. */
 const later = (a: CalendarDate | undefined, b: CalendarDate): CalendarDate =>
@@ -1515,8 +1519,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     (selectionShown ? null : firstSelectedDay(selection)) ??
     initialVisibleDate;
 
-  const calendar = folded ? null : (
-    <>
+  const calendar = (
+    <View style={folded ? FOLDED : undefined}>
       {calendarSwitchNode}
       {dualTabs}
       <Calendar
@@ -1551,7 +1555,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         strings={strings}
         testID={testID}
       />
-    </>
+    </View>
   );
 
   const timeRow =

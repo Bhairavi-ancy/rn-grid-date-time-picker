@@ -112,6 +112,16 @@ describe('DefaultSheet', () => {
     expect(maxHeight(unresized)).toBe(
       (Dimensions.get('window').height - 300) / 2
     );
+
+    // A keyboard reported as tall as the window (split screen): the sheet
+    // keeps a strip of room instead of collapsing.
+    const squeezed = mount(() => {});
+    act(() =>
+      listeners[show!]({
+        endCoordinates: { height: Dimensions.get('window').height + 100 },
+      })
+    );
+    expect(maxHeight(squeezed)).toBe(144); // 90% of the 160 pt floor
     jest.restoreAllMocks();
   });
 });

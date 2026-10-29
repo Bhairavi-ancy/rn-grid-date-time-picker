@@ -590,15 +590,23 @@ describe('DateTimePicker: calendar', () => {
       listeners[name] = cb;
       return { remove: () => {} };
     }) as never);
+    // A folded calendar stays mounted, hidden, so it comes back as it was.
+    const shown = () => {
+      let node = find(tree, 'dp-calendar')?.parent ?? null;
+      for (; node; node = node.parent)
+        if (StyleSheet.flatten(node.props.style)?.display === 'none')
+          return false;
+      return exists(tree, 'dp-calendar');
+    };
     const tree = mount({ now, hideCalendarOnKeyboard: true });
     openSheet(tree);
-    expect(exists(tree, 'dp-calendar')).toBe(true);
+    expect(shown()).toBe(true);
     const show = Object.keys(listeners).find((k) => k.endsWith('Show'));
     act(() => listeners[show!]());
-    expect(exists(tree, 'dp-calendar')).toBe(false);
+    expect(shown()).toBe(false);
     const hide = Object.keys(listeners).find((k) => k.endsWith('Hide'));
     act(() => listeners[hide!]());
-    expect(exists(tree, 'dp-calendar')).toBe(true);
+    expect(shown()).toBe(true);
     jest.restoreAllMocks();
   });
 });
