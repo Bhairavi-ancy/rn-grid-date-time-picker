@@ -34,6 +34,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - A range end picked on the start's day starts an hour after the start (within the day's `timeBounds`), so a same-day date-time range isn't out of order before the user touches the time.
 - With `commitMode="instant"`, each value is saved once, and typing in the sheet's field saves when focus leaves it or its last box fills.
 - A controlled `visible` waits for the keyboard to close before opening, like the built-in open.
+- A date typed in another month brings the calendar to that month; browsing without picking leaves it on the month you browsed to, folded or not.
 
 ### Fixed
 
