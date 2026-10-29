@@ -9,9 +9,7 @@ A themeable date and time picker for React Native: one date, several dates or a 
 
 <!-- Absolute URLs so the screenshots also show on npmjs.com. -->
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/single.png" width="240" alt="A date picked in the bottom sheet" />
-  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/range.png" width="240" alt="A From / To date range" />
-  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/datetime.png" width="240" alt="A date and a typed time" />
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/screenshots.png" width="760" alt="The bottom sheet three ways: a date picked, a From / To date range, and a date with a typed time" />
 </p>
 
 <!--
