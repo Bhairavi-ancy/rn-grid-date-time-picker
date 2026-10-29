@@ -483,9 +483,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const [minuteTick, setMinuteTick] = useState(0);
   const constraints = useMemo(() => {
     const nowDate = now?.() ?? new Date();
+    // yearRange bounds the limits too, so days outside it are greyed.
     const limits = {
-      minDate,
-      maxDate,
+      minDate: later(minDate, { year: yearRange.first, month: 1, day: 1 }),
+      maxDate: earlier(maxDate, { year: yearRange.last, month: 12, day: 31 }),
       disabledDates,
       enabledDates,
       timeBounds,
@@ -507,12 +508,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           type,
           timeZone: zone,
           now: nowDate,
-          minDate: later(minDate, { year: yearRange.first, month: 1, day: 1 }),
-          maxDate: earlier(maxDate, {
-            year: yearRange.last,
-            month: 12,
-            day: 31,
-          }),
+          minDate: limits.minDate,
+          maxDate: limits.maxDate,
           isDisabled: disabledDates,
           isEnabled: enabledDates,
           timeBounds,

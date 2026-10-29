@@ -41,7 +41,7 @@ c.isValueAllowed({ date: { year: 2026, month: 10, day: 24 }, time: { hour: 8, mi
 
 Reasons come in this order: `OUTSIDE_RANGE`, `WEEKDAY`, `HOLIDAY`, then what `isDisabled` returns (`true` → `'CUSTOM'`, or your own reason string or list), then `CUSTOM` from `isEnabled`. In range and multiple modes the picker adds `RANGE_LENGTH` and `MAX_SELECTIONS` while the user picks.
 
-For full control, pass `getConstraints`. Its result is used as is, and the limit props arrive in `ctx.limits` so you can merge them:
+For full control, pass `getConstraints`. Its result is used as is, and the limit props arrive in `ctx.limits` so you can merge them: `ctx.limits.minDate` / `maxDate` already include `yearRange`.
 
 ```tsx
 <DateTimePicker
