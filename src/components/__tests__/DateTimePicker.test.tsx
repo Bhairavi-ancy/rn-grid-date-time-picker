@@ -512,10 +512,18 @@ describe('DateTimePicker: keyboard wait before opening', () => {
     const dismiss = jest
       .spyOn(Keyboard, 'dismiss')
       .mockImplementation(() => {});
-    const props = { ...base, showField: false, visible: false };
+    // Not even one frame of the sheet before the keyboard is gone.
+    const drawn = jest.fn(renderSheet);
+    const props = {
+      ...base,
+      renderSheet: drawn,
+      showField: false,
+      visible: false,
+    };
     const tree = mount(props);
     act(() => tree.update(<DateTimePicker {...props} visible />));
     expect(dismiss).toHaveBeenCalled();
+    expect(drawn).not.toHaveBeenCalled();
     expect(exists(tree, 'dp-sheet')).toBe(false);
     act(() => jest.advanceTimersByTime(KEYBOARD_WAIT_FALLBACK_MS));
     expect(exists(tree, 'dp-sheet')).toBe(true);

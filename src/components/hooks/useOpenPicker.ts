@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard, Platform, TextInput } from 'react-native';
 
 /** How long to wait for the keyboard to finish closing before opening anyway. */
@@ -39,8 +33,15 @@ export const useOpenPicker = ({
 }: Options): { isOpen: boolean; open: () => void; close: () => void } => {
   const [openState, setOpenState] = useState(false);
   const isControlled = visible !== undefined;
-  // Controlled: `visible` turned on while the keyboard is closing.
+  // Controlled: `visible` turned on while a text input has focus waits for
+  // the keyboard. Decided while rendering, so the sheet never shows a frame
+  // early.
   const [keyboardWait, setKeyboardWait] = useState(false);
+  const [seenVisible, setSeenVisible] = useState(visible);
+  if (isControlled && visible !== seenVisible) {
+    setSeenVisible(visible);
+    setKeyboardWait(!!visible && !!TextInput.State.currentlyFocusedInput?.());
+  }
   const isOpen = isControlled ? !!visible && !keyboardWait : openState;
   const pending = useRef<{ cancel: () => void } | null>(null);
 
@@ -71,20 +72,12 @@ export const useOpenPicker = ({
     Keyboard.dismiss();
   };
 
-  // Before paint, so the sheet never shows under a closing keyboard.
-  useLayoutEffect(() => {
-    if (!isControlled || !visible) {
-      if (keyboardWait) {
-        cancelPending();
-        setKeyboardWait(false);
-      }
-      return;
-    }
-    if (!TextInput.State.currentlyFocusedInput?.()) return;
-    setKeyboardWait(true);
+  useEffect(() => {
+    if (!keyboardWait) return undefined;
     afterKeyboard(() => setKeyboardWait(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- when `visible` turns on
-  }, [isControlled, visible]);
+    return cancelPending;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- while waiting
+  }, [keyboardWait]);
 
   const reallyOpen = useCallback(() => {
     pending.current = null;
