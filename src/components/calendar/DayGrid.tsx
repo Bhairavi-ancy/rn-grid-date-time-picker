@@ -93,6 +93,9 @@ const DayGrid: React.FC<DayGridProps> = ({
         onStartShouldSetPanResponder: () => !!onSwipeRef.current,
         onMoveShouldSetPanResponder: (_, g) =>
           !!onSwipeRef.current && isSwipeStart(g.dx, g.dy),
+        // Android: let the sheet's ScrollView take a vertical drag that starts
+        // on the grid (PanResponder blocks native views by default).
+        onShouldBlockNativeResponder: () => false,
         onPanResponderRelease: (_, g) => {
           const step = swipeStep(g.dx, I18nManager.isRTL);
           if (step !== 0) onSwipeRef.current?.(step);

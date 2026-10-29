@@ -162,4 +162,22 @@ describe('DayGrid', () => {
       grid(mount({})).props.onStartShouldSetResponder({ touchHistory: {} })
     ).toBe(false);
   });
+
+  it("doesn't block the sheet's scroll view from taking a vertical drag", () => {
+    const tree = mount({ onSwipe: jest.fn() });
+    const grid = tree.root.findAll(
+      (n) => n.props.testID === 'g-grid' && typeof n.type === 'string'
+    )[0]!;
+    const touchHistory = {
+      touchBank: [],
+      numberActiveTouches: 0,
+      indexOfSingleActiveTouch: -1,
+      mostRecentTimeStamp: 0,
+    };
+    // The grant's return value is "block native responders" (Android).
+    expect(grid.props.onResponderGrant({ touchHistory })).toBe(false);
+    expect(grid.props.onResponderTerminationRequest({ touchHistory })).toBe(
+      true
+    );
+  });
 });

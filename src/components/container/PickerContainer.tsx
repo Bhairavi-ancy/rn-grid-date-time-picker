@@ -52,6 +52,7 @@ const PickerContainer: React.FC<PickerContainerProps> = ({
       {...p}
       height={sheet?.height}
       maxHeight={sheet?.maxHeight}
+      keyboardMaxHeight={sheet?.keyboardMaxHeight}
       tokens={layout.state.tokens}
       styles={layout.styles}
     />

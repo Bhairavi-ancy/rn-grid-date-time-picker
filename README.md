@@ -364,7 +364,7 @@ The built-in sheet doesn't add a safe-area inset. Add one with `styles.sheet`:
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const insets = useSafeAreaInsets();
-<DateTimePicker styles={{ sheet: { paddingBottom: 24 + insets.bottom } }} /* … */ />;
+<DateTimePicker styles={{ sheet: { paddingBottom: 8 + insets.bottom } }} /* … */ />;
 ```
 
 Or bring your own sheet with `renderSheet`. It is called only while the picker is open and rendered in place (no portal), so it works inside other sheets:
@@ -406,6 +406,7 @@ Everything inside the sheet can be set from props:
 |---|---|---|
 | `height` | as tall as the content | A fixed height, in points or as a percentage of the screen (`'60%'`). The footer then sits at the bottom. |
 | `maxHeight` | `'90%'` | The most the sheet grows to. Beyond it the body scrolls. |
+| `keyboardMaxHeight` | `maxHeight` | The most the sheet grows to while the keyboard is up. A percentage is of the room above the keyboard, so the default `'90%'` leaves some backdrop above the sheet. |
 | `fixedHeader` | `true` | The header stays put while the body scrolls. `false` scrolls it with the body. |
 | `fixedFooter` | `true` | Confirm stays pinned below the body. `false` scrolls it at the end of the body. `renderSheet` then gets `footer: null`. |
 | `showField` | `true` | The field above the calendar, which shows the picked date and takes typing with `allowTyping`. When it's hidden, its errors still show above the calendar. Applies inline too. |
