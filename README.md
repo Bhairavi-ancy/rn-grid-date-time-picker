@@ -3,7 +3,6 @@
 [![npm version](https://img.shields.io/npm/v/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
 ![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Expo%20Go-blue)
 [![types](https://img.shields.io/npm/types/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
-[![license](https://img.shields.io/npm/l/rn-grid-date-time-picker)](./LICENSE)
 
 A themeable date and time picker for React Native: one date, several dates or a range, typed or tapped, with limits, holidays and the Hijri calendar. Pure JS, so there's nothing native to install. It runs on iOS and Android and works in Expo Go.
 
