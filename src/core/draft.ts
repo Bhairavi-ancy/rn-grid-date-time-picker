@@ -37,7 +37,15 @@ export interface DraftSlot {
 export type Draft =
   | { mode: 'single'; slot: DraftSlot }
   | { mode: 'range'; from: DraftSlot; to: DraftSlot }
-  | { mode: 'multiple'; slots: DraftSlot[]; sharedTime: Time | null };
+  | {
+      mode: 'multiple';
+      slots: DraftSlot[];
+      /**
+       * Shared time mode: the time every date gets. Null while the saved dates
+       * have different times, which each date then keeps until one is set.
+       */
+      sharedTime: Time | null;
+    };
 
 export interface DraftOptions {
   type: PickerType;
@@ -119,13 +127,22 @@ export const createDraft = (
     return { mode, from: slotFrom(from, opts), to: slotFrom(to, opts) };
   }
   if (mode === 'multiple') {
+    // One slot per day: a later value on a day already listed is dropped.
     const slots = sortSlots(
       splitMultiple(safe)
         .map((w) => slotFrom(w, opts))
-        .filter((s) => s.value)
+        .filter(
+          (s, i, all) =>
+            s.value &&
+            all.findIndex((o) => isSameDay(o.value?.date, s.value?.date)) === i
+        )
     );
-    const sharedTime =
-      opts.type === 'datetime' ? (slots[0]?.value?.time ?? null) : null;
+    const times = slots.map((s) => s.value?.time ?? null);
+    const first = times[0] ?? null;
+    const sameTime = times.every(
+      (t) => t?.hour === first?.hour && t?.minute === first?.minute
+    );
+    const sharedTime = opts.type === 'datetime' && sameTime ? first : null;
     return { mode, slots, sharedTime };
   }
   return {
@@ -233,8 +250,10 @@ export const selectDay = (
       ...draft.slots,
       { value: { date: day, time }, initialWire: '' },
     ]),
+    // The first date's time becomes the shared one; dates with their own
+    // (different) times keep them.
     sharedTime:
-      opts.type === 'datetime' && !perDate
+      opts.type === 'datetime' && !perDate && draft.slots.length === 0
         ? (draft.sharedTime ?? time)
         : draft.sharedTime,
   };
@@ -355,7 +374,7 @@ const effectiveValue = (
     opts.type === 'datetime' &&
     opts.multiple?.timeMode !== 'perDate'
   ) {
-    return { ...slot.value, time: draft.sharedTime };
+    return { ...slot.value, time: draft.sharedTime ?? slot.value.time };
   }
   return slot.value;
 };

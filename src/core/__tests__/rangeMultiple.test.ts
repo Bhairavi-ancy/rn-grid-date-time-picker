@@ -3,7 +3,10 @@ import { utcMidnightAdapter } from '../../adapters';
 import { createConstraints } from '../constraints';
 import {
   createDraft,
+  draftToWire,
+  selectDay,
   setRangeEnd,
+  setTime,
   validateDraft,
   type DraftOptions,
 } from '../draft';
@@ -123,5 +126,55 @@ describe('withSelectionRules', () => {
 
   it('returns the same rules when nothing applies', () => {
     expect(withSelectionRules(base, {})).toBe(base);
+  });
+});
+
+describe('multiple: saved times', () => {
+  const dt: DraftOptions = {
+    type: 'datetime',
+    zone: 'UTC',
+    adapter: utcMidnightAdapter,
+  };
+  const saved = ['2026-10-24T09:00:00.000Z', '2026-10-25T15:00:00.000Z'];
+
+  it('dates saved with different times keep them on an unchanged Confirm', () => {
+    const draft = createDraft('multiple', saved, dt);
+    expect(validateDraft(draft, dt)).toBeNull();
+    expect(draftToWire(draft, dt)).toEqual(saved);
+  });
+
+  it('adding a day keeps the other dates own times', () => {
+    const draft = selectDay(createDraft('multiple', saved, dt), day(26), dt, {
+      hour: 10,
+      minute: 0,
+    });
+    expect(draftToWire(draft, dt)).toEqual([
+      ...saved,
+      '2026-10-26T10:00:00.000Z',
+    ]);
+  });
+
+  it('a shared time set by the user applies to every date', () => {
+    const draft = setTime(
+      createDraft('multiple', saved, dt),
+      { hour: 12, minute: 30 },
+      'shared'
+    );
+    expect(draftToWire(draft, dt)).toEqual([
+      '2026-10-24T12:30:00.000Z',
+      '2026-10-25T12:30:00.000Z',
+    ]);
+  });
+
+  it('a day listed twice is one date', () => {
+    const draft = createDraft('multiple', [wire(24), wire(24), wire(26)], {
+      ...opts,
+      multiple: { maxSelections: 2 },
+    });
+    expect(
+      validateDraft(draft, { ...opts, multiple: { maxSelections: 2 } })
+    ).toBeNull();
+    const after = selectDay(draft, day(24), opts);
+    expect(draftToWire(after, opts)).toEqual([wire(26)]);
   });
 });

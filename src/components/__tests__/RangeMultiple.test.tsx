@@ -465,6 +465,23 @@ describe('multiple', () => {
     expect(dayCell(tree, 22).props.disabled).toBe(false);
   });
 
+  it('shared time: dates saved with different times keep them when nothing changes', () => {
+    const value = ['2026-10-24T03:30:00.000Z', '2026-10-25T09:30:00.000Z'];
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'multiple',
+      type: 'datetime',
+      valueFormat: 'iso',
+      value,
+      onChange,
+    });
+    open(tree);
+    tap(tree, 26);
+    tap(tree, 26);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith(value);
+  });
+
   it('shared time: one row applies to every date', () => {
     const onChange = jest.fn();
     const tree = mount({
