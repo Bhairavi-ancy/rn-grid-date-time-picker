@@ -18,6 +18,7 @@ import {
   createDraft,
   DEFAULT_TIME,
   draftToWire,
+  sameDayRangeOk,
   setTime as applyTime,
   validateDraft,
   type Draft,
@@ -848,6 +849,24 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     return { hour: Math.floor(capped / 60), minute: capped % 60 };
   }, [now, zone, minuteStep]);
 
+  // A range end picked on the start's day starts an hour after the start (at
+  // most the day's last step), so the range isn't out of order before the
+  // user has touched the time.
+  // A time typed for the end before its day is kept as typed.
+  const endTimeFor = (
+    from: DateTimeValue | null,
+    day: CalendarDate,
+    typed: Time | null | undefined
+  ): Time => {
+    if (!fixedTime && typed) return typed;
+    const time = fixedTime ?? nowTime();
+    if (!from?.time || !isSameDay(from.date, day)) return time;
+    const start = from.time.hour * 60 + from.time.minute;
+    if (time.hour * 60 + time.minute > start) return time;
+    const end = Math.min(start + 60, 24 * 60 - Math.max(1, minuteStep));
+    return { hour: Math.floor(end / 60), minute: end % 60 };
+  };
+
   const onSelectDay = useCallback(
     (day: CalendarDate) => {
       edited.current = true;
@@ -891,8 +910,21 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
               : end0;
           // The tapped day replaces whatever was typed in this end only.
           setTypingBlock(end1, false);
-          draft.setRangeEnd(day, end1, fixedTime ?? times[end1] ?? nowTime());
+          draft.setRangeEnd(
+            day,
+            end1,
+            end1 === 'to'
+              ? endTimeFor(cur.from.value, day, times.to)
+              : (fixedTime ?? times.from ?? nowTime())
+          );
+          // The start tapped again where a range can't be one day deselects
+          // it, so the next tap picks the start again.
+          const deselects =
+            end1 === 'to' &&
+            !sameDayRangeOk(draftOptions) &&
+            isSameDay(cur.from.value?.date, day);
           if (end0 === 'from') setActiveEnd('to');
+          else if (deselects) setActiveEnd('from');
           return;
         }
         // The single field: the first tap is the start, the next one the end.
@@ -901,7 +933,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           (!!cur.to.value && range?.reselect !== 'moveNearestEnd');
         const end: RangeEnd = startsOver ? 'from' : 'to';
         setTypingBlock('single', false);
-        draft.selectDay(day, fixedTime ?? times[end] ?? nowTime());
+        draft.selectDay(
+          day,
+          end === 'to' && !cur.to.value
+            ? endTimeFor(cur.from.value, day, times.to)
+            : (fixedTime ?? times[end] ?? nowTime())
+        );
         return;
       }
       if (cur.mode === 'multiple') {
@@ -939,6 +976,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       shownSystem,
       resetSelectionUi,
       endPicked,
+      draftOptions,
+      minuteStep,
     ]
   );
 

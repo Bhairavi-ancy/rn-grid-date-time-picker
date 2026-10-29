@@ -92,7 +92,7 @@ export const DEFAULT_STRINGS: PickerStrings = {
   errorNotAllowed: "This date isn't available",
   errorTimeNotAllowed: "This time isn't available",
   errorMinuteStep: (step) => `Choose a minute in steps of ${step}`,
-  errorRangeOrder: 'The end must be after the start',
+  errorRangeOrder: 'The end date must be greater than the start date',
   errorRangeTooShort: (n) => `Choose a range of at least ${n} days`,
   errorRangeTooLong: (n) => `Choose a range of at most ${n} days`,
   nothingSelectable: 'No dates are available',

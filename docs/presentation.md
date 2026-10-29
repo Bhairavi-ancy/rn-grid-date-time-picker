@@ -91,7 +91,7 @@ Date-time pickers show a time row under the calendar:
 
 **Time checks happen on Confirm, not while typing.** Nothing is flagged as the user types, and Confirm stays enabled. Pressing it with an unfinished, impossible, off-step or out-of-limits time shows the error under the time row, calls `onError`, and saves nothing. Editing the time hides the error again until the next Confirm. With `commitMode="instant"` there's no Confirm, so errors show as they happen, and a time with a problem is never saved.
 
-A newly picked day on an empty date-time starts at the current time, rounded up to the next minute step. `newDayTime` replaces that. An existing time is kept when another day is picked. Range mode has start and end rows. Multiple mode has one shared row, or (with `timeMode: 'perDate'`) a row for the day last tapped.
+A newly picked day on an empty date-time starts at the current time, rounded up to the next minute step. `newDayTime` replaces that. An existing time is kept when another day is picked. Range mode has start and end rows; an end picked on the start's day starts an hour after the start, so the range is in order from the first tap. While the end is before the start, `strings.errorRangeOrder` shows, and it goes as soon as either time is fixed. Multiple mode has one shared row, or (with `timeMode: 'perDate'`) a row for the day last tapped.
 
 ## Your own input
 

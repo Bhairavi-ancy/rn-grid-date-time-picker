@@ -158,6 +158,14 @@ const withDay = (
   };
 };
 
+/**
+ * Whether a range may start and end on one day: date-time ranges and
+ * `allowSameDay` date ranges, as long as minDays allows a 1-day range.
+ */
+export const sameDayRangeOk = (opts: DraftOptions): boolean =>
+  (opts.type === 'datetime' || !!opts.range?.allowSameDay) &&
+  (opts.range?.minDays ?? 1) <= 1;
+
 const pickRangeDay = (
   draft: Extract<Draft, { mode: 'range' }>,
   day: CalendarDate,
@@ -166,10 +174,6 @@ const pickRangeDay = (
 ): Draft => {
   const from = draft.from.value?.date;
   const to = draft.to.value?.date;
-  // A same-day range is 1 day long, so it's only an end when minDays allows it.
-  const allowSameDay =
-    (opts.type === 'datetime' || !!opts.range?.allowSameDay) &&
-    (opts.range?.minDays ?? 1) <= 1;
 
   if (!from) return { ...draft, from: withDay(draft.from, day, opts, eq) };
 
@@ -177,7 +181,8 @@ const pickRangeDay = (
     const order = compareCalendarDates(day, from);
     if (order < 0)
       return { ...draft, from: withDay(draft.from, day, opts, eq) };
-    if (order === 0 && !allowSameDay)
+    // The start tapped again, where it can't also be the end: deselects it.
+    if (order === 0 && !sameDayRangeOk(opts))
       return { ...draft, from: { ...draft.from, value: null } };
     return { ...draft, to: withDay(draft.to, day, opts, eq) };
   }
@@ -237,7 +242,9 @@ export const selectDay = (
 
 /**
  * From/To layout: a tap fills the end being edited. An end that would come
- * before the start (or after the end) clears the other one.
+ * before the start (or after the end) clears the other one. The start tapped
+ * again as the end, where a range can't be one day, deselects the start, as
+ * in the single field.
  */
 export const setRangeEnd = (
   draft: Draft,
@@ -247,12 +254,14 @@ export const setRangeEnd = (
   newDayTime?: Time | null
 ): Draft => {
   if (draft.mode !== 'range') return draft;
-  const sameDayOk = opts.type === 'datetime' || !!opts.range?.allowSameDay;
+  const sameDayOk = sameDayRangeOk(opts);
   const fits = (from?: CalendarDate, to?: CalendarDate) => {
     if (!from || !to) return true;
     const order = compareCalendarDates(to, from);
     return order > 0 || (order === 0 && sameDayOk);
   };
+  if (end === 'to' && !sameDayOk && isSameDay(draft.from.value?.date, day))
+    return { ...draft, from: { ...draft.from, value: null } };
   if (end === 'from') {
     const from = withDay(draft.from, day, opts, newDayTime);
     const keepTo = fits(day, draft.to.value?.date);
