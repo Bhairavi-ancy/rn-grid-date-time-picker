@@ -401,6 +401,35 @@ describe('DateTimePicker: instant saves each edit once', () => {
     expect(onChange).toHaveBeenCalledWith('2026-10-12T00:00:00.000Z');
   });
 
+  it('closing the sheet while still typing saves what was typed', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      commitMode: 'instant',
+      now,
+      value: '2026-10-15T00:00:00.000Z',
+      onChange,
+    });
+    openSheet(tree);
+    // Focus moves on to the month and stays in the field.
+    typeSegment(tree, 'dp-value', 'day', '20');
+    expect(onChange).not.toHaveBeenCalled();
+    act(() => find(tree, 'dp-sheet').props.onRequestClose());
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-20T00:00:00.000Z');
+  });
+
+  it("a tap saves even while the picker's own field has focus", () => {
+    const onChange = jest.fn();
+    const tree = mount({ ...instant, onChange });
+    const day = tree.root
+      .findAllByType(TextInput)
+      .find((i) => i.props.testID === 'dp-value-segment-day')!;
+    act(() => day.props.onFocus());
+    tapDay(tree, 20);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-20T00:00:00.000Z');
+  });
+
   it('× with nothing saved saves nothing (an empty list or range)', () => {
     const onChange = jest.fn();
     const tree = mount({

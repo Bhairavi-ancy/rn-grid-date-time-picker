@@ -382,7 +382,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const {
     isOpen: sheetOpen,
     open,
-    close,
+    close: closePicker,
   } = useOpenPicker({
     disabled,
     readOnly,
@@ -800,7 +800,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     commit(wire);
     onConfirm?.(wire);
     edited.current = false;
-    if (!isInline) close();
+    if (!isInline) closePicker();
   }, [
     canConfirm,
     timeBlocked,
@@ -810,7 +810,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     preview,
     draftOptions,
     isInline,
-    close,
+    closePicker,
   ]);
 
   const clearValue = useCallback(() => {
@@ -857,9 +857,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     focusedParts['value-from'] ||
     focusedParts['value-to']
   );
-  useEffect(() => {
+  /** Saves the draft in instant mode; `typingDone` once the sheet's field is left. */
+  const saveInstant = (typingDone: boolean) => {
     if (commitMode !== 'instant' || !isOpen || !edited.current) return;
-    if (sheetTyping || timeIssue || !canSave(draft.draft)) return;
+    if (!typingDone || timeIssue || !canSave(draft.draft)) return;
     const wire = draft.toWire();
     const key = JSON.stringify(wire);
     if (key === lastRejected.current || key === lastEmitted.current) return;
@@ -877,19 +878,33 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     }
     lastEmitted.current = key;
     commit(wire);
+  };
+  // Only typing waits for the field to be left; a tap is a finished edit.
+  const typedLast = useRef(false);
+  useEffect(
+    () => saveInstant(!sheetTyping || !typedLast.current),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- when the draft or what blocks it changes, not when callbacks are re-created
-  }, [
-    commitMode,
-    isOpen,
-    sheetTyping,
-    draft.draft,
-    draftSystem,
-    timeIssue,
-    typingBlocked,
-    wheelSpinning,
-    confirmDisabled,
-    constraints,
-  ]);
+    [
+      commitMode,
+      isOpen,
+      sheetTyping,
+      draft.draft,
+      draftSystem,
+      timeIssue,
+      typingBlocked,
+      wheelSpinning,
+      confirmDisabled,
+      constraints,
+    ]
+  );
+  // Closing while the sheet's field still has focus ends the typing: an
+  // instant picker saves what was typed before it closes.
+  const saveInstantRef = useRef(saveInstant);
+  saveInstantRef.current = saveInstant;
+  const close = useCallback(() => {
+    saveInstantRef.current(true);
+    closePicker();
+  }, [closePicker]);
 
   // A typed date with no time yet gets one the way a tapped day does: the fixed
   // newDayTime, else a time already typed in the time row, else now.
@@ -913,6 +928,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const onSheetTyped = (parsed: ParsedSegments) => {
     edited.current = true;
+    typedLast.current = true;
     adoptShownIfEmpty();
     const typed = withFilledTime(parsed, 'single');
     setTypingBlock('single', !parsed.isEmpty && !typed);
@@ -922,6 +938,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const onRangeTyped = (end: RangeEnd, parsed: ParsedSegments) => {
     edited.current = true;
+    typedLast.current = true;
     adoptShownIfEmpty();
     const typed = withFilledTime(parsed, end);
     setTypingBlock(end, !parsed.isEmpty && !typed);
@@ -967,6 +984,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const onSelectDay = useCallback(
     (day: CalendarDate) => {
       edited.current = true;
+      typedLast.current = false;
       // A pick in the other calendar starts over: the selection is one calendar's.
       const fresh =
         draftSystem !== shownSystem && valuesOf(d).some((v) => v !== null);
