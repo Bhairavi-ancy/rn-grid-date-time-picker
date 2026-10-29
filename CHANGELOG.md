@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [1.1.0] - Unreleased
+## [1.1.0] - 2026-10-30
 
 1.1.0 reworks the Hijri calendar (Gregorian / Hijri tabs, a calendar switch, Arabic by default) and fixes issues found in real-device testing. It changes some 1.0.0 behaviour, listed below: most apps need no changes, but check this list if you use the Hijri or dual calendar, full `PickerStrings` / `ThemeTokens` objects, or tests that match `onChange` calls exactly.
 
