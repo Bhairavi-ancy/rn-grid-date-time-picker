@@ -1071,6 +1071,15 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     ]
   );
 
+  // The calendar gets a tap handler that never changes, so its memoized day
+  // cells don't all redraw on every tap; it calls the current one.
+  const selectDayRef = useRef(onSelectDay);
+  selectDayRef.current = onSelectDay;
+  const onSelectDayStable = useCallback(
+    (day: CalendarDate) => selectDayRef.current(day),
+    []
+  );
+
   // Greying that depends on what's picked: range length, From/To order, the multiple cap.
   const calendarConstraints = useMemo(() => {
     if (d.mode === 'range') {
@@ -1529,7 +1538,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         today={today}
         initialVisibleDate={calendarAnchor}
         selection={selectionShown ? selection : emptySelection(selection)}
-        onSelectDay={onSelectDay}
+        onSelectDay={onSelectDayStable}
         firstDayOfWeek={firstDayOfWeek}
         showOutsideDays={showOutsideDays}
         showHolidays={showHolidays}

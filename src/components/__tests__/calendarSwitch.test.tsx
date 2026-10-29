@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import * as calendarSystem from '../../core/calendarSystem';
+import * as calendarStyles from '../calendar/calendarStyles';
 import DateTimePicker from '../DateTimePicker';
 import type { DateTimePickerProps, PickerState } from '../types';
 
@@ -646,5 +647,25 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     press(tree, 'dp-dual-tabs-gregory');
     expect(isSelected(tree, 20)).toBe(true);
     expect(isSelected(tree, 25)).toBe(true);
+  });
+});
+
+describe('a tap redraws only what changed', () => {
+  it('not every day cell, in either calendar', () => {
+    for (const system of ['gregory', 'hijri'] as const)
+      for (const mode of ['single', 'range'] as const) {
+        const tree = mount({
+          calendarSystem: system,
+          mode,
+          commitMode: 'confirm',
+        });
+        tap(tree, 20);
+        // Each part builds its styles as it draws: the calendar, its header
+        // and grid, and the cells whose selection changed.
+        const draws = jest.spyOn(calendarStyles, 'buildCalendarStyles');
+        tap(tree, 22);
+        expect(draws.mock.calls.length).toBeLessThanOrEqual(10);
+        draws.mockRestore();
+      }
   });
 });

@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { isSameDay } from '../../core/calendarDate';
 import type { CalendarDate } from '../../core/types';
 import type { PickerStyles } from '../theme/styleKeys';
 import { DAY_HIT_SLOP, MAX_FONT_SCALE } from '../theme/a11y';
@@ -126,4 +127,13 @@ const DayCell: React.FC<Props> = ({
   );
 };
 
-export default memo(DayCell);
+// A Hijri grid builds new day objects on each render, so days compare by value.
+export default memo(
+  DayCell,
+  (prev, next) =>
+    (Object.keys(next) as (keyof Props)[]).every((key) =>
+      key === 'date'
+        ? isSameDay(prev.date, next.date)
+        : Object.is(prev[key], next[key])
+    ) && Object.keys(prev).length === Object.keys(next).length
+);
