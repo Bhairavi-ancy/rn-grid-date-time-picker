@@ -2,11 +2,11 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [2.0.0] - Unreleased
+## [1.1.0] - Unreleased
 
-2.0.0 reworks the Hijri calendar (Gregorian / Hijri tabs, a calendar switch, Arabic by default) and fixes issues found in real-device testing. Most apps need no changes, or only the few in "Upgrading from 1.0.0".
+1.1.0 reworks the Hijri calendar (Gregorian / Hijri tabs, a calendar switch, Arabic by default) and fixes issues found in real-device testing. It changes some 1.0.0 behaviour, listed below: most apps need no changes, but check this list if you use the Hijri or dual calendar, full `PickerStrings` / `ThemeTokens` objects, or tests that match `onChange` calls exactly.
 
-### Upgrading from 1.0.0
+### Changes from 1.0.0 to check
 
 - **`calendarSystem="dual"`** shows Gregorian and Hijri as two tabs, one calendar at a time; it no longer writes the Hijri day under each Gregorian day. `styles.daySubLabel` is no longer drawn, and `renderDay` gets `subLabel: null`. Use `dualDefaultTab` to choose the tab it opens on. A date shows selected only in the tab it was picked in, and a tap in the other tab starts the selection over.
 - **A folded calendar stays mounted but hidden** while the keyboard is up, so it comes back on the month it showed. A test that checks `dp-calendar` is gone while folded should check that it's hidden instead.
@@ -93,5 +93,5 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[2.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.0.0...v2.0.0
+[1.1.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.0
