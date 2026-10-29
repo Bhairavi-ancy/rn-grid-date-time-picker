@@ -71,7 +71,7 @@ import { useOpenPicker } from './hooks/useOpenPicker';
 import { usePickerDraft } from './hooks/usePickerDraft';
 import { useTodayTick } from './hooks/useTodayTick';
 import TimeRows, { type PendingTimes } from './time/TimeRows';
-import { resolveStrings } from './theme/defaultStrings';
+import { DEFAULT_STRINGS, resolveStrings } from './theme/defaultStrings';
 import { buildTokens } from './theme/tokens';
 import {
   DEFAULT_YEAR_RANGE,
@@ -1499,10 +1499,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     ) : null;
 
   const systemLabels: Record<CalendarSystem, string> = {
-    gregory: strings.calendarGregorian,
-    hijri: strings.calendarHijri,
-    dual: strings.calendarDual,
+    gregory: strings.calendarGregorian ?? DEFAULT_STRINGS.calendarGregorian,
+    hijri: strings.calendarHijri ?? DEFAULT_STRINGS.calendarHijri,
+    dual: strings.calendarDual ?? DEFAULT_STRINGS.calendarDual,
   };
+  const systemA11yLabel =
+    strings.a11yCalendarSystem ?? DEFAULT_STRINGS.a11yCalendarSystem;
   const chooseSystem = (next: CalendarSystem) => {
     if (next === system) return;
     setChosenSystem(next);
@@ -1526,7 +1528,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       })}
       selected={system}
       onSelect={chooseSystem}
-      accessibilityLabel={strings.a11yCalendarSystem}
+      accessibilityLabel={systemA11yLabel}
       tokens={tokens}
       styles={styles}
       testID={testID ? `${testID}-calendar-switch` : undefined}
@@ -1537,12 +1539,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       <CalendarSwitch
         variant="tabs"
         options={[
-          { value: 'gregory', label: strings.calendarGregorian },
-          { value: 'hijri', label: strings.calendarHijri },
+          { value: 'gregory', label: systemLabels.gregory },
+          { value: 'hijri', label: systemLabels.hijri },
         ]}
         selected={dualTab}
         onSelect={setDualTab}
-        accessibilityLabel={strings.a11yCalendarSystem}
+        accessibilityLabel={systemA11yLabel}
         tokens={tokens}
         styles={styles}
         testID={testID ? `${testID}-dual-tabs` : undefined}

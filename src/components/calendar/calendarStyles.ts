@@ -99,7 +99,7 @@ const create = (t: ThemeTokens) =>
     today: { borderWidth: 1, borderColor: t.accent },
     selected: { backgroundColor: t.accent },
     selectedText: { color: t.onAccent, ...fontStyle(t, 'semiBold') },
-    outsideText: { color: t.outsideText },
+    outsideText: { color: t.outsideText ?? t.mutedText },
     disabledText: { color: t.disabledText },
     holidayText: { color: t.holiday },
     pressed: { backgroundColor: t.rangeFill },

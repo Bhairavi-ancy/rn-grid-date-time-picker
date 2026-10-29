@@ -31,6 +31,8 @@ export {
   todayIn,
   weekdayOf,
 } from './core/calendarDate';
+export { hijriDateText } from './core/calendarSystem';
+export { arabicDigits } from './core/numerals';
 
 // Types
 export type {
