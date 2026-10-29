@@ -316,6 +316,19 @@ describe('time row editing', () => {
   });
 });
 
+/** Whether the calendar shows: a folded one stays mounted but hidden. */
+const shown = (tree: ReactTestRenderer) => {
+  const calendar = find(tree, 'dp-calendar');
+  if (!calendar) return false;
+  let node = calendar.parent;
+  while (node) {
+    const style = [].concat(node.props.style ?? []) as { display?: string }[];
+    if (style.some((x) => x?.display === 'none')) return false;
+    node = node.parent;
+  }
+  return true;
+};
+
 describe('keyboard folding inline', () => {
   const listeners: Record<string, () => void> = {};
   afterEach(() => {
@@ -344,7 +357,69 @@ describe('keyboard folding inline', () => {
     expect(find(tree, 'dp-calendar')).toBeTruthy();
     // One of the picker's own boxes does.
     act(() => box(tree, 'dp-value-segment-day').props.onFocus());
-    expect(find(tree, 'dp-calendar')).toBeUndefined();
+    expect(shown(tree)).toBe(false);
+  });
+
+  it('a folded calendar comes back on the month it showed', () => {
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      event: string,
+      cb: () => void
+    ) => {
+      listeners[event] = cb;
+      return { remove: () => {} };
+    }) as never);
+    const tree = mount(
+      <Screen
+        log={jest.fn()}
+        initial="2026-10-15"
+        allowTyping
+        hideCalendarOnKeyboard
+      />
+    );
+    open(tree);
+    press(tree, 'dp-chip-12');
+    const showEvent = Object.keys(listeners).find((k) => k.endsWith('Show'))!;
+    const hideEvent = Object.keys(listeners).find((k) => k.endsWith('Hide'))!;
+    act(() => listeners[showEvent]!());
+    expect(shown(tree)).toBe(false);
+    act(() => listeners[hideEvent]!());
+    expect(shown(tree)).toBe(true);
+    expect(find(tree, 'dp-day-2026-12-15')).toBeTruthy();
+  });
+
+  it('a date typed while folded brings the calendar to its month', () => {
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      event: string,
+      cb: () => void
+    ) => {
+      listeners[event] = cb;
+      return { remove: () => {} };
+    }) as never);
+    const tree = mount(
+      <Screen
+        log={jest.fn()}
+        initial="2026-10-15"
+        allowTyping
+        hideCalendarOnKeyboard
+      />
+    );
+    open(tree);
+    press(tree, 'dp-chip-12');
+    const showEvent = Object.keys(listeners).find((k) => k.endsWith('Show'))!;
+    const hideEvent = Object.keys(listeners).find((k) => k.endsWith('Hide'))!;
+    act(() => listeners[showEvent]!());
+    type(tree, 'dp-value-segment-day', '20');
+    type(tree, 'dp-value-segment-month', '11');
+    blur(tree, 'dp-value-segment-year');
+    act(() => listeners[hideEvent]!());
+    const cell = tree.root.findAll(
+      (n) =>
+        n.props.testID === 'dp-day-2026-11-20' &&
+        n.props.accessibilityRole === 'button' &&
+        typeof n.type !== 'string'
+    )[0];
+    expect(cell?.props.accessibilityState?.selected).toBe(true);
+    expect(find(tree, 'dp-day-2026-12-15')).toBeUndefined();
   });
 });
 
@@ -370,6 +445,41 @@ describe('limits and opening month', () => {
       hour: 12,
       minute: 0,
     });
+  });
+
+  it('dependsOnNow limits follow the clock while the sheet is open', () => {
+    jest.useFakeTimers();
+    try {
+      let clock = Date.UTC(2026, 9, 21, 6, 30);
+      const log = jest.fn();
+      const tree = mount(
+        <Screen
+          log={log}
+          type="datetime"
+          now={() => new Date(clock)}
+          getConstraints={(ctx) =>
+            createConstraints({
+              type: ctx.type,
+              timeZone: ctx.timeZone,
+              now: ctx.now,
+              min: { date: ctx.today, time: ctx.nowTime },
+              dependsOnNow: true,
+            })
+          }
+        />
+      );
+      open(tree);
+      day(tree, 2026, 10, 21);
+      // An hour later, the 06:30 picked on open is in the past.
+      clock += 60 * 60_000;
+      act(() => {
+        jest.advanceTimersByTime(60_000);
+      });
+      press(tree, 'dp-confirm');
+      expect(log).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('initialVisibleDate opens an empty calendar on that month, and the value wins', () => {

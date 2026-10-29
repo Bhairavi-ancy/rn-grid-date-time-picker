@@ -1,57 +1,54 @@
 # rn-grid-date-time-picker
 
 [![npm version](https://img.shields.io/npm/v/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
-[![npm downloads](https://img.shields.io/npm/dm/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
-[![CI](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/actions/workflows/ci.yml)
+![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Expo%20Go-blue)
 [![types](https://img.shields.io/npm/types/rn-grid-date-time-picker)](https://www.npmjs.com/package/rn-grid-date-time-picker)
 [![license](https://img.shields.io/npm/l/rn-grid-date-time-picker)](./LICENSE)
-![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-blue)
-![Expo Go](https://img.shields.io/badge/Expo%20Go-compatible-000020)
 
-A flexible, themeable date & time picker for React Native: single, multiple and range selection, typed or wheel time entry, limits and holidays, Hijri support. Runs on **iOS and Android**. Pure JS, so it also works in Expo Go and bare React Native apps.
+A themeable date and time picker for React Native: one date, several dates or a range, typed or tapped, with limits, holidays and the Hijri calendar. Pure JS, so there's nothing native to install. It runs on iOS and Android and works in Expo Go.
 
-<!--
-  Screenshots: add images to docs/ and uncomment. Use absolute raw.githubusercontent.com
-  URLs so they also show on npmjs.com, e.g.
-  https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/range.gif
-
+<!-- Absolute URLs so the screenshots also show on npmjs.com. -->
 <p align="center">
-  <img src="…/docs/single.png" width="240" alt="Single date in a bottom sheet" />
-  <img src="…/docs/range.gif" width="240" alt="Picking a date range" />
-  <img src="…/docs/datetime.png" width="240" alt="Date and time with typed segments" />
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/single.png" width="240" alt="A date picked in the bottom sheet" />
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/range.png" width="240" alt="A From / To date range" />
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/datetime.png" width="240" alt="A date and a typed time" />
 </p>
--->
 
 <!--
   Live demo: after publishing, create a Snack (see CONTRIBUTING.md) and uncomment.
+  The query offers only Expo Go, iOS and Android (no web) and opens on Android.
 
-**[Try it in Expo Snack →](https://snack.expo.dev/@your-account/rn-grid-date-time-picker)**
+**[Try it in Expo Snack →](https://snack.expo.dev/@your-account/rn-grid-date-time-picker?supportedPlatforms=mydevice,ios,android&platform=android)**
 -->
 
-- [Features](#features)
-- [Install](#install)
-- [Quick start](#quick-start)
-- [Values](#values)
-- [Props](#props)
-- [Limits & greying](#limits--greying)
-- [Presentation](#presentation-1) · [Field and typing](#field-and-typing) · [Time](#time-1)
-- [Locale, RTL & Hijri](#locale-rtl--hijri)
-- [Theming](#theming) · [Icons](#icons) · [Strings / i18n](#strings--i18n)
-- [Your own validation](#your-own-validation) · [Your own input](#your-own-input)
-- [Accessibility](#accessibility) · [Testing](#testing)
-- [Platform support and known limits](#platform-support-and-known-limits)
+## Why this picker
 
-## Features
+- **Every kind of pick**: one date, several dates, or a range in one field or as From / To, with or without a time. Month-and-year and year-only picks too.
+- **Typed or tapped**: users type the date and time, or pick them on the calendar. Time is typed boxes or a scrolling wheel, 12- or 24-hour, in minute steps.
+- **Only the days you allow**: block past dates, weekends, holidays loaded from your server, booked days, or hours outside opening times.
+- **Saves only on Confirm**: by default `onChange` fires once, when the user confirms, and closing the sheet never touches your value. `commitMode="instant"` saves each edit instead.
+- **Gregorian, Hijri or both**: a Hijri (Umm al-Qura) calendar written in Arabic, Gregorian and Hijri tabs, or a switch between them. Layouts mirror in RTL.
+- **Your design**: colours, fonts, corners and every text, a style for every part, or your own field, sheet and day cells.
+- **Accessible and light**: every control is labelled for screen readers, reduce motion is respected, and the only dependency is [Luxon](https://moment.github.io/luxon/).
 
-- **Dates and date-times**: one value, several dates, or a range (in one field or From / To).
-- **Typed or tapped**: type the date and time as segments, or pick them on the calendar and a time row (typed boxes or a scrolling wheel, 12- or 24-hour, minute steps).
-- **Limits**: min / max days with edge times, disabled weekdays, holidays (marked or disabled, loaded per year), custom checks, per-day time bounds, or your own constraint engine.
-- **Calendar**: day, month and year views, month swipe, a Today button, outside days, any first day of the week, years 1900–2200.
-- **Hijri**: a Gregorian or Hijri (Umm al-Qura) calendar, or both as tabs, with an optional Gregorian / Hijri / Dual switch.
-- **Exact commits**: `onChange` fires once per Confirm. Closing fires nothing.
-- **Accessible and RTL-aware**: every control is labelled, reduce motion is respected, font scaling is capped, and chevrons mirror in RTL.
-- **Yours to restyle**: theme tokens, a `styles` key for every part, every string, and render props for the sheet, field, label, days, cells and time row.
-- **No native code**: one runtime dependency ([Luxon](https://moment.github.io/luxon/)).
+## Hijri and Arabic
+
+<img align="right" src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/hijri-dual.png" width="200" alt="Gregorian and Hijri tabs, the Hijri month in Arabic" />
+
+`calendarSystem="hijri"` lays out Hijri months, days and years in Arabic, whatever your app's language. `"dual"` shows Gregorian and Hijri as two tabs, and `calendarSwitch` lets users switch for themselves. Values stay plain Gregorian strings, so your API doesn't change.
+
+```tsx
+<DateTimePicker
+  type="date"
+  value={value}
+  onChange={setValue}
+  calendarSystem="dual"
+/>
+```
+
+More in [Locale, RTL and Hijri](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/localization.md).
+
+<br clear="right" />
 
 ## Install
 
@@ -61,7 +58,7 @@ npm i rn-grid-date-time-picker
 yarn add rn-grid-date-time-picker
 ```
 
-There are no native steps. It works in Expo Go and in bare React Native apps. `react` (18 or later) and `react-native` (0.71 or later) are peer dependencies.
+There are no native steps. `react` (18 or later) and `react-native` (0.71 or later) are peer dependencies.
 
 ## Quick start
 
@@ -106,638 +103,53 @@ A range:
 />
 ```
 
-## Values
+Values are strings, so they go straight into a form, a store or an API. See [Values](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/values.md) for other formats.
 
-Values are strings, so they can go straight into a form, a store or an API.
+## Common props
 
-| Mode | `value` accepted | `onChange` receives |
-|---|---|---|
-| `single` | `string` (`''` = empty) | `string` |
-| `multiple` | `string[]`; a non-empty `string` counts as a one-item list | `string[]`, sorted by date |
-| `range` | `{ from, to }` or `[from, to]` | `{ from, to }` |
-| any, on clear (×) | – | `''` |
-
-The string format is set by `valueFormat`:
-
-| `valueFormat` | date | date-time |
-|---|---|---|
-| `'iso'` (default) | `'2026-10-24'`. Only `YYYY-MM-DD` is accepted; anything else reads as empty. | A UTC ISO instant with seconds and milliseconds zeroed: `'2026-10-24T10:00:00.000Z'`. Any ISO 8601 string with `Z` or an offset is accepted (one without an offset is read as UTC) and shown in `timeZone`. |
-| `'utc-midnight'` | `'2026-10-24T00:00:00.000Z'`: the calendar day at UTC midnight, never shifted by a zone. | The same as `'iso'`. |
-| a `ValueAdapter` | yours | yours |
-
-```ts
-interface ValueAdapter {
-  parse(raw: string, ctx: AdapterContext): DateTimeValue | null; // null = empty or invalid
-  format(value: DateTimeValue, ctx: AdapterContext): string; // '' when incomplete
-  /** Confirm without a change: what to emit for the stored raw string. Default: raw as-is. */
-  formatUnchanged?(raw: string, ctx: AdapterContext): string;
-}
-interface AdapterContext { type: 'date' | 'datetime'; timeZone: string }
-interface DateTimeValue { date: CalendarDate; time: Time | null }
-```
-
-For example, an adapter that stores epoch milliseconds:
-
-```ts
-import type { ValueAdapter } from 'rn-grid-date-time-picker';
-
-const epochMs: ValueAdapter = {
-  parse: (raw) => {
-    const d = new Date(Number(raw));
-    if (!raw || Number.isNaN(d.getTime())) return null;
-    return {
-      date: { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() },
-      time: { hour: d.getHours(), minute: d.getMinutes() },
-    };
-  },
-  format: ({ date, time }) =>
-    time
-      ? String(new Date(date.year, date.month - 1, date.day, time.hour, time.minute).getTime())
-      : '',
-};
-```
-
-`isoAdapter` and `utcMidnightAdapter` are exported too.
-
-**Empty and clear.** `''` (or `[]`, or `{ from: '', to: '' }`) is empty. A value the format can't read is treated as empty. The × on the field calls `onChange('')` straight away, in every mode.
-
-**Unchanged Confirm.** If the user confirms without changing a value, the stored string comes back as it came in (`'iso'`), so a value with seconds or an offset isn't rewritten. `'utc-midnight'` re-serialises the stored instant or day as UTC (`formatUnchanged`).
-
-**Time zones.** Date-time values are read and written in `timeZone` (an IANA name; default: the device zone). "Today" uses the same zone. Dates have no zone. A wall time skipped by a daylight-saving change moves forward, and a repeated one uses its first occurrence.
-
-## Props
-
-### What it picks
-
-| Prop | Type | Default | Notes |
+| Prop | Type | Default | What it does |
 |---|---|---|---|
-| `type` | `'date' \| 'datetime'` | required | |
-| `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | |
-| `value` | `PickerValue` | required | See [Values](#values). |
-| `onChange` | `(value: PickerValue, info?: ChangeInfo) => void` | required | Once per Confirm, or with `''` on clear. When a Hijri calendar can show, `info.calendarSystem` (`'gregory'` or `'hijri'`) says which calendar the date was picked in. |
-| `onBlur` | `() => void` | – | Right after every `onChange` that saves a value (Confirm, an `'instant'` edit, typing in the on-screen field), like a form field losing focus. Not on clear. |
-| `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit, and × in the field above the calendar clears the saved value. |
-| `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
-| `multiple` | `{ timeMode?: 'shared' \| 'perDate'; maxSelections?: number; joinConsecutive?: boolean }` | `timeMode: 'shared'` | `joinConsecutive` draws neighbouring days as one band. |
-| `range` | `{ layout?: 'singleField' \| 'fromTo'; allowSameDay?: boolean; minDays?: number; maxDays?: number; reselect?: 'newRange' \| 'moveNearestEnd' }` | `layout: 'singleField'`, `reselect: 'newRange'` | `allowSameDay` is for dates; date-time ranges may always start and end on one day. `minDays` / `maxDays` count calendar days with both ends included (the 1st to the 3rd is 3 days; a same-day range is 1). With `layout: 'fromTo'`, taps fill From, then To; a tap before the start while picking To moves the start. Once both are set nothing is greyed, and the next tap starts a new range (`reselect: 'moveNearestEnd'` moves the nearer end instead). Tapping the From or To field first edits that end only (after a To field tap, days before the start are greyed). |
-
-### Presentation
-
-| Prop | Type | Default | Notes |
-|---|---|---|---|
-| `presentation` | `'sheet' \| 'inline'` | `'sheet'` | |
-| `visible` | `boolean` | – | Controls the sheet; without it the picker opens itself. |
-| `onOpen` / `onClose` | `() => void` | – | `onClose` fires whenever the sheet closes: Close, the backdrop, Android back, and after Confirm. |
-| `onBeforeOpen` | `() => void` | – | Just before opening, e.g. to close your own dropdowns. |
-| `showField` | `boolean` | `true` | Hide the on-screen field (for example with `visible`). |
-| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`. See [Sheet layout](#sheet-layout). |
-| `renderSheet` | `(p: SheetRenderProps) => ReactNode` | built-in sheet | See [Presentation](#presentation). |
-
-### Value field
-
-| Prop | Type | Default | Notes |
-|---|---|---|---|
-| `label`, `placeholder`, `helperText`, `instruction` | `string` | – | `helperText` sits with the label, `instruction` under the field. |
-| `isMandatory` | `boolean` | `false` | Adds ` *` to the label. |
-| `disabled`, `readOnly` | `boolean` | `false` | Neither opens; disabled also greys the field. |
-| `allowTyping` | `boolean` | `false` | Type in the field inside the sheet. |
-| `hideCalendarOnKeyboard` | `boolean` | `false` | Hide the calendar while the keyboard is up (typing a date or a time), so the box being typed in and Confirm stay in view on small phones. Inline, only while one of the picker's own boxes has focus. |
-| `allowFieldTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
-| `allowClear` | `boolean` | `false` | Shows × when there is a value. |
-| `errorMessage` | `string` | – | Your error, shown under the field. |
-| `dateFormat` | `string` | from `locale` | `dd`, `MM` and `yyyy` with one separator, in any case: `'dd/mm/yyyy'`, `'DD.MM.YYYY'`, `'yyyy-MM-dd'`. Used for the field text, the typed segments and the placeholder. Anything else (for example `'d/m/yy'` or `'dd MMM yyyy'`) logs a warning in development and uses the locale order. |
-| `renderLabel` | `(p: LabelRenderProps) => ReactNode` | built-in label | |
-| `renderInstruction` | `(p: InstructionRenderProps) => ReactNode` | built-in text | |
-| `icons` | `Partial<Record<IconName, ComponentType<IconRenderProps> \| null>>` | built-in icons | Your own component per icon; `null` hides it. `IconName`: `'calendar' \| 'clear' \| 'chevronLeft' \| 'chevronRight' \| 'chevronDown'`. See [Icons](#icons). |
-| `iconProps` | `Partial<Record<IconName, IconOptions>>` | – | `color`, `disabledColor`, `size`, `width`, `height` per icon, for the built-in icons and yours. |
-
-### Slots and render props
-
-| Prop | Type | Notes |
-|---|---|---|
-| `header`, `bodyTop`, `bodyBottom`, `footer` | `ReactNode \| (state: PickerState) => ReactNode` | `header` replaces the title + Reset row; `footer` replaces Confirm (call `state.confirm`). |
-| `title` | `string` | Sheet title (default `strings.titleDate`). |
-| `onReset` | `() => void` | Shows a Reset button in the header. |
-| `onConfirm` | `(value: PickerValue) => void` | Only when Confirm is pressed and saves, after `onChange` and `onBlur`. Not for `'instant'` edits. |
-| `confirmDisabled` | `boolean` | Keep Confirm disabled. |
-| `renderField` | `(state: PickerState) => ReactNode` | Replaces the on-screen field with your own input: show `state.displayText`, open with `state.open`, clear with `state.clear`. See [Your own input](#your-own-input). |
-| `renderDay` | `(state: DayCellState, onPress: () => void) => ReactNode` | |
-| `renderWeekday` | `(weekday: Weekday, name: string) => ReactNode` | |
-| `renderMonthChip` | `(month: number, state: { selected; disabled }) => ReactNode` | |
-| `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
-| `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
-| `renderCalendarSwitch` | `(p: CalendarSwitchRenderProps) => ReactNode` | Replaces the calendar switch: draw `p.systems`, mark `p.selected`, call `p.onSelect(system)`. |
-| `renderTimeRow` | `(state: PickerState) => ReactNode` | Replaces the time row. Read `state.time` (ranges: `state.rangeTimes`) and change it with `state.setTime(time, end?)`, which works like the built-in row, including before a day is picked. |
-
-### Calendar
-
-| Prop | Type | Default |
-|---|---|---|
-| `firstDayOfWeek` | `1`–`7` (Monday = 1) | from `locale`'s region (Sunday for `en-US`, Monday for `en-GB`), else `7` (Sunday) |
-| `showOutsideDays` | `boolean` | `true` |
-| `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
-| `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
-| `precision` | `'day' \| 'month' \| 'year'` | `'day'`: what one pick is. With `'month'` or `'year'` the month or year grid is the last step, the saved value is the period's first day, the field shows "March 2026" or "2026", and a period can be picked when any day in it can (so `minDate` 15 Oct still allows October). The current month or year is outlined. Single date pickers only (ignored for date-time, range and multiple), always Gregorian, without typing. |
-| `initialVisibleDate` | `CalendarDate` | today: with no value, the calendar opens on this day's month without selecting it (e.g. `{ year: 2000, month: 1, day: 1 }` for a date of birth); a value's month always wins |
-| `enableMonthSwipe` | `boolean` | `true` |
-| `showToday` | `boolean` | `false` |
-| `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'`. `'dual'` shows Gregorian and Hijri tabs. With `calendarSwitch`, the calendar shown first. See [Hijri](#locale-rtl--hijri). |
-| `calendarSwitch` | `boolean \| CalendarSystem[]` | `false`. A Gregorian / Hijri / Dual switch above the calendar; a list picks which ones and their order, e.g. `['hijri', 'gregory']` |
-| `onCalendarSystemChange` | `(system: CalendarSystem) => void` | – |
-| `hijriLocale` | BCP-47 tag | `'ar-SA'`: the language a Hijri calendar is written in, whatever `locale` is (month and weekday names, the Hijri date in the field, screen-reader labels) |
-| `dualDefaultTab` | `'gregory' \| 'hijri'` | `'gregory'`: the tab a dual calendar opens on, each time it opens |
-| `locale` | BCP-47 tag | the device locale |
-| `numerals` | `'latin' \| 'arabic' \| 'locale'` | `'arabic'` (١٢٣) for a Hijri calendar and a date picked in it, in any language; `'latin'` for a Gregorian one. `'locale'` uses the language's own digits (١٢٣ for `ar-SA`, ۱۲۳ for `fa-IR`, 123 for `en-US`). Values stay 0–9 |
-| `timeZone` | IANA zone | the device zone |
-| `now` | `() => Date` | `() => new Date()` |
-
-### Time
-
-| Prop | Type | Default | Notes |
-|---|---|---|---|
-| `timeInput` | `'typed' \| 'wheel'` | `'typed'` | |
-| `timeFormat` | `'12h' \| '24h'` | from `locale`, else `'12h'` | |
-| `minuteStep` | `number` | `1` | A step that divides the hour: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. Off-step minutes are flagged on Confirm, never rounded silently. |
-| `newDayTime` | `Time` | – | Every newly picked day gets this time. It wins over a time typed before the day and over the current time. |
-
-### Limits
-
-| Prop | Type | Default | Notes |
-|---|---|---|---|
-| `minDate`, `maxDate` | `CalendarDate` | – | `{ year, month, day }`, month 1–12. |
-| `disabledWeekdays` | `Weekday[]` | `[]` | Reason `'WEEKDAY'`. |
-| `disabledDates` | `(day) => boolean` | – | Reason `'CUSTOM'`. |
-| `enabledDates` | `(day) => boolean` | – | `false` → reason `'CUSTOM'`. |
-| `timeBounds` | `(day) => TimeBounds \| null` | – | Per-day `{ min?, max? }` times. |
-| `holidays` | `string[]` | `[]` | `'YYYY-MM-DD'`; ISO strings are cut to the date. |
-| `loadHolidays` | `(year) => Promise<string[]>` | – | Called once per year the calendar shows. |
-| `showHolidays` | `boolean` | `true` | Holiday styling on day cells. |
-| `disableHolidays` | `boolean` | `false` | Holidays can't be picked (reason `'HOLIDAY'`). |
-| `getConstraints` | `(ctx: ConstraintContext) => Constraints` | – | Full control; see below. |
-
-### Look, text and events
-
-| Prop | Type | Notes |
-|---|---|---|
-| `theme` | `Partial<ThemeTokens>` | See [Theming](#theming). |
-| `styles` | `PickerStyles` | A style for any part. |
-| `strings` | `Partial<PickerStrings>` | See [Strings / i18n](#strings--i18n). |
-| `testID` | `string` | The prefix for every part; see [Testing](#testing). |
-| `onVisibleMonthChange` | `(year, month) => void` | The Gregorian month of the first day shown. |
-| `onError` | `(code: PickerErrorCode, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. |
-| `validate` | `(value: PickerValue) => string \| null \| undefined` | – | Your own check on Confirm, after the built-in ones. Return a message to show it inside the picker and save nothing; `null` to save. See [Your own validation](#your-own-validation). |
-
-## Limits & greying
-
-The limit props cover most cases:
-
-```tsx
-<DateTimePicker
-  type="date"
-  value={value}
-  onChange={setValue}
-  minDate={{ year: 2026, month: 10, day: 1 }}
-  maxDate={{ year: 2026, month: 12, day: 31 }}
-  disabledWeekdays={[6, 7]}
-  holidays={['2026-12-25']}
-  disableHolidays
-  disabledDates={(d) => d.day === 13}
-/>
-```
-
-Greyed days are drawn in the `disabledText` colour (no strike-through), aren't pressable and are read out as "unavailable". A typed value on a greyed day keeps Confirm disabled and shows `strings.errorNotAllowed`. Greying only guides the user, so keep your own validation for what is saved.
-
-`createConstraints` is the engine behind those props. Use it on its own, for example to check a value on the server side of a form:
-
-```ts
-import { createConstraints, toDateKey } from 'rn-grid-date-time-picker';
-
-const bookedDays = new Set(['2026-10-27']);
-const c = createConstraints({
-  type: 'datetime',
-  timeZone: 'Europe/Berlin',
-  now: new Date(),
-  // A bound can carry a time on its edge day.
-  min: { date: { year: 2026, month: 10, day: 24 }, time: { hour: 9, minute: 0 } },
-  disabledWeekdays: [7],
-  isDisabled: (d) => (bookedDays.has(toDateKey(d)) ? 'BOOKED' : false),
-});
-c.dayStatus({ year: 2026, month: 10, day: 25 }); // { disabled: true, reasons: ['WEEKDAY'], holiday: false }
-c.isValueAllowed({ date: { year: 2026, month: 10, day: 24 }, time: { hour: 8, minute: 30 } }); // false
-```
-
-Reasons come in this order: `OUTSIDE_RANGE`, `WEEKDAY`, `HOLIDAY`, then what `isDisabled` returns (`true` → `'CUSTOM'`, or your own reason string or list), then `CUSTOM` from `isEnabled`. In range and multiple modes the picker adds `RANGE_LENGTH` and `MAX_SELECTIONS` while the user picks.
-
-For full control, pass `getConstraints`. Its result is used as is, and the limit props arrive in `ctx.limits` so you can merge them:
-
-```tsx
-<DateTimePicker
-  type="datetime"
-  value={value}
-  onChange={setValue}
-  maxDate={lastDay}
-  getConstraints={(ctx) =>
-    createConstraints({
-      type: ctx.type,
-      timeZone: ctx.timeZone,
-      now: ctx.now,
-      maxDate: ctx.limits.maxDate,
-      // From now on, to the minute; refreshed while the sheet is open.
-      min: { date: ctx.today, time: ctx.nowTime },
-      dependsOnNow: true,
-      holidays: ctx.holidays,
-      timeBounds: () => ({ min: { hour: 9, minute: 0 }, max: { hour: 17, minute: 30 } }),
-    })
-  }
-/>
-```
-
-`ctx` also holds `today` and `nowTime` (the current day and time in `timeZone`) and `holidays` (the prop plus every year loaded so far).
-
-## Presentation
-
-`presentation="sheet"` (the default) opens a built-in bottom sheet: an RN `Modal` with a backdrop, up to 90% of the screen (see [Sheet layout](#sheet-layout)). The body scrolls between the title and Confirm when it doesn't fit, and the sheet waits for the keyboard to close before opening. `presentation="inline"` renders the same content in place, for example inside your own sheet or a filter panel.
-
-The built-in sheet doesn't add a safe-area inset. Add one with `styles.sheet`:
-
-```tsx
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const insets = useSafeAreaInsets();
-<DateTimePicker styles={{ sheet: { paddingBottom: 8 + insets.bottom } }} /* … */ />;
-```
-
-Or bring your own sheet with `renderSheet`. It is called only while the picker is open and rendered in place (no portal), so it works inside other sheets:
-
-```tsx
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import type { SheetRenderProps } from 'rn-grid-date-time-picker';
-
-const renderSheet = ({ onRequestClose, body, footer }: SheetRenderProps) => (
-  <Modal visible transparent animationType="fade" onRequestClose={onRequestClose}>
-    <Pressable style={StyleSheet.absoluteFill} onPress={onRequestClose} />
-    <View style={{ margin: 16, marginTop: 'auto', borderRadius: 16, backgroundColor: '#fff' }}>
-      {body}
-      {footer}
-    </View>
-  </Modal>
-);
-```
-
-Call `onRequestClose` for Close, the backdrop and Android back. It fires `onClose` and never `onChange`.
-
-### Sheet layout
-
-Everything inside the sheet can be set from props:
-
-| What | How |
-|---|---|
-| Title | `title="Choose a day"` (default `strings.titleDate`) |
-| The whole header | `header={(state) => <MyHeader onClose={state.close} />}`; `header={null}` hides it |
-| Confirm, or your own buttons | `footer={(state) => <MyButton disabled={!state.canConfirm} onPress={state.confirm} />}`; `footer={null}` hides it |
-| Content above / below the calendar | `bodyTop`, `bodyBottom` |
-| Styles | `styles.sheet` (panel), `sheetBackdrop`, `header`, `title`, `container`, `body`, `footer`, `confirmButton`, `confirmText` |
-| Placeholders | `sheet.fieldPlaceholder` for the field above the calendar; `strings.placeholderDay` / `placeholderMonth` / `placeholderYear` / `placeholderHour` / `placeholderHour24` / `placeholderMinute` for the typed segments and time boxes (and the empty field) |
-| Size and scrolling | `sheet` (below) |
-
-`sheet` takes:
-
-| Option | Default | |
-|---|---|---|
-| `height` | as tall as the content | A fixed height, in points or as a percentage of the screen (`'60%'`). The footer then sits at the bottom. |
-| `maxHeight` | `'90%'` | The most the sheet grows to. Beyond it the body scrolls. |
-| `keyboardMaxHeight` | `maxHeight` | The most the sheet grows to while the keyboard is up. A percentage is of the room above the keyboard, so the default `'90%'` leaves some backdrop above the sheet. |
-| `fixedHeader` | `true` | The header stays put while the body scrolls. `false` scrolls it with the body. |
-| `fixedFooter` | `true` | Confirm stays pinned below the body. `false` scrolls it at the end of the body. `renderSheet` then gets `footer: null`. |
-| `showField` | `true` | The field above the calendar, which shows the picked date and takes typing with `allowTyping`. When it's hidden, its errors still show above the calendar. Applies inline too. |
-| `fieldPlaceholder` | from `dateFormat` | Placeholder of that field when it shows text. |
-| `fieldIcon` | `false` | The calendar icon at the end of that field, as on the on-screen field. |
-
-```tsx
-<DateTimePicker
-  title="Choose a day"
-  header={(state) => <MyHeader title="Choose a day" onClose={state.close} />}
-  sheet={{ height: '70%', fixedHeader: true, fixedFooter: false, showField: false }}
-  styles={{ sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24 } }}
-  strings={{ placeholderHour: 'HH', placeholderMinute: 'MM' }}
-  …
-/>
-```
-
-`height` and `maxHeight` size the built-in sheet only; with `renderSheet`, your sheet sets its own size. `fixedHeader` and `fixedFooter` apply to both.
-
-## Field and typing
-
-The on-screen field shows the saved value (never the draft) in `dateFormat`, with an optional ×, label, helper text, instruction and error. Tap it, or its calendar icon, to open the picker.
-
-With `allowTyping`, the field inside the sheet takes the date and time as segments (day, month, year, hour, minute, AM/PM) in the locale's order. Each segment moves on when it's full, Backspace on an empty segment goes back, and leaving a segment pads it. Typing and the calendar edit the same draft. With `hideCalendarOnKeyboard`, the calendar folds away while the keyboard is up so the field and Confirm stay visible. On iOS every box's number pad has a Done button (`strings.done`) that closes the keyboard. Errors (incomplete, invalid date, year outside `yearRange`) show once the user leaves the field. The date and the time each stay on one line; when the field is too narrow (large text, a small phone) the time moves to a second line. In 12-hour mode a typed time reads as AM until AM/PM is switched, as in the time row. A date typed with the time still empty takes the time the user already typed in the time row (or `newDayTime`, or the current time), like a tapped day. Fast input (a hardware keyboard, autofill) is handled character by character.
-
-`allowFieldTyping` makes the on-screen field typeable too (single mode). A complete, allowed value is saved once typing pauses: when focus leaves the field, or when its last box fills. `onChange` doesn't see values on the way (typing 09:30 never saves 09:03); correcting a box saves again when it's full or left.
-
-## Time
-
-Date-time pickers show a time row under the calendar:
-
-- **Typed** (default): `[hh] : [mm] [AM | PM]`, or `[HH] : [mm]` in 24-hour. Two hour digits jump to the minutes. Empty minutes count as `00`. A time is saved when focus leaves a box, and Confirm also saves a time still being typed. The AM/PM side that can't hold an allowed time is disabled.
-- **Wheel** (`timeInput="wheel"`): hour, minute (by `minuteStep`) and AM/PM columns on native scroll views, with momentum and snapping. Rows outside the day's limits are dimmed and can't be stopped on. Confirm waits until the wheel settles.
-
-**Time checks happen on Confirm, not while typing.** Nothing is flagged as the user types, and Confirm stays enabled. Pressing it with an unfinished, impossible, off-step or out-of-limits time shows the error under the time row, calls `onError`, and saves nothing. Editing the time hides the error again until the next Confirm. With `commitMode="instant"` there's no Confirm, so errors show as they happen, and a time with a problem is never saved.
-
-A newly picked day on an empty date-time starts at the current time, rounded up to the next minute step. `newDayTime` replaces that. An existing time is kept when another day is picked. Range mode has start and end rows. Multiple mode has one shared row, or (with `timeMode: 'perDate'`) a row for the day last tapped.
-
-## Locale, RTL & Hijri
-
-- **`locale`** (default: the device locale from `Intl.DateTimeFormat().resolvedOptions().locale`, else `'en-US'`) sets month and weekday names, the default `dateFormat` (from `Intl`: `MM/dd/yyyy` for `en-US`, `dd/MM/yyyy` for `en-GB`, `dd.MM.yyyy` for `de-DE`; a separator other than `/`, `-` or `.` becomes `/`; fallback `yyyy-MM-dd`) the default `timeFormat` (the locale's hour cycle, else `'12h'`) and the default `firstDayOfWeek` (the region's first day from CLDR week data: Sunday for `en-US`, Monday for `en-GB` and `de-DE`, Saturday for `ar-EG`; Sunday when the tag has no region).
-- **RTL**: layouts use start/end, so they flip with `I18nManager`. The chevrons point the right way, and swipe directions are mirrored. Typed dates and times keep their left-to-right digit order.
-- **Digits**: a Hijri calendar draws numbers in Arabic digits in any language: ١٤٤٨ in Arabic, English or French. A Gregorian calendar shows 0–9 in any language, so a dual calendar shows 27 in its Gregorian tab and ١٦ in its Hijri tab. The field and the time row use the digits of the calendar the date was picked in: a Gregorian pick reads 26/10/2026, a Hijri one ١٥ جمادى الأولى ١٤٤٨ هـ. `numerals` sets both calendars at once: `'latin'` for 0–9 everywhere, `'arabic'` for ١٢٣ everywhere, or `'locale'` for the language's own digits (`hijriLocale` for the Hijri calendar) as `Intl` writes them (`ar-SA` gives ١٢٣, `fa-IR` gives ۱۲۳, and a language that writes 0–9, such as `en-US` or `ar-AE`, keeps them). Values passed to `onChange` stay 0–9. Typed digits are read in any script, so ٢٥ typed on an Arabic number pad is 25 either way. Your own `renderDay`, `renderYearCell` and `renderMonthCell` get plain numbers, so they choose their digits.
-- **Hijri**: `calendarSystem="hijri"` lays out Hijri (Umm al-Qura) months, years and day numbers, written in Arabic whatever the app's `locale`: Arabic month and weekday names (جمادى الأولى, الأحد), Arabic digits, and the Hijri date in the field. `hijriLocale` changes that language. The switch, tab and button labels still come from `strings`. `"dual"` shows Gregorian and Hijri as two tabs, one calendar at a time; it opens on `dualDefaultTab` (Gregorian by default) and the user taps the other tab to switch. Values stay Gregorian either way.
-  - **A date belongs to the calendar it was picked in.** It shows selected only there, and the field writes it in that calendar: "21/10/2026" when picked in Gregorian, "٩ جمادى الأولى ١٤٤٨ هـ" when picked in Hijri. A tap in the other calendar starts the selection over, so a range or a set of dates is always picked in one calendar. `onChange` gets the Gregorian value plus `{ calendarSystem: 'gregory' | 'hijri' }`. A value passed in from outside counts as picked in the calendar the picker opens on, so to show a stored value back the way it was picked, store `info.calendarSystem` with it and pass it as `dualDefaultTab` (dual) or `calendarSystem`. Typed segments stay Gregorian `dateFormat` in either calendar, and typing keeps the calendar a selection was picked in.
-  - **The switch**: `calendarSwitch` adds a Gregorian / Hijri / Dual switch above the calendar (`true` for all three, or a list such as `['hijri', 'gregory']`). `calendarSystem` is the one it starts on, and `onCalendarSystemChange` reports each change. Labels come from `strings.calendarGregorian`, `calendarHijri` and `calendarDual` (screen readers name the group `a11yCalendarSystem`); the dual tabs use the first two. Each part has its own `styles` key, and `renderCalendarSwitch` replaces it. It isn't shown for month and year picks.
-
-  ```tsx
-  <DateTimePicker
-    type="date"
-    value={value}
-    onChange={(v, info) => save(v, info?.calendarSystem)}
-    locale="ar-SA"
-    calendarSwitch
-    dualDefaultTab="hijri"
-    strings={{ calendarGregorian: 'ميلادي', calendarHijri: 'هجري', calendarDual: 'كلاهما' }}
-    styles={{
-      calendarSwitchSegmentSelected: { backgroundColor: '#8B6B2E' },
-      dualTabSelected: { borderBottomColor: '#8B6B2E' },
-    }}
-  />
-  ```
-
-  Hijri dates come from the platform's `Intl` (`islamic-umalqura`). Some JS engines and devices ship without that calendar, for example some Hermes / Android builds. The picker checks once, and if it isn't available it falls back to `'gregory'`. The default is always `'gregory'`, whatever the locale.
-
-## Theming
-
-`theme` overrides any token. A given `accent` also becomes `borderFocused`.
-
-| Token | Default | Used for |
-|---|---|---|
-| `accent` | `#2563EB` | Selection, links, focused borders, Confirm |
-| `onAccent` | `#FFFFFF` | Text on the accent |
-| `text` | `#111827` | Values and day numbers |
-| `heading` | `#111827` | Year title, time label and boxes |
-| `mutedText` | `#6B7280` | Weekdays, helper text, chevrons, × |
-| `outsideText` | `mutedText` | Days of the months before and after (still pickable); darker than `disabledText` |
-| `placeholder` | `#9CA3AF` | Placeholders |
-| `border` | `#D1D5DB` | Field border |
-| `inputBorder` | `#D1D5DB` | Time box border |
-| `separator` | `#E5E7EB` | Line above the time row |
-| `toggleTrack` | `#F3F4F6` | Behind AM / PM |
-| `borderFocused` | `#2563EB` | Focused field / box |
-| `error` | `#DC2626` | Errors, mandatory mark |
-| `background` | `#FFFFFF` | Field, sheet |
-| `surface` | `#F9FAFB` | Wheel highlight |
-| `disabledBackground` | `#F3F4F6` | Disabled field |
-| `disabledText` | `#9CA3AF` | Disabled text, greyed days |
-| `rangeFill` | `#DBEAFE` | Range band |
-| `holiday` | `#DC2626` | Holiday days |
-| `fontFamily` | `undefined` (system font) | One family for all text, at weight 400 / 500 / 600 as each part needs |
-| `fontRegular`, `fontMedium`, `fontSemiBold` | `undefined` | A family per weight, for fonts shipped as one file per weight; each one set wins over `fontFamily`. `INTER_FONTS` sets all four to Inter, `SYSTEM_FONTS` clears them |
-| `fontSizeSmall` | `12` | Weekday names, helper / error text, AM / PM in the field |
-| `fontSizeMedium` | `14` | Field text and label, day numbers, month chips, cells, Today, time boxes, AM / PM toggle |
-| `fontSizeLarge` | `16` | Sheet title, Confirm, year title, time label, wheel |
-| `radius` | `8` | Field and button corners (the sheet uses `radius * 2`) |
-| `fieldHeight` | `44` | Field minimum height |
-| `touchTarget` | `44` | Minimum button size |
-
-`DEFAULT_TOKENS` is exported.
-
-### Fonts
-
-The picker uses the system font by default (San Francisco on iOS, Roboto on Android) at weights 400 / 500 / 600, so there's nothing to load.
-
-The picker was designed with **Inter**. To use it, load its static files under these names and pass `INTER_FONTS`. The package doesn't ship or load font files:
-
-```tsx
-// Expo
-import { useFonts } from 'expo-font';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
-import { INTER_FONTS } from 'rn-grid-date-time-picker';
-
-const [loaded] = useFonts({
-  'Inter-Regular': Inter_400Regular,
-  'Inter-Medium': Inter_500Medium,
-  'Inter-SemiBold': Inter_600SemiBold,
-});
-
-<DateTimePicker theme={{ ...INTER_FONTS }} … />
-```
-
-In a bare app, add `Inter-Regular.ttf`, `Inter-Medium.ttf` and `Inter-SemiBold.ttf` to your fonts folder (`react-native.config.js` → `assets`) and run `npx react-native-asset`. If a family isn't loaded, iOS and Android fall back to the system font, but every text is drawn at the regular weight.
-
-Every text in the picker takes its family and size from these tokens, so one `theme` sets the font for all of it:
-
-```tsx
-// One font file with several weights (or the system font name):
-<DateTimePicker theme={{ fontFamily: 'Inter', fontSizeMedium: 15 }} … />
-
-// One file per weight, as loaded with expo-font or react-native assets:
-<DateTimePicker
-  theme={{
-    fontRegular: 'Inter-Regular',
-    fontMedium: 'Inter-Medium',
-    fontSemiBold: 'Inter-SemiBold',
-  }}
-  …
-/>
-```
-
-To change a single part, pass a text style through `styles` (for example `styles={{ dayText: { fontSize: 13 } }}`).
-
-`styles` takes a style for any of these keys:
-
-- **Containers**: `container`, `sheet`, `sheetBackdrop`, `header`, `title`, `resetButton`, `resetText`, `body`, `footer`, `confirmButton`, `confirmText`.
-- **Field**: `field`, `fieldFocused`, `fieldError`, `fieldDisabled`, `fieldText`, `fieldTextDisabled` (the value while disabled; the placeholder keeps its colour), `fieldPlaceholder`, `fieldSegment`, `fieldSegmentFocused`, `fieldSeparator`, `fieldPeriod`, `fieldPeriodSelected`, `fieldPeriodText`, `fieldIcon`, `clearIcon`, `label`, `mandatoryMark`, `helperText`, `instructionText`, `errorText`, `validationText`.
-- **Calendar switch and dual tabs**: `calendarSwitch`, `calendarSwitchSegment`, `calendarSwitchSegmentSelected`, `calendarSwitchText`, `calendarSwitchTextSelected`, `dualTabs`, `dualTab`, `dualTabSelected`, `dualTabText`, `dualTabTextSelected`.
-- **Calendar header**: `calendarHeader`, `navArrow`, `navArrowDisabled`, `yearButton`, `yearButtonText`, `monthChipRow`, `monthChip`, `monthChipText`, `monthChipSelected`, `monthChipDisabled`.
-- **Weekdays and days**: `weekdayRow`, `weekdayText`, `day`, `dayText`, `dayPressed`, `today`, `todayText`, `selected`, `selectedText`, `rangeStart`, `rangeMiddle`, `rangeEnd`, `rangeFill`, `outside`, `outsideText`, `disabled`, `disabledText`, `holiday`, `holidayText`, `daySubLabel` (no longer drawn; kept so existing styles compile).
-- **Grids**: `yearGrid`, `yearCell`, `yearCellSelected`, `yearCellDisabled`, `yearCellText`, `yearCellCurrent`, `monthGrid`, `monthCell`, `monthCellSelected`, `monthCellDisabled`, `monthCellText`, `monthCellCurrent` (the outlined current year / month in a `precision` pick).
-- **Time**: `timeRow`, `timeLabel`, `timeBox`, `timeBoxFocused`, `timeBoxError`, `timeBoxText`, `timeColon`, `ampmToggle`, `ampmOption`, `ampmOptionSelected`, `ampmOptionDisabled`, `ampmOptionText`, `wheel`, `wheelRow`, `wheelRowSelected`, `wheelRowDisabled` (the row), `wheelText`, `wheelTextSelected`, `wheelTextDisabled` (its text), `wheelHighlight`.
-- **Other**: `todayButton`, `todayButtonText`, `emptyState`, `emptyStateText`.
-
-## Icons
-
-The built-in icons are drawn with plain Views, so there's nothing native to install. Each icon gets `{ color, size, width, height }`, where `size` is the smaller of `width` and `height`. By default:
-
-| Icon | Where | Colour | Size |
-|---|---|---|---|
-| `calendar` | Field | `accent`, or `disabledText` when the field is disabled | 18 |
-| `clear` | Field (with `allowClear`) | `mutedText` | 12 |
-| `chevronLeft`, `chevronRight` | Calendar header | `mutedText` | 24 |
-| `chevronDown` | Next to the year title | `accent` | 24 |
-
-Change the colour or size with `iconProps`, or swap the icon with `icons`. The two work together:
-
-```tsx
-// Your app's own SVG, e.g. with react-native-svg-transformer:
-import CalendarSvg from './assets/icons/calendar.svg';
-
-<DateTimePicker
-  iconProps={{
-    calendar: { color: '#2563EB', disabledColor: '#9CA3AF', size: 20 },
-    clear: { color: '#2563EB', width: 12, height: 12 },
-  }}
-  icons={{
-    // An SVG component that takes width / height; pass the colour on as it expects.
-    calendar: ({ color, width, height }) => (
-      <CalendarSvg width={width} height={height} stroke={color} />
-    ),
-    chevronDown: null, // hide the caret next to the year
-  }}
-  …
-/>
-```
-
-The built-in `CalendarIcon`, `ClearIcon`, `ChevronLeftIcon`, `ChevronRightIcon` and `ChevronDownIcon` are exported, so you can use them elsewhere in your app.
-
-**The clear (×) icon** shows only when `allowClear` is set, the field has a value, and the field is neither disabled nor read-only. `icons={{ clear: null }}` hides it even with `allowClear`. Pressing it calls `onChange('')` right away, with no Confirm, so there's no separate clear handler to pass: your `onChange` receives `''`.
-
-## Your own validation
-
-Every built-in message can be reworded through `strings` (`errorNotAllowed`, `errorTimeNotAllowed`, `errorIncomplete`, `errorMinuteStep(step)`, `errorRangeTooLong(n)` and the rest). For rules only your app knows, pass `validate`. It runs when Confirm is pressed, after the built-in checks pass, with the value about to be saved:
-
-```tsx
-<DateTimePicker
-  type="datetime"
-  value={value}
-  onChange={setValue}
-  validate={(v) => {
-    const at = DateTime.fromISO(v as string);
-    if (at < DateTime.now().plus({ minutes: 5 })) return 'Pick a time at least 5 minutes from now';
-    if (at > DateTime.now().plus({ days: 31 })) return 'Pick a time within the next 31 days';
-    return null;
-  }}
-  styles={{ validationText: { textAlign: 'center' } }}
-/>
-```
-
-A message keeps the sheet open, saves nothing, calls `onError('VALIDATION', value)`, and shows above the footer (`testID` `${testID}-validation-error`). It is styled by `errorText`, then `validationText`, and disappears as soon as the selection changes. With `commitMode="instant"`, `validate` runs before each save. To stop days or times from being picked at all, use the limit props (`minDate`, `timeBounds`, `disabledDates` …); `validate` is for rules you'd rather explain than grey out.
-
-## Your own input
-
-`renderField` swaps the on-screen field for your own input, with your own icons. Tapping it opens the picker's sheet (or the sheet you give `renderSheet`):
-
-```tsx
-<DateTimePicker
-  type="date"
-  value={value}
-  onChange={setValue}
-  dateFormat="dd/mm/yyyy"
-  renderField={(state) => (
-    <MyInput
-      label="Due date"
-      value={state.displayText} // '21/10/2026', or '' when empty
-      placeholder="DD/MM/YYYY"
-      disabled={state.disabled}
-      onPress={state.open}
-      rightIcon={<MyCalendarIcon />}
-      onClear={state.displayText ? state.clear : undefined}
-    />
-  )}
-/>
-```
-
-`state.clear` is the same as the built-in ×: it calls your `onChange('')`. Calling `setValue('')` yourself does the same thing.
-
-You can also hide the field and open the picker from anywhere, with `showField={false}`, `visible` and `onClose`:
-
-```tsx
-<MyInput onPress={() => setOpen(true)} value={value} />
-<DateTimePicker showField={false} visible={open} onClose={() => setOpen(false)} value={value} onChange={setValue} type="date" />
-```
-
-## Strings / i18n
-
-Every visible and spoken text is in `strings`, and the defaults are English (`DEFAULT_STRINGS`). Pass any subset. `rangeSeparator` (default `' – '`) joins the two ends of a range in the field text, e.g. `' ↔ '`. A few entries are functions:
-
-```ts
-errorYearOutOfRange: ({ first, last }) => string;
-errorMinuteStep: (step) => string;
-errorRangeTooShort: (days) => string;
-errorRangeTooLong: (days) => string;
-```
-
-With i18next:
-
-```tsx
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import DateTimePicker, {
-  type DateTimePickerProps,
-  type PickerStrings,
-} from 'rn-grid-date-time-picker';
-
-function LocalizedPicker(props: Omit<DateTimePickerProps, 'strings' | 'locale'>) {
-  const { t, i18n } = useTranslation();
-  const strings = useMemo<Partial<PickerStrings>>(
-    () => ({
-      titleDate: t('picker.titleDate'),
-      confirm: t('picker.confirm'),
-      today: t('picker.today'),
-      errorNotAllowed: t('picker.errors.notAllowed'),
-      errorMinuteStep: (step) => t('picker.errors.minuteStep', { step }),
-      errorYearOutOfRange: ({ first, last }) => t('picker.errors.yearRange', { first, last }),
-      a11yOpen: t('picker.a11y.open'),
-    }),
-    [t]
-  );
-  return <DateTimePicker {...props} strings={strings} locale={i18n.language} />;
-}
-```
-
-Memoise `strings` (and `theme`) so they aren't rebuilt on every render.
-
-## Accessibility
-
-- Every control has a role, a label and state. Day cells are read as full dates (in the Hijri calendar, as Hijri dates in `hijriLocale`) with "today", "holiday", "start of range" or "end of range"; selected and unavailable come from their state, so they aren't said twice. Typed segments include the field's label ("From, Day"). AM/PM in the time row and the calendar switch are radio buttons; the dual tabs are tabs. Month changes are announced.
-- Day cells reach a 48 pt touch target. Text grows with the system font size up to 1.4×, then stops so fixed-size parts don't clip.
-- Reduce motion is respected: scrolls and snaps jump instead of animating.
-- Errors are announced: a live region on Android, an announcement on iOS. The wheel supports increment / decrement actions.
-
-## Testing
-
-Every part gets a testID built from the `testID` prop (`dp` here):
-
-| testID | Part |
-|---|---|
-| `dp-trigger-field` | The on-screen field (press to open) |
-| `dp-trigger-clear`, `dp-trigger-icon`, `dp-trigger-label`, `dp-trigger-error`, `dp-trigger-instruction` | Its ×, calendar icon, label, error and instruction |
-| `dp-trigger-segment-{day,month,year,hour,minute,period}` | Its typed segments (`allowFieldTyping`) |
-| `dp-sheet`, `dp-sheet-backdrop` | The sheet panel and its backdrop (the `testID` passed to `renderSheet`) |
-| `dp-inline` | The inline container |
-| `dp-scroll` | The sheet's scrolling body |
-| `dp-reset`, `dp-confirm` | Reset and Confirm |
-| `dp-value`, `dp-value-field`, `dp-value-segment-…`, `dp-value-clear`, `dp-value-error` | The field inside the sheet |
-| `dp-from`, `dp-to`, `dp-from-wrap`, `dp-to-wrap`, `dp-from-segment-…`, `dp-range-error` | From / To range fields |
-| `dp-calendar`, `dp-grid` | The calendar and its day grid |
-| `dp-prev`, `dp-next`, `dp-prev-left` / `-right`, `dp-next-left` / `-right`, `dp-title` | Header arrows (the suffix tells which way the chevron points) and the year title |
-| `dp-calendar-switch`, `dp-calendar-switch-{gregory,hijri,dual}` | The calendar switch and its segments |
-| `dp-dual-tabs`, `dp-dual-tabs-{gregory,hijri}` | A dual calendar's tabs |
-| `dp-chip-{1–12}` | Month chips |
-| `dp-day-{y}-{m}-{d}` | Day cells, e.g. `dp-day-2026-10-24` (no zero padding) |
-| `dp-year-{y}`, `dp-month-{m}` | Year and month grid cells |
-| `dp-today`, `dp-empty` | The Today button and the empty state |
-| `dp-time`, `dp-time-from`, `dp-time-to` | Time rows (one row, or start / end) |
-| `dp-time-hour`, `dp-time-minute`, `dp-time-am`, `dp-time-pm` | Typed time boxes and AM / PM |
-| `dp-time-wheel`, `dp-time-wheel-{hour,minute,period}`, `…-scroll` | Wheel columns and their scroll views |
-
-For Jest, no transform changes are needed: `main` points to the CommonJS build. To pin the clock and zone in tests, pass `now` and `timeZone`.
-
-## Platform support and known limits
-
-- **iOS and Android** are the supported targets. The package is pure JS, so it runs in Expo Go.
-- **Web** is untested.
-- The keyboard's **Done button** is iOS-only: React Native adds it above each box's number pad (`returnKeyType="done"`). Android's number pad has its own.
-- **Hijri** needs `Intl` support for `islamic-umalqura` and falls back to Gregorian without it (see above).
-- The built-in sheet doesn't add a safe-area inset; use `styles.sheet.paddingBottom` or `renderSheet`.
-- A `minuteStep` that doesn't divide 60, an unknown `timeZone`, or a custom `valueFormat.parse` that throws falls back (step 1, the device zone, an empty value) with a warning in development. Errors thrown by your own callbacks (`disabledDates`, `enabledDates`, `timeBounds`, `getConstraints`) are not caught.
-- Only one runtime dependency: `luxon`. Exported types don't reference Luxon, so you don't need `@types/luxon`.
+| `type` | `'date' \| 'datetime'` | required | A date, or a date and time |
+| `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | One date, several, or a range |
+| `value` / `onChange` | `PickerValue` | required | The saved value; `onChange` fires on Confirm |
+| `presentation` | `'sheet' \| 'inline'` | `'sheet'` | A bottom sheet, or in place on the page |
+| `label`, `placeholder` | `string` | – | The field's label and placeholder |
+| `allowTyping` | `boolean` | `false` | Type the date and time in the sheet |
+| `allowClear` | `boolean` | `false` | An × that clears the value |
+| `minDate`, `maxDate` | `{ year, month, day }` | – | The first and last days that can be picked |
+| `disabledWeekdays` | `Weekday[]` | `[]` | Weekdays that can't be picked, e.g. `[6, 7]` |
+| `holidays`, `loadHolidays` | `string[]`, `(year) => Promise<string[]>` | – | Holidays to mark, or to block with `disableHolidays` |
+| `timeInput` | `'typed' \| 'wheel'` | `'typed'` | Typed time boxes or a scrolling wheel |
+| `timeFormat` | `'12h' \| '24h'` | from `locale` | The clock |
+| `minuteStep` | `number` | `1` | Minutes in steps, e.g. `15` |
+| `locale` | BCP-47 tag | the device's | Month and weekday names, date order, first day of the week |
+| `calendarSystem` | `'gregory' \| 'dual' \| 'hijri'` | `'gregory'` | The calendar |
+| `theme` | `Partial<ThemeTokens>` | – | Colours, fonts, corners and sizes |
+| `strings` | `Partial<PickerStrings>` | English | Every visible and spoken text |
+
+Every other prop is in [Props](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/props.md).
+
+## How do I…
+
+- **Grey out past days, weekends or booked days?** [Limits and validation](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/limits.md)
+- **Check a value with my own rule on Confirm?** [Your own validation](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/limits.md#your-own-validation)
+- **Store epoch milliseconds or UTC midnight?** [Values](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/values.md)
+- **Change the sheet, or show the picker inline?** [Sheet, field and time](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/presentation.md)
+- **Use my own input or my own sheet?** [Your own input](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/presentation.md#your-own-input)
+- **Pick only a month and year?** `precision="month"` in [Props](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/props.md#calendar)
+- **Match my app's colours, fonts and icons?** [Theming, fonts and icons](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/theming.md)
+- **Translate the texts?** [Strings and i18n](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/localization.md#strings--i18n)
+- **Find the testIDs for my tests?** [Accessibility and testing](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/testing.md)
+
+All pages: [docs](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/README.md).
+
+## Platform support
+
+- **iOS and Android**, in Expo Go and bare React Native apps. Web is untested.
+- **Hijri** needs the platform's `Intl` support for the Islamic calendar. Some Hermes builds on Android lack it, and the picker then falls back to Gregorian.
+- The built-in sheet doesn't add a safe-area inset. Add one with `styles.sheet`, as shown in [Sheet, field and time](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/presentation.md).
+
+Other known limits are listed in the [docs](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/README.md#platform-support-and-known-limits).
 
 ## Contributing
 

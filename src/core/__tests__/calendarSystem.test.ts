@@ -49,6 +49,11 @@ describe('Hijri (Umm al-Qura via Intl)', () => {
       year: 1447,
       month: 12,
     });
+    // Before 1 AH (a yearRange that starts before 623).
+    expect(addHijriMonths({ year: 0, month: 1 }, -1)).toEqual({
+      year: -1,
+      month: 12,
+    });
   });
 
   it('names months in the language, English otherwise', () => {

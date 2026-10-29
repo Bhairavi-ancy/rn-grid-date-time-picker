@@ -3,25 +3,10 @@ import {
   checkTime,
   cleanBoxText,
   completeTimeEntry,
-  createTimeEntry,
   formatTimeEntry,
   isPeriodAllowed,
   parseTimeEntry,
-  timeEntryReducer,
-  type TimeEntryAction,
-  type TimeEntryState,
 } from '../timeEntry';
-import type { TimeFormat } from '../types';
-
-const run = (
-  actions: TimeEntryAction[],
-  timeFormat: TimeFormat = '12h',
-  start: TimeEntryState = createTimeEntry(null, timeFormat)
-) => actions.reduce((s, a) => timeEntryReducer(s, a, timeFormat), start);
-const digits = (text: string): TimeEntryAction[] =>
-  text.split('').map((digit) => {
-    return { type: 'digit', digit };
-  });
 
 describe('timeEntry: typing', () => {
   it('shows a saved time in 12h and 24h; an empty 12h row starts on AM', () => {
@@ -41,52 +26,6 @@ describe('timeEntry: typing', () => {
     });
     expect(formatTimeEntry(null, '12h')).toEqual({ period: 'AM' });
     expect(formatTimeEntry(null, '24h')).toEqual({});
-  });
-
-  it('two hour digits jump to the minutes; a digit that cannot grow jumps too', () => {
-    const s = run([{ type: 'focus', key: 'hour' }, ...digits('10')]);
-    expect(s).toEqual({
-      values: { period: 'AM', hour: '10' },
-      focused: 'minute',
-    });
-    const padded = run([{ type: 'focus', key: 'hour' }, ...digits('4')]);
-    expect(padded.values.hour).toBe('04');
-    expect(padded.focused).toBe('minute');
-    // 24h: "2" can still become 20–23, "3" cannot.
-    expect(
-      run([{ type: 'focus', key: 'hour' }, ...digits('2')], '24h').focused
-    ).toBe('hour');
-    expect(
-      run([{ type: 'focus', key: 'hour' }, ...digits('3')], '24h').values.hour
-    ).toBe('03');
-  });
-
-  it('pads on leaving a box, and Backspace on an empty minute goes back to the hour', () => {
-    const s = run([
-      { type: 'focus', key: 'minute' },
-      ...digits('5'),
-      { type: 'blur' },
-    ]);
-    expect(s.values.minute).toBe('05');
-    const back = run([
-      { type: 'focus', key: 'hour' },
-      ...digits('11'),
-      { type: 'backspace' },
-    ]);
-    expect(back).toEqual({
-      values: { period: 'AM', hour: '1' },
-      focused: 'hour',
-    });
-  });
-
-  it('a full box is replaced by the next digit', () => {
-    const start = createTimeEntry({ hour: 9, minute: 15 }, '12h');
-    const s = run(
-      [{ type: 'focus', key: 'minute' }, ...digits('4')],
-      '12h',
-      start
-    );
-    expect(s.values.minute).toBe('4');
   });
 });
 

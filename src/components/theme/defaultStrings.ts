@@ -46,6 +46,8 @@ export interface PickerStrings {
   a11yCalendarSystem: string;
   a11yClear: string;
   a11yOpen: string;
+  /** The built-in sheet's backdrop, which closes it. */
+  a11yClose: string;
   a11yDay: string;
   a11yMonth: string;
   a11yYear: string;
@@ -92,7 +94,7 @@ export const DEFAULT_STRINGS: PickerStrings = {
   errorNotAllowed: "This date isn't available",
   errorTimeNotAllowed: "This time isn't available",
   errorMinuteStep: (step) => `Choose a minute in steps of ${step}`,
-  errorRangeOrder: 'The end must be after the start',
+  errorRangeOrder: 'The end date must be greater than the start date',
   errorRangeTooShort: (n) => `Choose a range of at least ${n} days`,
   errorRangeTooLong: (n) => `Choose a range of at most ${n} days`,
   nothingSelectable: 'No dates are available',
@@ -102,6 +104,7 @@ export const DEFAULT_STRINGS: PickerStrings = {
   a11yCalendarSystem: 'Calendar',
   a11yClear: 'Clear date',
   a11yOpen: 'Open date picker',
+  a11yClose: 'Close',
   a11yDay: 'Day',
   a11yMonth: 'Month',
   a11yYear: 'Year',

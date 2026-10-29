@@ -153,14 +153,6 @@ export const inputDigit = (
   return { next, advance: cannotGrow };
 };
 
-/** 'a' / 'A' → AM, 'p' / 'P' → PM, anything else → null. */
-export const inputPeriod = (char: string): Period | null => {
-  const c = char.toLowerCase();
-  if (c === 'a') return 'AM';
-  if (c === 'p') return 'PM';
-  return null;
-};
-
 /** Pads a one-digit entry when leaving the segment ("7" → "07"); the year is never padded. */
 export const padSegment = (text: string, spec: SegmentSpec): string => {
   if (

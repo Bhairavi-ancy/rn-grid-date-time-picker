@@ -341,6 +341,111 @@ describe('DateTimePicker: inline and instant', () => {
   });
 });
 
+describe('DateTimePicker: instant saves each edit once', () => {
+  const now = () => new Date(Date.UTC(2026, 9, 21, 6, 30));
+  const tapDay = (tree: ReactTestRenderer, d: number) =>
+    act(() =>
+      tree.root
+        .findAll(
+          (n) =>
+            n.props.testID === `dp-day-2026-10-${d}` &&
+            n.props.accessibilityRole === 'button' &&
+            typeof n.type !== 'string'
+        )[0]
+        .props.onPress()
+    );
+  const instant: Partial<DateTimePickerProps> = {
+    presentation: 'inline',
+    commitMode: 'instant',
+    now,
+  };
+
+  it('a tap saves once while the parent has not stored the value yet', () => {
+    const onChange = jest.fn();
+    const onBlur = jest.fn();
+    const tree = mount({ ...instant, onChange, onBlur });
+    tapDay(tree, 20);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-20T00:00:00.000Z');
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it('parent re-renders with inline limit props save nothing again', () => {
+    const onChange = jest.fn();
+    const props = { ...base, ...instant, onChange };
+    const tree = mount({ ...instant, onChange, disabledDates: () => false });
+    tapDay(tree, 20);
+    for (let i = 0; i < 2; i++)
+      act(() =>
+        tree.update(<DateTimePicker {...props} disabledDates={() => false} />)
+      );
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('typing in the field saves once, when typing there is done', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      ...instant,
+      value: '2026-10-15T00:00:00.000Z',
+      onChange,
+    });
+    typeSegment(tree, 'dp-value', 'day', '1');
+    typeSegment(tree, 'dp-value', 'day', '12');
+    expect(onChange).not.toHaveBeenCalled();
+    // Two digits move focus on to the month; leaving it ends the typing.
+    const month = tree.root
+      .findAllByType(TextInput)
+      .find((i) => i.props.testID === 'dp-value-segment-month')!;
+    act(() => month.props.onBlur());
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-12T00:00:00.000Z');
+  });
+
+  it('closing the sheet while still typing saves what was typed', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      commitMode: 'instant',
+      now,
+      value: '2026-10-15T00:00:00.000Z',
+      onChange,
+    });
+    openSheet(tree);
+    // Focus moves on to the month and stays in the field.
+    typeSegment(tree, 'dp-value', 'day', '20');
+    expect(onChange).not.toHaveBeenCalled();
+    act(() => find(tree, 'dp-sheet').props.onRequestClose());
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-20T00:00:00.000Z');
+  });
+
+  it("a tap saves even while the picker's own field has focus", () => {
+    const onChange = jest.fn();
+    const tree = mount({ ...instant, onChange });
+    const day = tree.root
+      .findAllByType(TextInput)
+      .find((i) => i.props.testID === 'dp-value-segment-day')!;
+    act(() => day.props.onFocus());
+    tapDay(tree, 20);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('2026-10-20T00:00:00.000Z');
+  });
+
+  it('× with nothing saved saves nothing (an empty list or range)', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      ...instant,
+      mode: 'multiple',
+      value: [],
+      allowClear: true,
+      onChange,
+    });
+    tapDay(tree, 20);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    press(tree, 'dp-value-clear');
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('DateTimePicker: limits', () => {
   it('blocks Confirm and explains why when the typed day is not allowed', () => {
     const tree = mount({ minDate: { year: 2026, month: 10, day: 25 } });
@@ -348,6 +453,32 @@ describe('DateTimePicker: limits', () => {
     typeDate(tree);
     expect(find(tree, 'dp-confirm').props.disabled).toBe(true);
     expect(texts(tree)).toContain(DEFAULT_STRINGS.errorNotAllowed);
+  });
+});
+
+describe('DateTimePicker: the built-in sheet', () => {
+  it("the backdrop's screen-reader label comes from strings", () => {
+    const tree = mount({
+      renderSheet: undefined,
+      strings: { a11yClose: 'إغلاق' },
+    });
+    openSheet(tree);
+    expect(find(tree, 'dp-sheet-backdrop').props.accessibilityLabel).toBe(
+      'إغلاق'
+    );
+  });
+});
+
+describe('DateTimePicker: translated AM / PM', () => {
+  it('the field writes the time with strings.am / strings.pm', () => {
+    const tree = mount({
+      type: 'datetime',
+      allowTyping: false,
+      // 09:30 UTC is 3:00 PM in India.
+      value: '2026-10-21T09:30:00.000Z',
+      strings: { am: 'ص', pm: 'م' },
+    });
+    expect(texts(tree)).toContain('21-10-2026 03:00 م');
   });
 });
 
@@ -368,6 +499,31 @@ describe('DateTimePicker: keyboard wait before opening', () => {
     const tree = mount({});
     openSheet(tree);
     expect(dismiss).toHaveBeenCalled();
+    expect(exists(tree, 'dp-sheet')).toBe(false);
+    act(() => jest.advanceTimersByTime(KEYBOARD_WAIT_FALLBACK_MS));
+    expect(exists(tree, 'dp-sheet')).toBe(true);
+  });
+
+  it('a controlled visible turned on waits for the keyboard the same way', () => {
+    jest.useFakeTimers();
+    jest
+      .spyOn(TextInput.State, 'currentlyFocusedInput')
+      .mockReturnValue({} as never);
+    const dismiss = jest
+      .spyOn(Keyboard, 'dismiss')
+      .mockImplementation(() => {});
+    // Not even one frame of the sheet before the keyboard is gone.
+    const drawn = jest.fn(renderSheet);
+    const props = {
+      ...base,
+      renderSheet: drawn,
+      showField: false,
+      visible: false,
+    };
+    const tree = mount(props);
+    act(() => tree.update(<DateTimePicker {...props} visible />));
+    expect(dismiss).toHaveBeenCalled();
+    expect(drawn).not.toHaveBeenCalled();
     expect(exists(tree, 'dp-sheet')).toBe(false);
     act(() => jest.advanceTimersByTime(KEYBOARD_WAIT_FALLBACK_MS));
     expect(exists(tree, 'dp-sheet')).toBe(true);
@@ -446,6 +602,34 @@ describe('DateTimePicker: calendar', () => {
     await act(async () => {});
   });
 
+  it('days outside yearRange are greyed, even shown from the month next to it', () => {
+    const tree = mount({
+      now,
+      yearRange: { first: 2020, last: 2030 },
+      initialVisibleDate: { year: 2020, month: 1, day: 1 },
+    });
+    openSheet(tree);
+    expect(dayCell(tree, 2019, 12, 30).props.disabled).toBe(true);
+    expect(dayCell(tree, 2020, 1, 2).props.disabled).toBe(false);
+  });
+
+  it('a Hijri month running into January loads that year’s holidays too', async () => {
+    const loadHolidays = jest.fn((year: number) =>
+      Promise.resolve(year === 2027 ? ['2027-01-01'] : [])
+    );
+    const tree = mount({
+      now,
+      calendarSystem: 'hijri',
+      value: '2026-12-20T00:00:00.000Z',
+      loadHolidays,
+      disableHolidays: true,
+    });
+    openSheet(tree);
+    await act(async () => {});
+    expect(loadHolidays).toHaveBeenCalledWith(2027);
+    expect(dayCell(tree, 2027, 1, 1).props.disabled).toBe(true);
+  });
+
   it('tells the screen once per open when nothing can be picked', () => {
     const onError = jest.fn();
     const tree = mount({
@@ -477,7 +661,7 @@ describe('DateTimePicker: calendar', () => {
     jest.restoreAllMocks();
   });
 
-  it('hideCalendarOnKeyboard: hides the calendar while the keyboard is up', () => {
+  it('by default the calendar folds while the keyboard is up; hideCalendarOnKeyboard={false} keeps it', () => {
     const listeners: Record<string, () => void> = {};
     jest.spyOn(Keyboard, 'addListener').mockImplementation(((
       name: string,
@@ -486,15 +670,31 @@ describe('DateTimePicker: calendar', () => {
       listeners[name] = cb;
       return { remove: () => {} };
     }) as never);
-    const tree = mount({ now, hideCalendarOnKeyboard: true });
+    // A folded calendar stays mounted, hidden, so it comes back as it was.
+    const shown = () => {
+      let node = find(tree, 'dp-calendar')?.parent ?? null;
+      for (; node; node = node.parent)
+        if (StyleSheet.flatten(node.props.style)?.display === 'none')
+          return false;
+      return exists(tree, 'dp-calendar');
+    };
+    const tree = mount({ now });
     openSheet(tree);
-    expect(exists(tree, 'dp-calendar')).toBe(true);
+    expect(shown()).toBe(true);
     const show = Object.keys(listeners).find((k) => k.endsWith('Show'));
     act(() => listeners[show!]());
-    expect(exists(tree, 'dp-calendar')).toBe(false);
+    expect(shown()).toBe(false);
     const hide = Object.keys(listeners).find((k) => k.endsWith('Hide'));
     act(() => listeners[hide!]());
-    expect(exists(tree, 'dp-calendar')).toBe(true);
+    expect(shown()).toBe(true);
+
+    const kept = mount({ now, hideCalendarOnKeyboard: false });
+    openSheet(kept);
+    act(() => listeners[show!]());
+    expect(exists(kept, 'dp-calendar')).toBe(true);
+    let node = find(kept, 'dp-calendar')?.parent ?? null;
+    for (; node; node = node.parent)
+      expect(StyleSheet.flatten(node.props.style)?.display).not.toBe('none');
     jest.restoreAllMocks();
   });
 });

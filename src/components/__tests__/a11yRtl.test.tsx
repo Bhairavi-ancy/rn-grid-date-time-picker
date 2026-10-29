@@ -117,9 +117,10 @@ describe('accessibility', () => {
       );
     });
     const inputs = tree.root.findAllByType(TextInput);
+    // The row's label goes first, so a range's Start and End boxes differ.
     expect(inputs.map((i) => i.props.accessibilityLabel)).toEqual([
-      DEFAULT_STRINGS.a11yHour,
-      DEFAULT_STRINGS.a11yMinute,
+      `Time, ${DEFAULT_STRINGS.a11yHour}`,
+      `Time, ${DEFAULT_STRINGS.a11yMinute}`,
     ]);
     expect(
       inputs.every((i) => i.props.maxFontSizeMultiplier === MAX_FONT_SCALE)

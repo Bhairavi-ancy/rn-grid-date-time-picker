@@ -230,6 +230,10 @@ export const MonthChips: React.FC<ChipsProps> = ({
           return (
             <Pressable
               key={month}
+              testID={testID ? `${testID}-chip-${month}` : undefined}
+              accessibilityRole="button"
+              accessibilityLabel={fullNames[i]}
+              accessibilityState={{ selected, disabled }}
               disabled={disabled}
               onPress={() => onSelect(month)}
               onLayout={onChipLayout(month)}

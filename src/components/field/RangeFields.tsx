@@ -113,7 +113,8 @@ const RangeFields: React.FC<Props> = (props) => {
           dateFormat,
           timeFormat,
           strings.rangeSeparator,
-          dateText
+          dateText,
+          strings
         )}
         placeholder={placeholder}
         allowClear={allowClear}

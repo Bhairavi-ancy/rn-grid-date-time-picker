@@ -17,6 +17,14 @@ export const firstSelectedDay = (
   return sel.days[0] ?? null;
 };
 
+/** Every selected day. */
+export const selectedDays = (sel: CalendarSelection): CalendarDate[] => {
+  if (sel.kind === 'single') return sel.day ? [sel.day] : [];
+  if (sel.kind === 'range')
+    return [sel.from, sel.to].filter((d): d is CalendarDate => !!d);
+  return sel.days;
+};
+
 const isNextDay = (a: CalendarDate, b: CalendarDate): boolean => {
   const next = new Date(Date.UTC(a.year, a.month - 1, a.day + 1));
   return (

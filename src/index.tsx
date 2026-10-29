@@ -72,9 +72,13 @@ export type {
 export type { CalendarSystem } from './core/calendarSystem';
 export type { Numerals } from './core/numerals';
 export type { PickerStrings } from './components/theme/defaultStrings';
-export type { PickerStyles } from './components/theme/styleKeys';
+export type {
+  PickerStyles,
+  PickerStyleValue,
+  StyleKey,
+} from './components/theme/styleKeys';
 export type { ThemeTokens } from './components/theme/tokens';
-export type { DayCellState } from './components/calendar/DayCell';
+export type { DayCellState, RangeRole } from './components/calendar/DayCell';
 export type { PeriodItem } from './components/calendar/PeriodGrid';
 export type {
   IconComponent,

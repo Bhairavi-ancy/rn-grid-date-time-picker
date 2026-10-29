@@ -2,6 +2,62 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - Unreleased
+
+2.0.0 reworks the Hijri calendar (Gregorian / Hijri tabs, a calendar switch, Arabic by default) and fixes issues found in real-device testing. Most apps need no changes, or only the few in "Upgrading from 1.0.0".
+
+### Upgrading from 1.0.0
+
+- **`calendarSystem="dual"`** shows Gregorian and Hijri as two tabs, one calendar at a time; it no longer writes the Hijri day under each Gregorian day. `styles.daySubLabel` is no longer drawn, and `renderDay` gets `subLabel: null`. Use `dualDefaultTab` to choose the tab it opens on. A date shows selected only in the tab it was picked in, and a tap in the other tab starts the selection over.
+- **A folded calendar stays mounted but hidden** while the keyboard is up, so it comes back on the month it showed. A test that checks `dp-calendar` is gone while folded should check that it's hidden instead.
+- **`calendarSystem="hijri"` is written in Arabic** (month and weekday names, Arabic digits), whatever the app's `locale`, and **the field shows the Hijri date** (e.g. "١٥ جمادى الأولى ١٤٤٨ هـ") instead of the Gregorian date in `dateFormat`. `hijriLocale={locale}` and `numerals="latin"` bring back 1.0.0's language and digits; the field still writes the date in Hijri. Values passed to `onChange` stay Gregorian.
+- **`onChange` gets a second argument**, `{ calendarSystem }`, when a Hijri calendar can show. Tests asserting `toHaveBeenCalledWith(value)` need `expect.anything()` added.
+- **New required keys** in full `ThemeTokens` objects (`outsideText`) and full `PickerStrings` objects (`calendarGregorian`, `calendarHijri`, `calendarDual`, `a11yCalendarSystem`, `a11yClose`). `Partial<…>`, as the docs use, is unaffected.
+- **Stored values must start with a full `YYYY-MM-DD` day.** Strings such as `'2026-10'`, `'2026'` or `'10:30'` now read as empty instead of being guessed, and so do a leading space, a lowercase `t` and six-digit years (`+002026-…`).
+- **Days outside `yearRange` are greyed**, like days outside `minDate` / `maxDate`.
+- **Outside days** (from the months before and after) use the new `outsideText` token, which follows `mutedText`, instead of `placeholder`.
+- **The built-in sheet's padding** is 8 at the bottom (was 24) and 24 above the title (was 8). If you add a safe-area inset, use `paddingBottom: 8 + insets.bottom`.
+- **From / To ranges:** a tap on a full range starts a new range (or moves the nearer end with `reselect: 'moveNearestEnd'`), instead of replacing To.
+- **`strings.errorRangeOrder`** now defaults to "The end date must be greater than the start date".
+
+### Added
+
+- `calendarSwitch`: a Gregorian / Hijri / Dual switch above the calendar, with `onCalendarSystemChange`, `renderCalendarSwitch` and style keys for each part.
+- `dualDefaultTab`, `hijriLocale` and `numerals` (`'latin'`, `'arabic'` or `'locale'` digits; values stay 0–9).
+- `info.calendarSystem` in `onChange`: the calendar a date was picked in.
+- `hideCalendarOnKeyboard` (on by default, as the calendar folded in 1.0.0; `false` keeps it in view) and `sheet.keyboardMaxHeight`.
+- `strings.a11yClose` for the sheet backdrop's screen-reader label, which was always English.
+- Exported types: `ChangeInfo`, `CalendarSwitchRenderProps`, `CalendarSystem`, `Numerals`, `RangeRole`, `StyleKey`, `PickerStyleValue`.
+
+### Changed
+
+- A range end picked on the start's day starts an hour after the start (within the day's `timeBounds`), so a same-day date-time range isn't out of order before the user touches the time.
+- With `commitMode="instant"`, each value is saved once, and typing in the sheet's field saves when focus leaves it or its last box fills.
+- A controlled `visible` waits for the keyboard to close before opening, like the built-in open.
+- The sheet's body scrolls without a scroll bar, and day cells are read out from the platform's own month and weekday names.
+- `getConstraints` gets `yearRange` in `ctx.limits.minDate` / `maxDate`.
+- Time boxes and wheel columns are read out with their row's label ("Start time, Hour"), and a custom `renderMonthChip` keeps the chip's role, name and state.
+- A date typed in another month brings the calendar to that month; browsing without picking leaves it on the month you browsed to, folded or not.
+
+### Fixed
+
+- A date typed or pasted with separators and no padding (`1/12/2025`) reads as 1 December, not 11 February.
+- The field writes AM / PM with `strings.am` / `strings.pm`, like the time row.
+- A minute off the wheel's step shows at the nearest row, not 00.
+- Multiple dates saved with different times keep them on Confirm; before, every date took the first date's time. A day listed twice counts once.
+- Instant mode no longer saves twice on a tap, again on parent re-renders while `value` catches up, or values half-way through typing; a date still being typed is saved when the sheet closes.
+- A controlled `calendarSystem` fed from `onCalendarSystemChange` keeps each selection in one calendar, and typing in the on-screen field keeps the saved date's calendar.
+- Limits built with `dependsOnNow` refresh every minute while the picker is open.
+- Holidays load for the next or previous year when the grid shows its days (a Hijri month running into January, December's outside days).
+- From / To: tapping the start again deselects it instead of leaving the range stuck.
+- A folded calendar comes back on the month and view it showed.
+- The sheet keeps some room under a keyboard as tall as the window, knows a keyboard that's already up, and reads it as down once it has hidden on iOS.
+- RTL chevrons and the selected month chip, digits typed in Arabic and Persian, the date order on Hermes for Android and iOS `ar-SA`, iOS month and weekday names, and scrolling the sheet from the calendar grid.
+
+### Performance
+
+- A tap redraws only the day cells that changed, not all 42, and Hijri dates are worked out once.
+
 ## [1.0.0] - 2026-10-27
 
 Initial release.
@@ -37,4 +93,5 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
+[2.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.0

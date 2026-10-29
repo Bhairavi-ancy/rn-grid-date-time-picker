@@ -258,11 +258,13 @@ interface Config {
   language: string;
   calendar: 'gregory' | 'dual' | 'hijri';
   dualTab: 'gregory' | 'hijri';
+  calendarSwitch: boolean;
   timeFormat: 'auto' | '12h' | '24h';
   timeInput: 'typed' | 'wheel';
   minuteStep: string;
   limits: 'none' | 'future' | 'weekdays' | 'holidays';
   allowTyping: boolean;
+  hideCalendar: boolean;
   allowClear: boolean;
   showToday: boolean;
   colour: string;
@@ -278,11 +280,13 @@ const INITIAL: Config = {
   language: I18nManager.isRTL ? 'ar-SA' : 'en-US',
   calendar: I18nManager.isRTL ? 'hijri' : 'gregory',
   dualTab: 'gregory',
+  calendarSwitch: false,
   timeFormat: 'auto',
   timeInput: 'typed',
   minuteStep: '1',
   limits: 'none',
   allowTyping: false,
+  hideCalendar: true,
   allowClear: true,
   showToday: false,
   colour: 'violet',
@@ -311,6 +315,7 @@ const PRESETS: { label: string; options: Partial<Config> }[] = [
   },
   { label: 'Birth month', options: { precision: 'month' } },
   { label: 'Hijri & Gregorian', options: { calendar: 'dual' } },
+  { label: 'Calendar switch', options: { calendarSwitch: true } },
   {
     label: 'Weekdays only',
     options: { mode: 'multiple', limits: 'weekdays' },
@@ -340,6 +345,8 @@ function buildProps(c: Config): Record<string, unknown> {
   if (c.calendar !== 'gregory') p.calendarSystem = c.calendar;
   if (c.calendar === 'dual' && c.dualTab === 'hijri')
     p.dualDefaultTab = 'hijri';
+  // Users switch Gregorian / Hijri / Dual themselves, starting on `calendar`.
+  if (c.calendarSwitch) p.calendarSwitch = true;
   if (c.type === 'datetime') {
     if (c.timeFormat !== 'auto') p.timeFormat = c.timeFormat;
     if (c.timeInput === 'wheel') p.timeInput = 'wheel';
@@ -352,6 +359,8 @@ function buildProps(c: Config): Record<string, unknown> {
     p.disableHolidays = true;
   }
   if (c.allowTyping) p.allowTyping = true;
+  // On by default: the calendar folds while the keyboard is up.
+  if (!c.hideCalendar) p.hideCalendarOnKeyboard = false;
   if (c.allowClear) p.allowClear = true;
   if (c.showToday) p.showToday = true;
   const tokens = themeTokens(c);
@@ -647,6 +656,12 @@ function Playground() {
             />
             <Chip
               ui={ui}
+              label="Hide calendar while typing"
+              selected={config.hideCalendar}
+              onPress={() => set('hideCalendar', !config.hideCalendar)}
+            />
+            <Chip
+              ui={ui}
               label="Clear ×"
               selected={config.allowClear}
               onPress={() => set('allowClear', !config.allowClear)}
@@ -658,6 +673,11 @@ function Playground() {
               onPress={() => set('showToday', !config.showToday)}
             />
           </View>
+          <Text style={[styles.note, { color: ui.muted }]}>
+            Hide calendar while typing: the calendar folds away while the
+            keyboard is up (typing a date, or a typed time), so the box and
+            Confirm stay in view.
+          </Text>
         </Card>
 
         <Card ui={ui}>
@@ -694,6 +714,14 @@ function Playground() {
               ]}
             />
           ) : null}
+          <View style={styles.chips}>
+            <Chip
+              ui={ui}
+              label="Let users switch calendars"
+              selected={config.calendarSwitch}
+              onPress={() => set('calendarSwitch', !config.calendarSwitch)}
+            />
+          </View>
           <Text style={[styles.note, { color: ui.muted }]}>
             Gregorian shows 123 and Hijri shows ١٢٣, in any language.
           </Text>

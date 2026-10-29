@@ -78,19 +78,45 @@ const readParts = (
     : null;
 };
 
+/**
+ * Remembers results by key. Every tap redraws the grid and its labels, and
+ * Intl is slow on some engines (Hermes on Android), so Hijri conversions are
+ * worked out once. Cleared when full, to stay small.
+ */
+const memoize = <V>(limit = 4000) => {
+  const map = new Map<string, V>();
+  return {
+    get: (key: string, make: () => V): V => {
+      if (map.has(key)) return map.get(key)!;
+      const value = make();
+      if (map.size >= limit) map.clear();
+      map.set(key, value);
+      return value;
+    },
+    clear: () => map.clear(),
+  };
+};
+const hijriDays = memoize<CalendarDate | null>();
+const hijriStarts = memoize<CalendarDate>(600);
+const hijriTexts = memoize<string | null>();
+
 /** Whether this device can show Hijri dates. */
 export const isHijriSupported = (): boolean => getHijriFormat() !== null;
 
-/** Test hook: forget the cached Intl check. */
+/** Test hook: forget the cached Intl check and what was worked out with it. */
 export const resetHijriSupportCache = (): void => {
   hijriFormat = undefined;
+  hijriDays.clear();
+  hijriStarts.clear();
+  hijriTexts.clear();
 };
 
 /** Gregorian day → Hijri {year, month, day}, or null when unsupported. */
-export const toHijri = (d: CalendarDate): CalendarDate | null => {
-  const f = getHijriFormat();
-  return f ? readParts(f, d) : null;
-};
+export const toHijri = (d: CalendarDate): CalendarDate | null =>
+  hijriDays.get(`${d.year}-${d.month}-${d.day}`, () => {
+    const f = getHijriFormat();
+    return f ? readParts(f, d) : null;
+  });
 
 const HIJRI_EPOCH = { year: 622, month: 7, day: 19 };
 const MEAN_YEAR = 354.367;
@@ -100,7 +126,10 @@ const cmp = (a: SystemMonth, b: SystemMonth) =>
   a.year - b.year || a.month - b.month;
 
 /** The Gregorian day on which a Hijri month starts. */
-export const hijriMonthStart = (year: number, month: number): CalendarDate => {
+export const hijriMonthStart = (year: number, month: number): CalendarDate =>
+  hijriStarts.get(`${year}-${month}`, () => findMonthStart(year, month));
+
+const findMonthStart = (year: number, month: number): CalendarDate => {
   const estimate = Math.round(
     (year - 1) * MEAN_YEAR + (month - 1) * MEAN_MONTH
   );
@@ -120,7 +149,11 @@ export const hijriMonthStart = (year: number, month: number): CalendarDate => {
 
 export const addHijriMonths = (m: SystemMonth, n: number): SystemMonth => {
   const index = m.year * 12 + (m.month - 1) + n;
-  return { year: Math.floor(index / 12), month: (index % 12) + 1 };
+  // % keeps the sign in JS, so a year before 1 AH still gets months 1–12.
+  return {
+    year: Math.floor(index / 12),
+    month: (((index % 12) + 12) % 12) + 1,
+  };
 };
 
 export const hijriMonthLength = (year: number, month: number): number => {
@@ -187,10 +220,12 @@ const dateTextFormats = new Map<string, Intl.DateTimeFormat | null>();
  * A Gregorian day written as a Hijri date in the user's language, in 0–9
  * ('16 Jumada I 1448 AH', '16 جمادى الأولى 1448 هـ'), or null when unsupported.
  */
-export const hijriDateText = (
-  d: CalendarDate,
-  locale: string
-): string | null => {
+export const hijriDateText = (d: CalendarDate, locale: string): string | null =>
+  hijriTexts.get(`${locale}|${d.year}-${d.month}-${d.day}`, () =>
+    writeHijriDate(d, locale)
+  );
+
+const writeHijriDate = (d: CalendarDate, locale: string): string | null => {
   const h = toHijri(d);
   if (!h) return null;
   if (!dateTextFormats.has(locale)) {

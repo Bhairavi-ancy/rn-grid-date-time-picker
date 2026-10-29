@@ -24,6 +24,7 @@ const mount = (
         body={<Text>the body</Text>}
         footer={<Text>the footer</Text>}
         testID="s"
+        closeLabel="Close"
         tokens={buildTokens()}
         styles={styles}
         {...sizes}
@@ -110,6 +111,51 @@ describe('DefaultSheet', () => {
     const show = Object.keys(listeners).find((k) => k.endsWith('Show'));
     act(() => listeners[show!]({ endCoordinates: { height: 300 } }));
     expect(maxHeight(unresized)).toBe(
+      (Dimensions.get('window').height - 300) / 2
+    );
+
+    // A keyboard reported as tall as the window (split screen): the sheet
+    // keeps a strip of room instead of collapsing.
+    const squeezed = mount(() => {});
+    act(() =>
+      listeners[show!]({
+        endCoordinates: { height: Dimensions.get('window').height + 100 },
+      })
+    );
+    expect(maxHeight(squeezed)).toBe(144); // 90% of the 160 pt floor
+    jest.restoreAllMocks();
+  });
+
+  it('a keyboard read as up at mount is put right when it finishes hiding', () => {
+    const listeners: Record<string, (e?: object) => void> = {};
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      name: string,
+      cb: (e?: object) => void
+    ) => {
+      listeners[name] = cb;
+      return { remove: () => {} };
+    }) as never);
+    jest.spyOn(Keyboard, 'isVisible').mockReturnValue(true);
+    jest
+      .spyOn(Keyboard, 'metrics')
+      .mockReturnValue({ height: 300, screenX: 0, screenY: 0, width: 0 });
+    const tree = mount(() => {});
+    const maxHeight = () =>
+      StyleSheet.flatten(panel(tree)?.props.style).maxHeight;
+    expect(maxHeight()).toBeLessThan(Dimensions.get('window').height * 0.9);
+    // Only the did-hide event: on iOS the will-hide one came before the mount.
+    act(() => listeners.keyboardDidHide!());
+    expect(maxHeight()).toBeCloseTo(Dimensions.get('window').height * 0.9);
+    jest.restoreAllMocks();
+  });
+
+  it('a sheet opened with the keyboard already up is sized for it', () => {
+    jest.spyOn(Keyboard, 'isVisible').mockReturnValue(true);
+    jest
+      .spyOn(Keyboard, 'metrics')
+      .mockReturnValue({ height: 300, screenX: 0, screenY: 0, width: 0 });
+    const tree = mount(() => {}, undefined, { keyboardMaxHeight: '50%' });
+    expect(StyleSheet.flatten(panel(tree)?.props.style).maxHeight).toBe(
       (Dimensions.get('window').height - 300) / 2
     );
     jest.restoreAllMocks();

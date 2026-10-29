@@ -8,6 +8,7 @@ import TimeWheel, {
   stepEnabled,
   WHEEL_ROW_HEIGHT,
   type TimeWheelProps,
+  indexOfValue,
 } from '../time/Wheel';
 
 const items = (disabled: number[]) =>
@@ -187,5 +188,16 @@ describe('wheel style keys', () => {
           flat(t.props.style).some((x) => x?.backgroundColor === '#ABCDEF')
         )
     ).toBe(false);
+  });
+});
+
+describe('indexOfValue', () => {
+  const items = [0, 5, 10, 15].map((value) => {
+    return { value, label: String(value), disabled: false };
+  });
+  it('a value with a row selects it; one off the step selects the nearest', () => {
+    expect(indexOfValue(items, 10)).toBe(2);
+    expect(indexOfValue(items, 7)).toBe(1);
+    expect(indexOfValue(items, 59)).toBe(3);
   });
 });

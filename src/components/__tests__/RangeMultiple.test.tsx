@@ -184,7 +184,124 @@ describe('range: single field', () => {
   });
 });
 
+describe('range: date-time on one day', () => {
+  // 11:45 in India.
+  const at1145 = () => new Date(Date.UTC(2026, 9, 21, 6, 15));
+
+  it('the end starts an hour after the start, so the range is in order', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      now: at1145,
+      onChange,
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(texts(tree)).toContain('20-10-2026 11:45 AM – 20-10-2026 12:45 PM');
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorRangeOrder);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenCalledWith({
+      from: '2026-10-20T06:15:00.000Z',
+      to: '2026-10-20T07:15:00.000Z',
+    });
+  });
+
+  it('an end before the start shows the error until the time is fixed, without leaving the box', () => {
+    const tree = mount({ mode: 'range', type: 'datetime', now: at1145 });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    // 12 keeps the end's PM; AM makes it 00:45, before the start.
+    press(tree, 'dp-time-to-am');
+    expect(texts(tree)).toContain(
+      'The end date must be greater than the start date'
+    );
+    expect(find(tree, 'dp-confirm').props.disabled).toBe(true);
+    typeBox(tree, 'dp-time-to-hour', '12');
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.errorRangeOrder);
+    press(tree, 'dp-time-to-pm');
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorRangeOrder);
+    expect(find(tree, 'dp-confirm').props.disabled).toBe(false);
+  });
+
+  it('newDayTime: a same-day end still starts after the start', () => {
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      newDayTime: { hour: 9, minute: 0 },
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(texts(tree)).toContain('20-10-2026 09:00 AM – 20-10-2026 10:00 AM');
+  });
+
+  it("the end stays within the day's allowed hours", () => {
+    // 16:30 in India.
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      now: () => new Date(Date.UTC(2026, 9, 21, 11, 0)),
+      timeBounds: () => ({ max: { hour: 17, minute: 0 } }),
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(texts(tree)).toContain('20-10-2026 04:30 PM – 20-10-2026 05:00 PM');
+  });
+
+  it('From / To: the end on the start day starts an hour later too', () => {
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      range: { layout: 'fromTo' },
+      now: at1145,
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(texts(tree)).toContain('20-10-2026 12:45 PM');
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorRangeOrder);
+  });
+});
+
 describe('range: From / To fields', () => {
+  it('the start tapped again deselects it, and the next tap is the start', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      range: { layout: 'fromTo' },
+      onChange,
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(find(tree, 'dp-from').props.active).toBe(true);
+    expect(texts(tree)).not.toContain('20-10-2026');
+    tap(tree, 25);
+    tap(tree, 27);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenCalledWith({
+      from: '2026-10-25T00:00:00.000Z',
+      to: '2026-10-27T00:00:00.000Z',
+    });
+  });
+
+  it('date-time with minDays 3: the start tapped again never makes a same-day range', () => {
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      range: { layout: 'fromTo', minDays: 3 },
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(find(tree, 'dp-from').props.active).toBe(true);
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorRangeTooShort(3));
+  });
+
   it('taps fill the active field, then move to To; a tap before the start moves the start', () => {
     const onChange = jest.fn();
     const tree = mount({
@@ -360,6 +477,23 @@ describe('multiple', () => {
     expect(dayCell(tree, 21).props.disabled).toBe(false);
     tap(tree, 21);
     expect(dayCell(tree, 22).props.disabled).toBe(false);
+  });
+
+  it('shared time: dates saved with different times keep them when nothing changes', () => {
+    const value = ['2026-10-24T03:30:00.000Z', '2026-10-25T09:30:00.000Z'];
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'multiple',
+      type: 'datetime',
+      valueFormat: 'iso',
+      value,
+      onChange,
+    });
+    open(tree);
+    tap(tree, 26);
+    tap(tree, 26);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith(value);
   });
 
   it('shared time: one row applies to every date', () => {

@@ -32,6 +32,21 @@ export interface WheelItem {
   disabled: boolean;
 }
 
+/**
+ * The row showing `value`, or the nearest one when the value has no row (a
+ * minute off the step, e.g. 07 on a 5-minute wheel, shows at 05, not 00).
+ */
+export const indexOfValue = (items: WheelItem[], value: number): number => {
+  const exact = items.findIndex((i) => i.value === value);
+  if (exact > -1) return exact;
+  let best = 0;
+  items.forEach((item, i) => {
+    if (Math.abs(item.value - value) < Math.abs(items[best]!.value - value))
+      best = i;
+  });
+  return best;
+};
+
 /** The enabled row nearest to `index` (searching both ways), or `index` when none is. */
 export const nearestEnabled = (items: WheelItem[], index: number): number => {
   const start = Math.max(0, Math.min(items.length - 1, index));
@@ -88,10 +103,7 @@ const WheelColumnBase: React.FC<ColumnProps> = ({
   const s = buildTimeStyles(tokens);
   const ref = useRef<ScrollViewRef>(null);
   const reduceMotion = useReduceMotion();
-  const selectedIndex = Math.max(
-    0,
-    items.findIndex((i) => i.value === value)
-  );
+  const selectedIndex = indexOfValue(items, value);
   const [centered, setCentered] = useState(selectedIndex);
   const spinning = useRef(false);
   const momentumTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

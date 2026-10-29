@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import * as calendarSystem from '../../core/calendarSystem';
+import * as calendarStyles from '../calendar/calendarStyles';
 import DateTimePicker from '../DateTimePicker';
 import type { DateTimePickerProps, PickerState } from '../types';
 
@@ -427,6 +428,138 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     expect(state().displayText).toBe('20/10/2026');
   });
 
+  /** A parent that feeds the switch's choice back as the calendarSystem prop. */
+  const Controlled = (props: Partial<DateTimePickerProps>) => {
+    const [system, setSystem] =
+      useState<DateTimePickerProps['calendarSystem']>('gregory');
+    return (
+      <DateTimePicker
+        {...base}
+        presentation="sheet"
+        commitMode="confirm"
+        renderSheet={(p) => <View>{p.body}</View>}
+        calendarSwitch
+        calendarSystem={system}
+        onCalendarSystemChange={setSystem}
+        {...props}
+      />
+    );
+  };
+
+  it('controlled switch: switching and closing without Confirm leaves the field as it was', () => {
+    const ref: { state?: PickerState } = {};
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(
+        <Controlled
+          value="2026-10-20"
+          renderField={(p) => {
+            ref.state = p;
+            return null;
+          }}
+        />
+      );
+    });
+    act(() => ref.state!.open());
+    press(tree, 'dp-calendar-switch-hijri');
+    act(() => ref.state!.close());
+    expect(ref.state!.displayText).toBe('20/10/2026');
+  });
+
+  it('controlled switch: a range started in one calendar starts over in the other', () => {
+    const onChange = jest.fn();
+    const ref: { state?: PickerState } = {};
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(
+        <Controlled
+          mode="range"
+          value={{ from: '', to: '' }}
+          onChange={onChange}
+          renderField={(p) => {
+            ref.state = p;
+            return null;
+          }}
+        />
+      );
+    });
+    act(() => ref.state!.open());
+    tap(tree, 20);
+    press(tree, 'dp-calendar-switch-hijri');
+    tap(tree, 25);
+    expect(ref.state!.canConfirm).toBe(false);
+    act(() => ref.state!.confirm());
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('a new calendarSystem prop while picking starts the selection over', () => {
+    const onChange = jest.fn();
+    const props = {
+      ...base,
+      mode: 'range' as const,
+      commitMode: 'confirm' as const,
+      value: { from: '', to: '' },
+      onChange,
+    };
+    const tree = mount(props);
+    tap(tree, 20);
+    act(() =>
+      tree.update(<DateTimePicker {...props} calendarSystem="hijri" />)
+    );
+    tap(tree, 25);
+    press(tree, 'dp-confirm');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('typing in the field keeps the calendar the saved date was picked in', () => {
+    const onChange = jest.fn();
+    const Parent = () => {
+      const [value, setValue] = useState<DateTimePickerProps['value']>('');
+      return (
+        <DateTimePicker
+          {...base}
+          presentation="sheet"
+          commitMode="confirm"
+          renderSheet={(p) => (
+            <View>
+              {p.body}
+              {p.footer}
+            </View>
+          )}
+          calendarSystem="dual"
+          allowFieldTyping
+          value={value}
+          onChange={(v, info) => {
+            onChange(v, info);
+            setValue(v);
+          }}
+        />
+      );
+    };
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(<Parent />);
+    });
+    press(tree, 'dp-trigger-icon');
+    press(tree, 'dp-dual-tabs-hijri');
+    tap(tree, 20);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-20', {
+      calendarSystem: 'hijri',
+    });
+    const seg = (key: string) =>
+      tree.root
+        .findAllByType(TextInput)
+        .find((i) => i.props.testID === `dp-trigger-segment-${key}`)!;
+    act(() => seg('day').props.onFocus());
+    act(() => seg('day').props.onChangeText('25'));
+    // Two digits move focus on to the month; leaving it ends the typing.
+    act(() => seg('month').props.onBlur());
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25', {
+      calendarSystem: 'hijri',
+    });
+  });
+
   it('a new calendarSystem prop moves an untouched value to that calendar, field and grid alike', () => {
     const tree = mount({ value: '2026-10-20' });
     act(() =>
@@ -514,5 +647,50 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     press(tree, 'dp-dual-tabs-gregory');
     expect(isSelected(tree, 20)).toBe(true);
     expect(isSelected(tree, 25)).toBe(true);
+  });
+});
+
+describe('a tap redraws only what changed', () => {
+  it('not every day cell, in either calendar', () => {
+    for (const system of ['gregory', 'hijri'] as const)
+      for (const mode of ['single', 'range'] as const) {
+        const tree = mount({
+          calendarSystem: system,
+          mode,
+          commitMode: 'confirm',
+        });
+        tap(tree, 20);
+        // Each part builds its styles as it draws: the calendar, its header
+        // and grid, and the cells whose selection changed.
+        const draws = jest.spyOn(calendarStyles, 'buildCalendarStyles');
+        tap(tree, 22);
+        expect(draws.mock.calls.length).toBeLessThanOrEqual(10);
+        draws.mockRestore();
+      }
+  });
+});
+
+describe('accessibility of custom parts', () => {
+  it('a custom month chip keeps its role, name, state and testID', () => {
+    const tree = mount({
+      maxDate: { year: 2026, month: 11, day: 30 },
+      renderMonthChip: (month) => <Text>{month}</Text>,
+    });
+    const chip = find(tree, 'dp-chip-12');
+    expect(chip.props.accessibilityRole).toBe('button');
+    expect(chip.props.accessibilityLabel).toBe('December');
+    expect(chip.props.accessibilityState).toEqual({
+      selected: false,
+      disabled: true,
+    });
+  });
+
+  it('range time boxes say which end they are', () => {
+    const tree = mount({ type: 'datetime', mode: 'range' });
+    const labels = tree.root
+      .findAllByType(TextInput)
+      .map((i) => i.props.accessibilityLabel as string)
+      .filter((l) => /Hour/.test(l));
+    expect(labels).toEqual(['Start time, Hour', 'End time, Hour']);
   });
 });

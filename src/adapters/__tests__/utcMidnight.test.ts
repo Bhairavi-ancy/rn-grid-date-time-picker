@@ -221,3 +221,28 @@ describe('utcMidnightAdapter: years it can write', () => {
     ).toBe('');
   });
 });
+
+describe('utc-midnight: only full days are read', () => {
+  it('a time, a year, a month, a week or an ordinal date reads as empty', () => {
+    for (const raw of ['10:30', '2026', '2026-10', '2026-W43-6', '2026-297'])
+      for (const type of ['date', 'datetime'] as const) {
+        expect(fromWire(raw, type, 'America/Los_Angeles')).toBeNull();
+        expect(unchangedWire(raw, type)).toBe('');
+      }
+  });
+
+  it('year 0 reads as empty, and a date-time that would save in year 10000 saves nothing', () => {
+    expect(fromWire('0000-06-01T00:00:00Z', 'date', 'UTC')).toBeNull();
+    expect(fromWire('0000-06-01T00:00:00Z', 'datetime', 'UTC')).toBeNull();
+    expect(
+      toWire(
+        {
+          date: { year: 9999, month: 12, day: 31 },
+          time: { hour: 20, minute: 0 },
+        },
+        'datetime',
+        'America/Los_Angeles'
+      )
+    ).toBe('');
+  });
+});

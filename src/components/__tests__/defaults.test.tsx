@@ -99,7 +99,12 @@ describe('defaults: overrides', () => {
       timeZone: 'UTC',
       today: { year: 2026, month: 10, day: 21 },
       holidays: ['2026-10-23'],
-      limits: { minDate, disabledWeekdays: [6, 7] },
+      // No maxDate given: the end of yearRange stands in for it.
+      limits: {
+        minDate,
+        maxDate: { year: 2200, month: 12, day: 31 },
+        disabledWeekdays: [6, 7],
+      },
     });
     // minDate isn't applied on top: only the returned constraints count.
     expect(dayCell(tree, 15)?.props.disabled).toBe(false);
