@@ -146,7 +146,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     disabled = false,
     readOnly = false,
     allowTyping,
-    hideCalendarOnKeyboard = false,
+    hideCalendarOnKeyboard = true,
     allowFieldTyping,
     allowClear,
     errorMessage,

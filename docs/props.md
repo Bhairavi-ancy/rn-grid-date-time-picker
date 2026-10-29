@@ -38,7 +38,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `isMandatory` | `boolean` | `false` | Adds ` *` to the label. |
 | `disabled`, `readOnly` | `boolean` | `false` | Neither opens; disabled also greys the field. |
 | `allowTyping` | `boolean` | `false` | Type in the field inside the sheet. |
-| `hideCalendarOnKeyboard` | `boolean` | `false` | Hide the calendar while the keyboard is up (typing a date or a time), so the box being typed in and Confirm stay in view on small phones. Inline, only while one of the picker's own boxes has focus. |
+| `hideCalendarOnKeyboard` | `boolean` | `true` | Hide the calendar while the keyboard is up (typing a date or a time), so the box being typed in and Confirm stay in view on small phones. Inline, only while one of the picker's own boxes has focus. `false` keeps it in view. |
 | `allowFieldTyping` | `boolean` | `false` | Type in the on-screen field (single mode). A complete, allowed value is saved once, when focus leaves the field or its last box fills. |
 | `allowClear` | `boolean` | `false` | Shows × when there is a value. |
 | `errorMessage` | `string` | – | Your error, shown under the field. |

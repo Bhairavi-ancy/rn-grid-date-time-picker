@@ -661,7 +661,7 @@ describe('DateTimePicker: calendar', () => {
     jest.restoreAllMocks();
   });
 
-  it('hideCalendarOnKeyboard: hides the calendar while the keyboard is up', () => {
+  it('by default the calendar folds while the keyboard is up; hideCalendarOnKeyboard={false} keeps it', () => {
     const listeners: Record<string, () => void> = {};
     jest.spyOn(Keyboard, 'addListener').mockImplementation(((
       name: string,
@@ -678,7 +678,7 @@ describe('DateTimePicker: calendar', () => {
           return false;
       return exists(tree, 'dp-calendar');
     };
-    const tree = mount({ now, hideCalendarOnKeyboard: true });
+    const tree = mount({ now });
     openSheet(tree);
     expect(shown()).toBe(true);
     const show = Object.keys(listeners).find((k) => k.endsWith('Show'));
@@ -687,6 +687,14 @@ describe('DateTimePicker: calendar', () => {
     const hide = Object.keys(listeners).find((k) => k.endsWith('Hide'));
     act(() => listeners[hide!]());
     expect(shown()).toBe(true);
+
+    const kept = mount({ now, hideCalendarOnKeyboard: false });
+    openSheet(kept);
+    act(() => listeners[show!]());
+    expect(exists(kept, 'dp-calendar')).toBe(true);
+    let node = find(kept, 'dp-calendar')?.parent ?? null;
+    for (; node; node = node.parent)
+      expect(StyleSheet.flatten(node.props.style)?.display).not.toBe('none');
     jest.restoreAllMocks();
   });
 });

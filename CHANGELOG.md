@@ -9,7 +9,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Upgrading from 1.0.0
 
 - **`calendarSystem="dual"`** shows Gregorian and Hijri as two tabs, one calendar at a time; it no longer writes the Hijri day under each Gregorian day. `styles.daySubLabel` is no longer drawn, and `renderDay` gets `subLabel: null`. Use `dualDefaultTab` to choose the tab it opens on. A date shows selected only in the tab it was picked in, and a tap in the other tab starts the selection over.
-- **The calendar no longer folds away while the keyboard is up.** Pass `hideCalendarOnKeyboard` to keep the 1.0.0 behaviour. A folded calendar now stays mounted but hidden, so a test that checks `dp-calendar` is gone while folded should check that it's hidden instead.
+- **A folded calendar stays mounted but hidden** while the keyboard is up, so it comes back on the month it showed. A test that checks `dp-calendar` is gone while folded should check that it's hidden instead.
 - **`calendarSystem="hijri"` is written in Arabic** (month and weekday names, Arabic digits), whatever the app's `locale`, and **the field shows the Hijri date** (e.g. "١٥ جمادى الأولى ١٤٤٨ هـ") instead of the Gregorian date in `dateFormat`. `hijriLocale={locale}` and `numerals="latin"` bring back 1.0.0's language and digits; the field still writes the date in Hijri. Values passed to `onChange` stay Gregorian.
 - **`onChange` gets a second argument**, `{ calendarSystem }`, when a Hijri calendar can show. Tests asserting `toHaveBeenCalledWith(value)` need `expect.anything()` added.
 - **New required keys** in full `ThemeTokens` objects (`outsideText`) and full `PickerStrings` objects (`calendarGregorian`, `calendarHijri`, `calendarDual`, `a11yCalendarSystem`, `a11yClose`). `Partial<…>`, as the docs use, is unaffected.
@@ -25,7 +25,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - `calendarSwitch`: a Gregorian / Hijri / Dual switch above the calendar, with `onCalendarSystemChange`, `renderCalendarSwitch` and style keys for each part.
 - `dualDefaultTab`, `hijriLocale` and `numerals` (`'latin'`, `'arabic'` or `'locale'` digits; values stay 0–9).
 - `info.calendarSystem` in `onChange`: the calendar a date was picked in.
-- `hideCalendarOnKeyboard` and `sheet.keyboardMaxHeight`.
+- `hideCalendarOnKeyboard` (on by default, as the calendar folded in 1.0.0; `false` keeps it in view) and `sheet.keyboardMaxHeight`.
 - `strings.a11yClose` for the sheet backdrop's screen-reader label, which was always English.
 - Exported types: `ChangeInfo`, `CalendarSwitchRenderProps`, `CalendarSystem`, `Numerals`, `RangeRole`, `StyleKey`, `PickerStyleValue`.
 

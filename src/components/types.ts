@@ -245,7 +245,8 @@ export interface DateTimePickerProps {
   allowTyping?: boolean;
   /**
    * Hide the calendar while the keyboard is up (typing a date or a time), so
-   * the box being typed in and Confirm stay in view on small phones. Default false.
+   * the box being typed in and Confirm stay in view on small phones. Default
+   * true; `false` keeps the calendar in view.
    */
   hideCalendarOnKeyboard?: boolean;
   /**

@@ -264,6 +264,7 @@ interface Config {
   minuteStep: string;
   limits: 'none' | 'future' | 'weekdays' | 'holidays';
   allowTyping: boolean;
+  hideCalendar: boolean;
   allowClear: boolean;
   showToday: boolean;
   colour: string;
@@ -285,6 +286,7 @@ const INITIAL: Config = {
   minuteStep: '1',
   limits: 'none',
   allowTyping: false,
+  hideCalendar: true,
   allowClear: true,
   showToday: false,
   colour: 'violet',
@@ -357,6 +359,8 @@ function buildProps(c: Config): Record<string, unknown> {
     p.disableHolidays = true;
   }
   if (c.allowTyping) p.allowTyping = true;
+  // On by default: the calendar folds while the keyboard is up.
+  if (!c.hideCalendar) p.hideCalendarOnKeyboard = false;
   if (c.allowClear) p.allowClear = true;
   if (c.showToday) p.showToday = true;
   const tokens = themeTokens(c);
@@ -652,6 +656,12 @@ function Playground() {
             />
             <Chip
               ui={ui}
+              label="Hide calendar while typing"
+              selected={config.hideCalendar}
+              onPress={() => set('hideCalendar', !config.hideCalendar)}
+            />
+            <Chip
+              ui={ui}
               label="Clear ×"
               selected={config.allowClear}
               onPress={() => set('allowClear', !config.allowClear)}
@@ -663,6 +673,11 @@ function Playground() {
               onPress={() => set('showToday', !config.showToday)}
             />
           </View>
+          <Text style={[styles.note, { color: ui.muted }]}>
+            Hide calendar while typing: the calendar folds away while the
+            keyboard is up (typing a date, or a typed time), so the box and
+            Confirm stay in view.
+          </Text>
         </Card>
 
         <Card ui={ui}>
