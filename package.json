@@ -99,6 +99,7 @@
     "react": "19.3.0",
     "react-native": "0.88.0",
     "react-native-builder-bob": "^0.44.1",
+    "react-native-safe-area-context": "~5.10.1",
     "react-test-renderer": "19.3.0",
     "turbo": "^2.11.10",
     "typescript": "^6.0.3"
@@ -108,7 +109,13 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-native": ">=0.71"
+    "react-native": ">=0.71",
+    "react-native-safe-area-context": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "react-native-safe-area-context": {
+      "optional": true
+    }
   },
   "workspaces": [
     "example"

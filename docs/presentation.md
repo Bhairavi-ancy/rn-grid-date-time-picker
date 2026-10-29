@@ -6,14 +6,15 @@
 
 `presentation="sheet"` (the default) opens a built-in bottom sheet: an RN `Modal` with a backdrop, up to 90% of the screen (see [Sheet layout](presentation.md#sheet-layout)). The body scrolls between the title and Confirm when it doesn't fit, and the sheet waits for the keyboard to close before opening. `presentation="inline"` renders the same content in place, for example inside your own sheet or a filter panel.
 
-The built-in sheet doesn't add a safe-area inset. Add one with `styles.sheet`:
+While the keyboard is up, the sheet sits on top of it, on iOS and on Android, including edge-to-edge Android apps, where the keyboard doesn't shrink the window.
+
+Below Confirm, the sheet keeps the bottom safe-area inset free: the home indicator, or Android's navigation bar in an edge-to-edge app, so Confirm never sits under the Back / Home buttons. It reads the inset from `react-native-safe-area-context` when your app has a `SafeAreaProvider` (most Expo apps do; it's an optional peer, nothing to install for the picker). Without one, pass it yourself:
 
 ```tsx
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const insets = useSafeAreaInsets();
-<DateTimePicker styles={{ sheet: { paddingBottom: 8 + insets.bottom } }} /* … */ />;
+<DateTimePicker sheet={{ bottomInset: 34 }} /* … */ />;
 ```
+
+`sheet.bottomInset` wins over the provider's inset, and `styles.sheet.paddingBottom` wins over both.
 
 Or bring your own sheet with `renderSheet`. It is called only while the picker is open and rendered in place (no portal), so it works inside other sheets:
 
@@ -55,6 +56,7 @@ Everything inside the sheet can be set from props:
 | `height` | as tall as the content | A fixed height, in points or as a percentage of the screen (`'60%'`). The footer then sits at the bottom. |
 | `maxHeight` | `'90%'` | The most the sheet grows to. Beyond it the body scrolls. |
 | `keyboardMaxHeight` | `maxHeight` | The most the sheet grows to while the keyboard is up. A percentage is of the room above the keyboard, so the default `'90%'` leaves some backdrop above the sheet. |
+| `bottomInset` | the app's safe-area inset, else `0` | Space kept free below Confirm while the keyboard is down: the home indicator, or Android's navigation bar in an edge-to-edge app. Read from `react-native-safe-area-context` when the app has a `SafeAreaProvider`. |
 | `fixedHeader` | `true` | The header stays put while the body scrolls. `false` scrolls it with the body. |
 | `fixedFooter` | `true` | Confirm stays pinned below the body. `false` scrolls it at the end of the body. `renderSheet` then gets `footer: null`. |
 | `showField` | `true` | The field above the calendar, which shows the picked date and takes typing with `allowTyping`. When it's hidden, its errors still show above the calendar. Applies inline too. |

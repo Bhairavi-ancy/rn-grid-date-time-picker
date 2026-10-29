@@ -467,6 +467,15 @@ describe('DateTimePicker: the built-in sheet', () => {
       'إغلاق'
     );
   });
+
+  it('sheet.bottomInset keeps that much free below Confirm', () => {
+    const tree = mount({ renderSheet: undefined, sheet: { bottomInset: 30 } });
+    openSheet(tree);
+    const panel = tree.root.findAll(
+      (n) => n.props.testID === 'dp-sheet' && typeof n.type === 'string'
+    )[0];
+    expect(StyleSheet.flatten(panel?.props.style).paddingBottom).toBe(8 + 30);
+  });
 });
 
 describe('DateTimePicker: translated AM / PM', () => {

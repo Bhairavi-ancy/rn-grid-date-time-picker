@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   useWindowDimensions,
   View,
@@ -10,13 +9,16 @@ import {
 import type { PickerStyles } from '../theme/styleKeys';
 import type { ThemeTokens } from '../theme/tokens';
 import type { SheetRenderProps, SheetSize } from '../types';
+import { useBottomInset } from '../hooks/useBottomInset';
 import { useKeyboard } from '../hooks/useKeyboardFold';
-import { buildContainerStyles } from './containerStyles';
+import { buildContainerStyles, SHEET_PADDING_BOTTOM } from './containerStyles';
 
 interface Props extends SheetRenderProps {
   height?: SheetSize;
   maxHeight?: SheetSize;
   keyboardMaxHeight?: SheetSize;
+  /** Space kept free below the footer; default: the app's safe-area inset. */
+  bottomInset?: number;
   /** The backdrop's screen-reader label. */
   closeLabel: string;
   tokens: ThemeTokens;
@@ -33,9 +35,10 @@ const toPoints = (size: SheetSize, screen: number): number =>
 /**
  * The built-in bottom sheet: an RN Modal with a backdrop and a panel pinned to
  * the bottom, up to 90% of the screen (`sheet.height` / `sheet.maxHeight`).
- * While the keyboard is up it stays within `sheet.keyboardMaxHeight` (default
- * `maxHeight`) of the room above the keyboard. Backdrop taps and Android back call
- * onRequestClose. `styles.sheet` styles the panel (e.g. a bottom safe-area inset);
+ * While the keyboard is up it sits on the keyboard, within `sheet.keyboardMaxHeight`
+ * (default `maxHeight`) of the room above it; otherwise it keeps the bottom
+ * safe-area inset (`sheet.bottomInset`) free below the footer. Backdrop taps
+ * and Android back call onRequestClose. `styles.sheet` styles the panel;
  * `renderSheet` replaces the whole sheet.
  */
 const DefaultSheet: React.FC<Props> = ({
@@ -46,6 +49,7 @@ const DefaultSheet: React.FC<Props> = ({
   height,
   maxHeight = '90%',
   keyboardMaxHeight = maxHeight,
+  bottomInset,
   closeLabel,
   tokens,
   styles,
@@ -69,6 +73,11 @@ const DefaultSheet: React.FC<Props> = ({
     height === undefined
       ? { maxHeight: max }
       : { height: Math.min(toPoints(height, screen), max) };
+  // Below the footer: the home indicator or Android's navigation bar, which
+  // an edge-to-edge app draws under. While the keyboard is up the sheet sits
+  // on the keyboard instead, with nothing under it.
+  const safeInset = useBottomInset();
+  const inset = keyboard.up ? 0 : Math.max(0, bottomInset ?? safeInset);
   const s = buildContainerStyles(tokens);
   return (
     <Modal
@@ -78,10 +87,10 @@ const DefaultSheet: React.FC<Props> = ({
       statusBarTranslucent
       onRequestClose={onRequestClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={s.sheetRoot}
-      >
+      {/* Pads by the part of the screen the keyboard covers: all of it in an
+          edge-to-edge Android app, whose window the keyboard doesn't resize;
+          none where the window does shrink. */}
+      <KeyboardAvoidingView behavior="padding" style={s.sheetRoot}>
         <Pressable
           testID={testID ? `${testID}-backdrop` : undefined}
           accessibilityRole="button"
@@ -93,7 +102,15 @@ const DefaultSheet: React.FC<Props> = ({
           style={s.sheetRoom}
           onLayout={(e) => setMeasured(e.nativeEvent.layout.height)}
         >
-          <View testID={testID} style={[s.sheet, size, styles?.sheet]}>
+          <View
+            testID={testID}
+            style={[
+              s.sheet,
+              size,
+              inset > 0 && { paddingBottom: SHEET_PADDING_BOTTOM + inset },
+              styles?.sheet,
+            ]}
+          >
             {body}
             {footer}
           </View>
