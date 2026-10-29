@@ -87,6 +87,9 @@ const nextKey = (
 };
 
 /** Pads the segment being left, then focuses `to`. */
+/** Characters that end a segment when typed or pasted between numbers. */
+const SEPARATOR = /^[/\-.:\s]$/;
+
 const moveFocus = (
   state: SegmentEditorState,
   to: SegmentKey | null
@@ -136,6 +139,16 @@ export const segmentEditorReducer = (
       const key = state.focused;
       const spec = key ? specOf(state, key) : undefined;
       if (!key || !spec || spec.key === 'period') return state;
+      // A separator typed or pasted after some digits ('1/12/2025') ends the
+      // segment, as moving on would: 1 becomes 01 and the next segment starts.
+      if (SEPARATOR.test(action.digit)) {
+        if (!state.values[key]) return state;
+        const following = nextKey(state, key, 1);
+        return withParsed(
+          moveFocus(state, following === 'period' ? null : following),
+          opts
+        );
+      }
       const { next, advance } = inputDigit(
         state.values[key] ?? '',
         action.digit,

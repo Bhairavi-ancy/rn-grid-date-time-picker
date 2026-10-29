@@ -144,3 +144,29 @@ describe('segmentEditor: backspace, blur, reset', () => {
     );
   });
 });
+
+describe('segmentEditor: separators typed or pasted', () => {
+  it('a separator ends the segment, so unpadded dates read right', () => {
+    const s = run(
+      createSegmentEditor(null, dtIN),
+      [{ type: 'focus', key: 'day' }, ...digits('1/12/2025 9:05')],
+      dtIN
+    );
+    expect(s.values).toMatchObject({
+      day: '01',
+      month: '12',
+      year: '2025',
+      hour: '09',
+      minute: '05',
+    });
+  });
+
+  it('a separator after a full segment, or on an empty one, changes nothing', () => {
+    const s = run(
+      createSegmentEditor(null, dateUS),
+      [{ type: 'focus', key: 'month' }, ...digits('12/05/2024')],
+      dateUS
+    );
+    expect(s.values).toMatchObject({ month: '12', day: '05', year: '2024' });
+  });
+});
