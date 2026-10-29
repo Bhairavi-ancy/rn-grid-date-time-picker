@@ -124,4 +124,16 @@ describe('DefaultSheet', () => {
     expect(maxHeight(squeezed)).toBe(144); // 90% of the 160 pt floor
     jest.restoreAllMocks();
   });
+
+  it('a sheet opened with the keyboard already up is sized for it', () => {
+    jest.spyOn(Keyboard, 'isVisible').mockReturnValue(true);
+    jest
+      .spyOn(Keyboard, 'metrics')
+      .mockReturnValue({ height: 300, screenX: 0, screenY: 0, width: 0 });
+    const tree = mount(() => {}, undefined, { keyboardMaxHeight: '50%' });
+    expect(StyleSheet.flatten(panel(tree)?.props.style).maxHeight).toBe(
+      (Dimensions.get('window').height - 300) / 2
+    );
+    jest.restoreAllMocks();
+  });
 });

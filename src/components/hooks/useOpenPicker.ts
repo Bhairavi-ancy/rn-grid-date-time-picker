@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Keyboard, Platform, TextInput } from 'react-native';
 
 /** How long to wait for the keyboard to finish closing before opening anyway. */
@@ -19,7 +25,8 @@ interface Options {
  * Opens and closes the picker.
  * - calls `onBeforeOpen` first;
  * - if a text input has focus, closes the keyboard and waits for it on iOS and
- *   Android (so the sheet doesn't jump as the keyboard leaves), with a 450 ms fallback;
+ *   Android (so the sheet doesn't jump as the keyboard leaves), with a 450 ms
+ *   fallback; a controlled `visible` turned on waits the same way;
  * - disabled and read-only pickers never open.
  */
 export const useOpenPicker = ({
@@ -32,7 +39,9 @@ export const useOpenPicker = ({
 }: Options): { isOpen: boolean; open: () => void; close: () => void } => {
   const [openState, setOpenState] = useState(false);
   const isControlled = visible !== undefined;
-  const isOpen = isControlled ? !!visible : openState;
+  // Controlled: `visible` turned on while the keyboard is closing.
+  const [keyboardWait, setKeyboardWait] = useState(false);
+  const isOpen = isControlled ? !!visible && !keyboardWait : openState;
   const pending = useRef<{ cancel: () => void } | null>(null);
 
   const cancelPending = () => {
@@ -40,6 +49,42 @@ export const useOpenPicker = ({
     pending.current = null;
   };
   useEffect(() => cancelPending, []);
+
+  /** Closes the keyboard and calls `then` once it's gone (or after the fallback). */
+  const afterKeyboard = (then: () => void) => {
+    const event =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const sub = Keyboard.addListener(event, () => {
+      cancelPending();
+      then();
+    });
+    const timer = setTimeout(() => {
+      cancelPending();
+      then();
+    }, KEYBOARD_WAIT_FALLBACK_MS);
+    pending.current = {
+      cancel: () => {
+        sub.remove();
+        clearTimeout(timer);
+      },
+    };
+    Keyboard.dismiss();
+  };
+
+  // Before paint, so the sheet never shows under a closing keyboard.
+  useLayoutEffect(() => {
+    if (!isControlled || !visible) {
+      if (keyboardWait) {
+        cancelPending();
+        setKeyboardWait(false);
+      }
+      return;
+    }
+    if (!TextInput.State.currentlyFocusedInput?.()) return;
+    setKeyboardWait(true);
+    afterKeyboard(() => setKeyboardWait(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- when `visible` turns on
+  }, [isControlled, visible]);
 
   const reallyOpen = useCallback(() => {
     pending.current = null;
@@ -55,23 +100,8 @@ export const useOpenPicker = ({
       reallyOpen();
       return;
     }
-    const event =
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const sub = Keyboard.addListener(event, () => {
-      cancelPending();
-      reallyOpen();
-    });
-    const timer = setTimeout(() => {
-      cancelPending();
-      reallyOpen();
-    }, KEYBOARD_WAIT_FALLBACK_MS);
-    pending.current = {
-      cancel: () => {
-        sub.remove();
-        clearTimeout(timer);
-      },
-    };
-    Keyboard.dismiss();
+    afterKeyboard(reallyOpen);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- afterKeyboard only uses refs and stable APIs
   }, [disabled, readOnly, isOpen, onBeforeOpen, reallyOpen]);
 
   const close = useCallback(() => {

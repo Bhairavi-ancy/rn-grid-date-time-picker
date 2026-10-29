@@ -448,6 +448,23 @@ describe('DateTimePicker: keyboard wait before opening', () => {
     act(() => jest.advanceTimersByTime(KEYBOARD_WAIT_FALLBACK_MS));
     expect(exists(tree, 'dp-sheet')).toBe(true);
   });
+
+  it('a controlled visible turned on waits for the keyboard the same way', () => {
+    jest.useFakeTimers();
+    jest
+      .spyOn(TextInput.State, 'currentlyFocusedInput')
+      .mockReturnValue({} as never);
+    const dismiss = jest
+      .spyOn(Keyboard, 'dismiss')
+      .mockImplementation(() => {});
+    const props = { ...base, showField: false, visible: false };
+    const tree = mount(props);
+    act(() => tree.update(<DateTimePicker {...props} visible />));
+    expect(dismiss).toHaveBeenCalled();
+    expect(exists(tree, 'dp-sheet')).toBe(false);
+    act(() => jest.advanceTimersByTime(KEYBOARD_WAIT_FALLBACK_MS));
+    expect(exists(tree, 'dp-sheet')).toBe(true);
+  });
 });
 
 describe('DateTimePicker: calendar', () => {

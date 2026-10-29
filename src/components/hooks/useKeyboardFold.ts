@@ -9,15 +9,22 @@ interface KeyboardState {
 
 const DOWN: KeyboardState = { up: false, height: 0 };
 
+/** The keyboard as it is now: it can already be up when the picker mounts or opens. */
+const current = (): KeyboardState =>
+  Keyboard.isVisible()
+    ? { up: true, height: Keyboard.metrics()?.height ?? 0 }
+    : DOWN;
+
 /** Whether the keyboard is up, and how tall it is, while `active`. */
 export const useKeyboard = (active: boolean): KeyboardState => {
-  const [keyboard, setKeyboard] = useState(DOWN);
+  const [keyboard, setKeyboard] = useState(() => (active ? current() : DOWN));
 
   useEffect(() => {
     if (!active) {
       setKeyboard(DOWN);
       return undefined;
     }
+    setKeyboard(current());
     const showEvent =
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent =
