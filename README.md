@@ -147,7 +147,7 @@ All pages: [docs](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob
 
 - **iOS and Android**, in Expo Go and bare React Native apps. Web is untested.
 - **Hijri** needs the platform's `Intl` support for the Islamic calendar. Some Hermes builds on Android lack it, and the picker then falls back to Gregorian.
-- The built-in sheet doesn't add a safe-area inset. Add one with `styles.sheet`, as shown in [Sheet, field and time](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/presentation.md).
+- **The built-in sheet** sits on the keyboard while it's up, and keeps the home indicator or Android's navigation bar free below Confirm, read from `react-native-safe-area-context` when your app has it, or from `sheet.bottomInset`.
 
 Other known limits are listed in the [docs](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/README.md#platform-support-and-known-limits).
 

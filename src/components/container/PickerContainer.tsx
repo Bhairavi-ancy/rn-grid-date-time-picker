@@ -1,5 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
+import { DEFAULT_STRINGS } from '../theme/defaultStrings';
 import type { SheetOptions, SheetRenderProps } from '../types';
 import DefaultSheet from './DefaultSheet';
 import { buildPickerLayout, type PickerLayoutProps } from './PickerLayout';
@@ -53,7 +54,8 @@ const PickerContainer: React.FC<PickerContainerProps> = ({
       height={sheet?.height}
       maxHeight={sheet?.maxHeight}
       keyboardMaxHeight={sheet?.keyboardMaxHeight}
-      closeLabel={layout.state.strings.a11yClose}
+      bottomInset={sheet?.bottomInset}
+      closeLabel={layout.state.strings.a11yClose ?? DEFAULT_STRINGS.a11yClose}
       tokens={layout.state.tokens}
       styles={layout.styles}
     />

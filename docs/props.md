@@ -27,7 +27,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `onOpen` / `onClose` | `() => void` | – | `onClose` fires whenever the sheet closes: Close, the backdrop, Android back, and after Confirm. |
 | `onBeforeOpen` | `() => void` | – | Just before opening, e.g. to close your own dropdowns. |
 | `showField` | `boolean` | `true` | Hide the on-screen field (for example with `visible`). |
-| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `keyboardMaxHeight`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`. See [Sheet layout](presentation.md#sheet-layout). |
+| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `keyboardMaxHeight`, `bottomInset`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`. See [Sheet layout](presentation.md#sheet-layout). |
 | `renderSheet` | `(p: SheetRenderProps) => ReactNode` | built-in sheet | See [Presentation](presentation.md). |
 
 ## Value field

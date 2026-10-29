@@ -109,6 +109,13 @@ export interface SheetOptions {
    * the room above the keyboard. Default: `maxHeight`. Built-in sheet only.
    */
   keyboardMaxHeight?: SheetSize;
+  /**
+   * Space kept free below Confirm while the keyboard is down: the home
+   * indicator, or Android's navigation bar in an edge-to-edge app. Default:
+   * the bottom inset from react-native-safe-area-context's SafeAreaProvider
+   * when the app has one, else 0. Built-in sheet only.
+   */
+  bottomInset?: number;
   /** The header stays put while the body scrolls. false: it scrolls with the body. Default true. */
   fixedHeader?: boolean;
   /** The footer (Confirm) stays pinned below the body. false: it scrolls at the end of the body. Default true. */

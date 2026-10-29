@@ -40,14 +40,14 @@ export interface PickerStrings {
   errorRangeTooLong: (days: number) => string;
   nothingSelectable: string;
   /** The calendar switch and the dual tabs. */
-  calendarGregorian: string;
-  calendarHijri: string;
-  calendarDual: string;
-  a11yCalendarSystem: string;
+  calendarGregorian?: string;
+  calendarHijri?: string;
+  calendarDual?: string;
+  a11yCalendarSystem?: string;
   a11yClear: string;
   a11yOpen: string;
   /** The built-in sheet's backdrop, which closes it. */
-  a11yClose: string;
+  a11yClose?: string;
   a11yDay: string;
   a11yMonth: string;
   a11yYear: string;
@@ -64,7 +64,7 @@ export interface PickerStrings {
   a11yRangeEnd: string;
 }
 
-export const DEFAULT_STRINGS: PickerStrings = {
+export const DEFAULT_STRINGS: Required<PickerStrings> = {
   titleDate: 'Select date',
   confirm: 'Confirm',
   reset: 'Reset',
@@ -124,6 +124,6 @@ export const DEFAULT_STRINGS: PickerStrings = {
 /** The English defaults with the caller's overrides on top. */
 export const resolveStrings = (
   overrides?: Partial<PickerStrings>
-): PickerStrings => {
+): Required<PickerStrings> => {
   return { ...DEFAULT_STRINGS, ...overrides };
 };

@@ -12,21 +12,23 @@ All notable changes to this project are documented here. The format follows [Kee
 - **A folded calendar stays mounted but hidden** while the keyboard is up, so it comes back on the month it showed. A test that checks `dp-calendar` is gone while folded should check that it's hidden instead.
 - **`calendarSystem="hijri"` is written in Arabic** (month and weekday names, Arabic digits), whatever the app's `locale`, and **the field shows the Hijri date** (e.g. "١٥ جمادى الأولى ١٤٤٨ هـ") instead of the Gregorian date in `dateFormat`. `hijriLocale={locale}` and `numerals="latin"` bring back 1.0.0's language and digits; the field still writes the date in Hijri. Values passed to `onChange` stay Gregorian.
 - **`onChange` gets a second argument**, `{ calendarSystem }`, when a Hijri calendar can show. Tests asserting `toHaveBeenCalledWith(value)` need `expect.anything()` added.
-- **New required keys** in full `ThemeTokens` objects (`outsideText`) and full `PickerStrings` objects (`calendarGregorian`, `calendarHijri`, `calendarDual`, `a11yCalendarSystem`, `a11yClose`). `Partial<…>`, as the docs use, is unaffected.
 - **Stored values must start with a full `YYYY-MM-DD` day.** Strings such as `'2026-10'`, `'2026'` or `'10:30'` now read as empty instead of being guessed, and so do a leading space, a lowercase `t` and six-digit years (`+002026-…`).
 - **Days outside `yearRange` are greyed**, like days outside `minDate` / `maxDate`.
 - **Outside days** (from the months before and after) use the new `outsideText` token, which follows `mutedText`, instead of `placeholder`.
-- **The built-in sheet's padding** is 8 at the bottom (was 24) and 24 above the title (was 8). If you add a safe-area inset, use `paddingBottom: 8 + insets.bottom`.
+- **The built-in sheet's padding** is 8 at the bottom (was 24) and 24 above the title (was 8), plus the bottom safe-area inset, which the sheet now adds itself (see Added). If you added `insets.bottom` to `styles.sheet.paddingBottom` yourself, that still wins; you can drop it.
 - **From / To ranges:** a tap on a full range starts a new range (or moves the nearer end with `reselect: 'moveNearestEnd'`), instead of replacing To.
 - **`strings.errorRangeOrder`** now defaults to "The end date must be greater than the start date".
 
 ### Added
 
+- `sheet.bottomInset`: the built-in sheet keeps the bottom safe-area inset (home indicator, Android's navigation bar) free below Confirm. By default it's read from `react-native-safe-area-context` when the app has a `SafeAreaProvider` (an optional peer dependency).
 - `calendarSwitch`: a Gregorian / Hijri / Dual switch above the calendar, with `onCalendarSystemChange`, `renderCalendarSwitch` and style keys for each part.
 - `dualDefaultTab`, `hijriLocale` and `numerals` (`'latin'`, `'arabic'` or `'locale'` digits; values stay 0–9).
 - `info.calendarSystem` in `onChange`: the calendar a date was picked in.
 - `hideCalendarOnKeyboard` (on by default, as the calendar folded in 1.0.0; `false` keeps it in view) and `sheet.keyboardMaxHeight`.
 - `strings.a11yClose` for the sheet backdrop's screen-reader label, which was always English.
+- `hijriDateText` and `arabicDigits`, the helpers the field uses to write a Hijri date and Arabic digits, so an app's own text (filter chips, summaries) matches the field.
+- New optional keys: `ThemeTokens.outsideText` and the `PickerStrings` keys `calendarGregorian`, `calendarHijri`, `calendarDual`, `a11yCalendarSystem` and `a11yClose`. A full 1.0.0 `ThemeTokens` or `PickerStrings` object still compiles.
 - Exported types: `ChangeInfo`, `CalendarSwitchRenderProps`, `CalendarSystem`, `Numerals`, `RangeRole`, `StyleKey`, `PickerStyleValue`.
 
 ### Changed
@@ -41,6 +43,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- Android, edge-to-edge apps (the default from Android 15 / recent Expo): the sheet now sits above the keyboard instead of behind it, and Confirm no longer sits under the navigation bar's Back / Home buttons.
 - A date typed or pasted with separators and no padding (`1/12/2025`) reads as 1 December, not 11 February.
 - The field writes AM / PM with `strings.am` / `strings.pm`, like the time row.
 - A minute off the wheel's step shows at the nearest row, not 00.

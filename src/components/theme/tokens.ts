@@ -10,7 +10,7 @@ export interface ThemeTokens {
   heading: string;
   mutedText: string;
   /** Days of the months before and after, which can still be picked. */
-  outsideText: string;
+  outsideText?: string;
   placeholder: string;
   border: string;
   /** Typed time boxes. */
@@ -48,7 +48,7 @@ export interface ThemeTokens {
   touchTarget: number;
 }
 
-export const DEFAULT_TOKENS: ThemeTokens = {
+export const DEFAULT_TOKENS: Required<ThemeTokens> = {
   accent: '#2563EB',
   onAccent: '#FFFFFF',
   text: '#111827',

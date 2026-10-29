@@ -2,6 +2,8 @@ import { StyleSheet } from 'react-native';
 import { fontStyle, type ThemeTokens } from '../theme/tokens';
 
 const GUTTER = 16;
+/** Space under the sheet's footer, before any bottom inset. */
+export const SHEET_PADDING_BOTTOM = 8;
 
 const cache = new WeakMap<ThemeTokens, ReturnType<typeof create>>();
 
@@ -22,7 +24,7 @@ const create = (t: ThemeTokens) =>
       borderTopLeftRadius: t.radius * 2,
       borderTopRightRadius: t.radius * 2,
       backgroundColor: t.background,
-      paddingBottom: 8,
+      paddingBottom: SHEET_PADDING_BOTTOM,
     },
     container: { width: '100%', paddingHorizontal: GUTTER },
     // In a sheet the body shrinks to the sheet's max height and scrolls.
