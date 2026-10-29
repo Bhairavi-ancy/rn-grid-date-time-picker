@@ -238,6 +238,20 @@ describe('range: date-time on one day', () => {
     expect(texts(tree)).toContain('20-10-2026 09:00 AM – 20-10-2026 10:00 AM');
   });
 
+  it("the end stays within the day's allowed hours", () => {
+    // 16:30 in India.
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      now: () => new Date(Date.UTC(2026, 9, 21, 11, 0)),
+      timeBounds: () => ({ max: { hour: 17, minute: 0 } }),
+    });
+    open(tree);
+    tap(tree, 20);
+    tap(tree, 20);
+    expect(texts(tree)).toContain('20-10-2026 04:30 PM – 20-10-2026 05:00 PM');
+  });
+
   it('From / To: the end on the start day starts an hour later too', () => {
     const tree = mount({
       mode: 'range',

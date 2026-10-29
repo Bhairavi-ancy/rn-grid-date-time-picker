@@ -126,6 +126,29 @@ describe('DefaultSheet', () => {
     jest.restoreAllMocks();
   });
 
+  it('a keyboard read as up at mount is put right when it finishes hiding', () => {
+    const listeners: Record<string, (e?: object) => void> = {};
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      name: string,
+      cb: (e?: object) => void
+    ) => {
+      listeners[name] = cb;
+      return { remove: () => {} };
+    }) as never);
+    jest.spyOn(Keyboard, 'isVisible').mockReturnValue(true);
+    jest
+      .spyOn(Keyboard, 'metrics')
+      .mockReturnValue({ height: 300, screenX: 0, screenY: 0, width: 0 });
+    const tree = mount(() => {});
+    const maxHeight = () =>
+      StyleSheet.flatten(panel(tree)?.props.style).maxHeight;
+    expect(maxHeight()).toBeLessThan(Dimensions.get('window').height * 0.9);
+    // Only the did-hide event: on iOS the will-hide one came before the mount.
+    act(() => listeners.keyboardDidHide!());
+    expect(maxHeight()).toBeCloseTo(Dimensions.get('window').height * 0.9);
+    jest.restoreAllMocks();
+  });
+
   it('a sheet opened with the keyboard already up is sized for it', () => {
     jest.spyOn(Keyboard, 'isVisible').mockReturnValue(true);
     jest

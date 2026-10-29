@@ -600,6 +600,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   }, []);
   const [activeDay, setActiveDay] = useState<CalendarDate | null>(null);
   const resetSelectionUi = useCallback(() => {
+    // What was typed is gone with the selection, so nothing blocks Confirm.
+    setTypingBlocks({});
     setPendingTimes({});
     setActiveEnd('from');
     setEndPicked(false);
@@ -940,8 +942,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   }, [now, zone, minuteStep]);
 
   // A range end picked on the start's day starts an hour after the start (at
-  // most the day's last step), so the range isn't out of order before the
-  // user has touched the time.
+  // most the day's latest allowed time, or its last step), so the range isn't
+  // out of order before the user has touched the time.
   // A time typed for the end before its day is kept as typed.
   const endTimeFor = (
     from: DateTimeValue | null,
@@ -953,7 +955,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     if (!from?.time || !isSameDay(from.date, day)) return time;
     const start = from.time.hour * 60 + from.time.minute;
     if (time.hour * 60 + time.minute > start) return time;
-    const end = Math.min(start + 60, 24 * 60 - Math.max(1, minuteStep));
+    // Within the day's allowed hours when it has them.
+    const max = constraints.timeBounds(day)?.max;
+    const last = max
+      ? max.hour * 60 + max.minute
+      : 24 * 60 - Math.max(1, minuteStep);
+    const end = Math.min(start + 60, last);
     return { hour: Math.floor(end / 60), minute: end % 60 };
   };
 
@@ -1068,6 +1075,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       endPicked,
       draftOptions,
       minuteStep,
+      constraints,
     ]
   );
 

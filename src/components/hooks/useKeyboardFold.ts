@@ -33,9 +33,16 @@ export const useKeyboard = (active: boolean): KeyboardState => {
       setKeyboard({ up: true, height: e?.endCoordinates?.height ?? 0 })
     );
     const hide = Keyboard.addListener(hideEvent, () => setKeyboard(DOWN));
+    // iOS: a sheet opened on keyboardWillHide mounts before the keyboard is
+    // gone, so it reads it as up; keyboardDidHide puts that right.
+    const hidden =
+      hideEvent === 'keyboardDidHide'
+        ? null
+        : Keyboard.addListener('keyboardDidHide', () => setKeyboard(DOWN));
     return () => {
       show.remove();
       hide.remove();
+      hidden?.remove();
     };
   }, [active]);
 
