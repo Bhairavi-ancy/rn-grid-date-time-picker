@@ -97,6 +97,12 @@ const emptySelection = (sel: CalendarSelection): CalendarSelection =>
 /** Minute steps that divide the hour. */
 const MINUTE_STEPS = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60];
 
+/** The later / earlier of a limit and a bound; the bound when there's no limit. */
+const later = (a: CalendarDate | undefined, b: CalendarDate): CalendarDate =>
+  a && compareCalendarDates(a, b) > 0 ? a : b;
+const earlier = (a: CalendarDate | undefined, b: CalendarDate): CalendarDate =>
+  a && compareCalendarDates(a, b) < 0 ? a : b;
+
 /**
  * A date & time picker: a value field that opens a sheet (or an inline panel)
  * with a calendar and, for date-time values, a time row. Single, range and
@@ -449,6 +455,17 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     },
     [loadHolidays]
   );
+  // A month's grid also shows days of the months either side, and a Hijri
+  // month can run from December into January, so a month at either end of a
+  // year loads the year next to it too.
+  const loadHolidaysAround = useCallback(
+    (year: number, month: number) => {
+      loadHolidaysFor(year);
+      if (month >= 11 && year < yearRange.last) loadHolidaysFor(year + 1);
+      if (month === 1 && year > yearRange.first) loadHolidaysFor(year - 1);
+    },
+    [loadHolidaysFor, yearRange.first, yearRange.last]
+  );
   const holidays = useMemo(
     () => [...(holidaysProp ?? []), ...Object.values(loadedHolidays).flat()],
     [holidaysProp, loadedHolidays]
@@ -486,8 +503,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           type,
           timeZone: zone,
           now: nowDate,
-          minDate,
-          maxDate,
+          minDate: later(minDate, { year: yearRange.first, month: 1, day: 1 }),
+          maxDate: earlier(maxDate, {
+            year: yearRange.last,
+            month: 12,
+            day: 31,
+          }),
           isDisabled: disabledDates,
           isEnabled: enabledDates,
           timeBounds,
@@ -512,6 +533,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     weekdaysKey,
     disableHolidays,
     getConstraints,
+    yearRange,
   ]);
 
   const followsClock = isOpen && constraints.dependsOnNow;
@@ -1113,15 +1135,16 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const handleVisibleMonth = useCallback(
     (year: number, month: number) => {
-      loadHolidaysFor(year);
+      loadHolidaysAround(year, month);
       onVisibleMonthChange?.(year, month);
     },
-    [loadHolidaysFor, onVisibleMonthChange]
+    [loadHolidaysAround, onVisibleMonthChange]
   );
   useEffect(() => {
     if (!isOpen) return;
-    const anchor = selection.kind === 'single' ? selection.day : null;
-    loadHolidaysFor((anchor ?? today).year);
+    const anchor =
+      (selection.kind === 'single' ? selection.day : null) ?? today;
+    loadHolidaysAround(anchor.year, anchor.month);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per open
   }, [isOpen]);
 

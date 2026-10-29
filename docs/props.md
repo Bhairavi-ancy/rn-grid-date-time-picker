@@ -72,7 +72,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 |---|---|---|
 | `firstDayOfWeek` | `1`–`7` (Monday = 1) | from `locale`'s region (Sunday for `en-US`, Monday for `en-GB`), else `7` (Sunday) |
 | `showOutsideDays` | `boolean` | `true` |
-| `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200) |
+| `yearRange` | `{ first: number; last: number }` | `DEFAULT_YEAR_RANGE` (1900–2200); days outside it are greyed, like days outside `minDate` / `maxDate` |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` |
 | `precision` | `'day' \| 'month' \| 'year'` | `'day'`: what one pick is. With `'month'` or `'year'` the month or year grid is the last step, the saved value is the period's first day, the field shows "March 2026" or "2026", and a period can be picked when any day in it can (so `minDate` 15 Oct still allows October). The current month or year is outlined. Single date pickers only (ignored for date-time, range and multiple), always Gregorian, without typing. |
 | `initialVisibleDate` | `CalendarDate` | today: with no value, the calendar opens on this day's month without selecting it (e.g. `{ year: 2000, month: 1, day: 1 }` for a date of birth); a value's month always wins |

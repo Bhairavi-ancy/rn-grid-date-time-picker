@@ -120,7 +120,11 @@ export const hijriMonthStart = (year: number, month: number): CalendarDate => {
 
 export const addHijriMonths = (m: SystemMonth, n: number): SystemMonth => {
   const index = m.year * 12 + (m.month - 1) + n;
-  return { year: Math.floor(index / 12), month: (index % 12) + 1 };
+  // % keeps the sign in JS, so a year before 1 AH still gets months 1–12.
+  return {
+    year: Math.floor(index / 12),
+    month: (((index % 12) + 12) % 12) + 1,
+  };
 };
 
 export const hijriMonthLength = (year: number, month: number): number => {

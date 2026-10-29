@@ -522,6 +522,34 @@ describe('DateTimePicker: calendar', () => {
     await act(async () => {});
   });
 
+  it('days outside yearRange are greyed, even shown from the month next to it', () => {
+    const tree = mount({
+      now,
+      yearRange: { first: 2020, last: 2030 },
+      initialVisibleDate: { year: 2020, month: 1, day: 1 },
+    });
+    openSheet(tree);
+    expect(dayCell(tree, 2019, 12, 30).props.disabled).toBe(true);
+    expect(dayCell(tree, 2020, 1, 2).props.disabled).toBe(false);
+  });
+
+  it('a Hijri month running into January loads that year’s holidays too', async () => {
+    const loadHolidays = jest.fn((year: number) =>
+      Promise.resolve(year === 2027 ? ['2027-01-01'] : [])
+    );
+    const tree = mount({
+      now,
+      calendarSystem: 'hijri',
+      value: '2026-12-20T00:00:00.000Z',
+      loadHolidays,
+      disableHolidays: true,
+    });
+    openSheet(tree);
+    await act(async () => {});
+    expect(loadHolidays).toHaveBeenCalledWith(2027);
+    expect(dayCell(tree, 2027, 1, 1).props.disabled).toBe(true);
+  });
+
   it('tells the screen once per open when nothing can be picked', () => {
     const onError = jest.fn();
     const tree = mount({
