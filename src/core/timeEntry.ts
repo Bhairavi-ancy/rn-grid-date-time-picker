@@ -2,8 +2,6 @@ import { toLatinDigits } from './digits';
 import type { TimeBounds } from './constraints';
 import {
   from12Hour,
-  inputDigit,
-  padSegment,
   to12Hour,
   type Period,
   type SegmentSpec,
@@ -23,19 +21,6 @@ export interface TimeEntryValues {
   minute?: string;
   period?: Period;
 }
-
-export interface TimeEntryState {
-  values: TimeEntryValues;
-  focused: TimeKey | null;
-}
-
-export type TimeEntryAction =
-  | { type: 'focus'; key: TimeKey }
-  | { type: 'digit'; digit: string }
-  | { type: 'backspace' }
-  | { type: 'period'; period: Period }
-  | { type: 'blur' }
-  | { type: 'reset'; time: Time | null };
 
 export type TimeEntryIssue =
   'INCOMPLETE' | 'INVALID' | 'OFF_STEP' | 'BEFORE_MIN' | 'AFTER_MAX';
@@ -72,85 +57,6 @@ export const formatTimeEntry = (
     return { hour: pad2(time.hour), minute: pad2(time.minute) };
   const { hour12, period } = to12Hour(time.hour);
   return { hour: pad2(hour12), minute: pad2(time.minute), period };
-};
-
-export const createTimeEntry = (
-  time: Time | null,
-  timeFormat: TimeFormat
-): TimeEntryState => {
-  return { values: formatTimeEntry(time, timeFormat), focused: null };
-};
-
-const leave = (
-  state: TimeEntryState,
-  to: TimeKey | null,
-  timeFormat: TimeFormat
-): TimeEntryState => {
-  const from = state.focused;
-  if (!from) return { ...state, focused: to };
-  const text = state.values[from] ?? '';
-  return {
-    values: {
-      ...state.values,
-      [from]: padSegment(text, timeSpecs(timeFormat)[from]),
-    },
-    focused: to,
-  };
-};
-
-export const timeEntryReducer = (
-  state: TimeEntryState,
-  action: TimeEntryAction,
-  timeFormat: TimeFormat
-): TimeEntryState => {
-  switch (action.type) {
-    case 'focus':
-      return leave(state, action.key, timeFormat);
-    case 'blur':
-      return leave(state, null, timeFormat);
-    case 'digit': {
-      const key = state.focused;
-      if (!key) return state;
-      const { next, advance } = inputDigit(
-        state.values[key] ?? '',
-        action.digit,
-        timeSpecs(timeFormat)[key]
-      );
-      const typed = { ...state, values: { ...state.values, [key]: next } };
-      // Two hour digits jump to the minutes; a full minute box stays put.
-      if (!advance) return typed;
-      return leave(typed, key === 'hour' ? 'minute' : null, timeFormat);
-    }
-    case 'backspace': {
-      const key = state.focused;
-      if (!key) return state;
-      const current = state.values[key] ?? '';
-      if (current)
-        return {
-          ...state,
-          values: { ...state.values, [key]: current.slice(0, -1) },
-        };
-      if (key === 'minute') {
-        return {
-          values: {
-            ...state.values,
-            hour: (state.values.hour ?? '').slice(0, -1),
-          },
-          focused: 'hour',
-        };
-      }
-      return state;
-    }
-    case 'period':
-      return { ...state, values: { ...state.values, period: action.period } };
-    case 'reset':
-      return {
-        values: formatTimeEntry(action.time, timeFormat),
-        focused: state.focused,
-      };
-    default:
-      return state;
-  }
 };
 
 const readNumber = (text?: string): number | null =>

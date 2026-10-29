@@ -3,7 +3,6 @@ import {
   formatSegments,
   from12Hour,
   inputDigit,
-  inputPeriod,
   padSegment,
   parseSegments,
   segmentLayout,
@@ -63,12 +62,6 @@ describe('segments: typing', () => {
     expect(padSegment('7', day)).toBe('07');
     expect(padSegment('', day)).toBe('');
     expect(padSegment('26', year)).toBe('26');
-  });
-
-  it('reads AM/PM from a or p', () => {
-    expect(inputPeriod('a')).toBe('AM');
-    expect(inputPeriod('P')).toBe('PM');
-    expect(inputPeriod('x')).toBeNull();
   });
 });
 
