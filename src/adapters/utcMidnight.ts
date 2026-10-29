@@ -30,6 +30,12 @@ export const isWritableYear = (year: number): boolean =>
   year >= 1 && year <= 9999;
 
 /**
+ * A stored value must start with a full day: Luxon also reads '10:30' (today),
+ * '2026' or week and ordinal dates, which aren't dates the picker saved.
+ */
+const STARTS_WITH_DAY = /^\d{4}-\d{2}-\d{2}(?:T|$)/;
+
+/**
  * A stored instant → its day and wall-clock time in `zone`, or null when it
  * can't be parsed. Shared by every built-in format for date-time values.
  */
@@ -37,11 +43,11 @@ export const parseInstant = (
   value: string | null | undefined,
   zone: string
 ): DateTimeValue | null => {
-  if (!value) return null;
+  if (!value || !STARTS_WITH_DAY.test(value)) return null;
   const utc = DateTime.fromISO(value, { zone: 'utc' });
   if (!utc.isValid) return null;
   const local = utc.setZone(zone);
-  if (!local.isValid) return null;
+  if (!local.isValid || !isWritableYear(local.year)) return null;
   return {
     date: calendarDateOf(local),
     time: { hour: local.hour, minute: local.minute },
@@ -58,8 +64,9 @@ export const formatInstant = (
 ): string => {
   if (!value || !isValidCalendarDate(value.date)) return '';
   if (!isValidTime(value.time)) return '';
-  const zoned = toZonedDateTime(value, zone);
-  return zoned.isValid ? (zoned.toUTC().toISO() ?? '') : '';
+  const utc = toZonedDateTime(value, zone).toUTC();
+  // A day near year 1 or 9999 can fall in year 0 or 10000 in UTC.
+  return utc.isValid && isWritableYear(utc.year) ? (utc.toISO() ?? '') : '';
 };
 
 /** Saved string → picker value. Returns null for '' or an unparsable string. */
@@ -70,10 +77,11 @@ const fromWire = (
 ): DateTimeValue | null => {
   if (!value) return null;
   if (type !== 'date') return parseInstant(value, zone);
+  if (!STARTS_WITH_DAY.test(value)) return null;
   // The calendar day as written: an offset in the string ('+05:30') is kept,
   // not converted to UTC, so the day never moves.
   const written = DateTime.fromISO(value, { setZone: true });
-  if (!written.isValid) return null;
+  if (!written.isValid || !isWritableYear(written.year)) return null;
   return { date: calendarDateOf(written), time: null };
 };
 
@@ -109,6 +117,7 @@ const unchangedWire = (
 ): string => {
   if (!value) return '';
   if (type === 'datetime') {
+    if (!STARTS_WITH_DAY.test(value)) return '';
     const dt = DateTime.fromISO(value, { zone: 'utc' });
     return dt.isValid ? (dt.toUTC().toISO() ?? '') : '';
   }

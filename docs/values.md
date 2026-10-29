@@ -15,7 +15,7 @@ The string format is set by `valueFormat`:
 
 | `valueFormat` | date | date-time |
 |---|---|---|
-| `'iso'` (default) | `'2026-10-24'`. Only `YYYY-MM-DD` is accepted; anything else reads as empty. | A UTC ISO instant with seconds and milliseconds zeroed: `'2026-10-24T10:00:00.000Z'`. Any ISO 8601 string with `Z` or an offset is accepted (one without an offset is read as UTC) and shown in `timeZone`. |
+| `'iso'` (default) | `'2026-10-24'`. Only `YYYY-MM-DD` is accepted; anything else reads as empty. | A UTC ISO instant with seconds and milliseconds zeroed: `'2026-10-24T10:00:00.000Z'`. Any ISO 8601 string that starts with a full `YYYY-MM-DD` day is accepted, with `Z` or an offset (one without an offset is read as UTC), and shown in `timeZone`. A time alone, a year, a week or an ordinal date reads as empty. |
 | `'utc-midnight'` | `'2026-10-24T00:00:00.000Z'`: the calendar day at UTC midnight, never shifted by a zone. | The same as `'iso'`. |
 | a `ValueAdapter` | yours | yours |
 
