@@ -242,8 +242,20 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   };
   // The switch changes this; a new calendarSystem prop starts over from it.
   const [chosenSystem, setChosenSystem] = useState(startSystem);
+  // The calendar the props open on, which a value from outside counts as
+  // picked in. The switch's own choice coming back as the calendarSystem prop
+  // (onCalendarSystemChange={setSystem}) isn't a new one.
+  const [openedOn, setOpenedOn] = useState(startSystem);
+  const echo = useRef<CalendarSystem | null>(null);
   useEffect(
-    () => setChosenSystem(startSystem()),
+    () => {
+      const next = startSystem();
+      const own = echo.current === next;
+      echo.current = null;
+      if (own) return;
+      setChosenSystem(next);
+      setOpenedOn(next);
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the props change
     [calendarSystem, switchKey]
   );
@@ -257,7 +269,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // A value from outside counts as picked in the calendar the props open on,
   // not the one the user has since chosen in the switch.
   const propSystem =
-    precision === 'day' ? resolveCalendarSystem(startSystem()) : 'gregory';
+    precision === 'day' ? resolveCalendarSystem(openedOn) : 'gregory';
   const outsideSystem = propSystem === 'dual' ? dualDefaultTab : propSystem;
   // Picks say which calendar they were made in only when one can be Hijri.
   const hijriInPlay = switchSystems !== null || system !== 'gregory';
@@ -654,8 +666,24 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       ? savedSystemRef.current.system
       : outsideSystem;
   const [draftSystem, setDraftSystem] = useState(savedSystem);
-  // The draft is rebuilt on open and on a new value; so is its calendar.
-  useEffect(() => setDraftSystem(savedSystem), [isOpen, valueKey, savedSystem]);
+  // The draft is rebuilt on open and on a new value; so is its calendar. A new
+  // calendarSystem prop while the user is picking starts the selection over,
+  // since a selection is one calendar's.
+  const systemSeen = useRef({ isOpen, valueKey, savedSystem });
+  useEffect(() => {
+    const seen = systemSeen.current;
+    systemSeen.current = { isOpen, valueKey, savedSystem };
+    setDraftSystem(savedSystem);
+    const systemOnly =
+      seen.isOpen === isOpen &&
+      seen.valueKey === valueKey &&
+      seen.savedSystem !== savedSystem;
+    if (systemOnly && isOpen && edited.current) {
+      draft.clear();
+      resetSelectionUi();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the draft's actions are stable
+  }, [isOpen, valueKey, savedSystem]);
   useEffect(() => setDualTab(dualDefaultTab), [isOpen, dualDefaultTab]);
   const selectionShown = draftSystem === shownSystem;
   /** Saves a value: with the calendar it was picked in, when one can be Hijri. */
@@ -1125,7 +1153,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       return;
     }
     setTriggerError('');
-    emitChange(wire, outsideSystem);
+    // Typing keeps the calendar the saved value was picked in.
+    emitChange(wire, savedSystem);
     onBlur?.();
   };
 
@@ -1393,6 +1422,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     if (next === system) return;
     setChosenSystem(next);
     if (next === 'dual') setDualTab(dualDefaultTab);
+    echo.current = next;
     onCalendarSystemChange?.(next);
   };
   const calendarSwitchNode = !switchSystems ? null : renderCalendarSwitch ? (
