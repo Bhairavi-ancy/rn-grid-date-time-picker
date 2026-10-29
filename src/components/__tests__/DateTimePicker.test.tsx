@@ -469,6 +469,19 @@ describe('DateTimePicker: the built-in sheet', () => {
   });
 });
 
+describe('DateTimePicker: translated AM / PM', () => {
+  it('the field writes the time with strings.am / strings.pm', () => {
+    const tree = mount({
+      type: 'datetime',
+      allowTyping: false,
+      // 09:30 UTC is 3:00 PM in India.
+      value: '2026-10-21T09:30:00.000Z',
+      strings: { am: 'ص', pm: 'م' },
+    });
+    expect(texts(tree)).toContain('21-10-2026 03:00 م');
+  });
+});
+
 describe('DateTimePicker: keyboard wait before opening', () => {
   afterEach(() => {
     jest.useRealTimers();

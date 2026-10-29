@@ -1,4 +1,4 @@
-import type { SegmentError } from '../../core/segments';
+import { to12Hour, type SegmentError } from '../../core/segments';
 import type { DateTimeValue, PickerType, TimeFormat } from '../../core/types';
 import { DEFAULT_STRINGS, type PickerStrings } from '../theme/defaultStrings';
 
@@ -14,16 +14,20 @@ export const formatDateText = (
     .replace('MM', pad2(value.date.month))
     .replace('dd', pad2(value.date.day));
 
+/** The AM / PM labels, from `strings`. */
+export type PeriodLabels = Pick<PickerStrings, 'am' | 'pm'>;
+
 /** '03:45 PM' (12-hour) or '15:45' (24-hour). Always shows AM/PM in 12-hour mode. */
 export const formatTimeText = (
   value: DateTimeValue,
-  timeFormat: TimeFormat
+  timeFormat: TimeFormat,
+  periods: PeriodLabels = DEFAULT_STRINGS
 ): string => {
   if (!value.time) return '';
   const { hour, minute } = value.time;
   if (timeFormat === '24h') return `${pad2(hour)}:${pad2(minute)}`;
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${pad2(hour12)}:${pad2(minute)} ${hour < 12 ? 'AM' : 'PM'}`;
+  const { hour12, period } = to12Hour(hour);
+  return `${pad2(hour12)}:${pad2(minute)} ${period === 'AM' ? periods.am : periods.pm}`;
 };
 
 /** Writes a value's date some other way, e.g. as a Hijri date. */
@@ -34,12 +38,13 @@ export const formatValueText = (
   type: PickerType,
   dateFormat: string,
   timeFormat: TimeFormat,
-  dateText?: DateTextFormatter
+  dateText?: DateTextFormatter,
+  periods: PeriodLabels = DEFAULT_STRINGS
 ): string => {
   if (!value) return '';
   const date = dateText ? dateText(value) : formatDateText(value, dateFormat);
   return type === 'datetime' && value.time
-    ? `${date} ${formatTimeText(value, timeFormat)}`
+    ? `${date} ${formatTimeText(value, timeFormat, periods)}`
     : date;
 };
 
@@ -51,11 +56,26 @@ export const formatRangeText = (
   dateFormat: string,
   timeFormat: TimeFormat,
   separator: string = ' – ',
-  dateText?: DateTextFormatter
+  dateText?: DateTextFormatter,
+  periods: PeriodLabels = DEFAULT_STRINGS
 ): string => {
   if (!from && !to) return '';
-  const a = formatValueText(from, type, dateFormat, timeFormat, dateText);
-  const b = formatValueText(to, type, dateFormat, timeFormat, dateText);
+  const a = formatValueText(
+    from,
+    type,
+    dateFormat,
+    timeFormat,
+    dateText,
+    periods
+  );
+  const b = formatValueText(
+    to,
+    type,
+    dateFormat,
+    timeFormat,
+    dateText,
+    periods
+  );
   return `${a}${separator}${b}`.trim();
 };
 
@@ -65,11 +85,14 @@ export const formatMultipleText = (
   type: PickerType,
   dateFormat: string,
   timeFormat: TimeFormat,
-  dateText?: DateTextFormatter
+  dateText?: DateTextFormatter,
+  periods: PeriodLabels = DEFAULT_STRINGS
 ): string =>
   values
     .filter((v): v is DateTimeValue => !!v)
-    .map((v) => formatValueText(v, type, dateFormat, timeFormat, dateText))
+    .map((v) =>
+      formatValueText(v, type, dateFormat, timeFormat, dateText, periods)
+    )
     .join(', ');
 
 /** 'DD-MM-YYYY' or 'DD-MM-YYYY hh:mm AM', from the placeholder strings. */

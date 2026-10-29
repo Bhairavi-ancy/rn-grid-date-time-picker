@@ -1264,7 +1264,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           dateFormat,
           timeFormat,
           strings.rangeSeparator,
-          savedDateText
+          savedDateText,
+          strings
         )
       : saved.mode === 'multiple'
         ? formatMultipleText(
@@ -1272,7 +1273,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             type,
             dateFormat,
             timeFormat,
-            savedDateText
+            savedDateText,
+            strings
           )
         : precision !== 'day'
           ? periodText(savedSingle)
@@ -1332,7 +1334,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           type,
           dateFormat,
           timeFormat,
-          savedDateText
+          savedDateText,
+          strings
         )
     ),
     disabled,
@@ -1485,7 +1488,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           type,
           dateFormat,
           timeFormat,
-          draftDateText
+          draftDateText,
+          strings
         )}
         placeholder={sheetOptions?.fieldPlaceholder}
         allowClear={allowClear}
