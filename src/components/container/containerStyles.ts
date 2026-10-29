@@ -7,7 +7,13 @@ const cache = new WeakMap<ThemeTokens, ReturnType<typeof create>>();
 
 const create = (t: ThemeTokens) =>
   StyleSheet.create({
-    sheetRoot: { flex: 1, justifyContent: 'flex-end' },
+    sheetRoot: { flex: 1 },
+    // The room above the keyboard (all of the screen while it's down); the panel sits at its bottom.
+    sheetRoom: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      pointerEvents: 'box-none',
+    },
     sheetBackdrop: {
       ...StyleSheet.absoluteFill,
       backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -16,7 +22,7 @@ const create = (t: ThemeTokens) =>
       borderTopLeftRadius: t.radius * 2,
       borderTopRightRadius: t.radius * 2,
       backgroundColor: t.background,
-      paddingBottom: 24,
+      paddingBottom: 8,
     },
     container: { width: '100%', paddingHorizontal: GUTTER },
     // In a sheet the body shrinks to the sheet's max height and scrolls.

@@ -104,6 +104,11 @@ export interface SheetOptions {
   height?: SheetSize;
   /** Default '90%'. Built-in sheet only. */
   maxHeight?: SheetSize;
+  /**
+   * The most the sheet grows to while the keyboard is up; a percentage is of
+   * the room above the keyboard. Default: `maxHeight`. Built-in sheet only.
+   */
+  keyboardMaxHeight?: SheetSize;
   /** The header stays put while the body scrolls. false: it scrolls with the body. Default true. */
   fixedHeader?: boolean;
   /** The footer (Confirm) stays pinned below the body. false: it scrolls at the end of the body. Default true. */

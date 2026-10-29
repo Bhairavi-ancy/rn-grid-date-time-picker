@@ -134,7 +134,7 @@ export const buildPickerLayout = ({
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
           bounces={false}
-          showsVerticalScrollIndicator
+          showsVerticalScrollIndicator={false}
         >
           {headerScrolls ? headerNode : null}
           {content}

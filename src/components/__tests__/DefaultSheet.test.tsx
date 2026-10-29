@@ -1,12 +1,20 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import {
+  Dimensions,
+  Keyboard,
+  Modal,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import DefaultSheet from '../container/DefaultSheet';
 import { buildTokens } from '../theme/tokens';
 
 const mount = (
   onRequestClose: () => void,
-  styles?: { sheet?: object }
+  styles?: { sheet?: object },
+  sizes?: { maxHeight?: '90%'; keyboardMaxHeight?: '50%' | 300 }
 ): ReactTestRenderer => {
   let tree!: ReactTestRenderer;
   act(() => {
@@ -18,6 +26,7 @@ const mount = (
         testID="s"
         tokens={buildTokens()}
         styles={styles}
+        {...sizes}
       />
     );
   });
@@ -53,5 +62,56 @@ describe('DefaultSheet', () => {
     expect(onRequestClose).toHaveBeenCalledTimes(1);
     act(() => tree.root.findByType(Modal).props.onRequestClose());
     expect(onRequestClose).toHaveBeenCalledTimes(2);
+  });
+
+  it('while the keyboard is up, keyboardMaxHeight is of the room above it', () => {
+    const listeners: Record<string, (e?: object) => void> = {};
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      name: string,
+      cb: (e?: object) => void
+    ) => {
+      listeners[name] = cb;
+      return { remove: () => {} };
+    }) as never);
+    const maxHeight = (tree: ReactTestRenderer) =>
+      StyleSheet.flatten(panel(tree)?.props.style).maxHeight;
+    const keyboard = (tree: ReactTestRenderer, room: number) => {
+      // The view the panel sits in (the innermost one that measures itself):
+      // the room above the keyboard.
+      const area = tree.root
+        .findAll(
+          (n) =>
+            n.type === View &&
+            n.props.onLayout &&
+            n.findAll((c) => c.props.testID === 's').length > 0
+        )
+        .at(-1)!;
+      act(() =>
+        area.props.onLayout({ nativeEvent: { layout: { height: room } } })
+      );
+      const show = Object.keys(listeners).find((k) => k.endsWith('Show'));
+      act(() => listeners[show!]());
+    };
+
+    const byDefault = mount(() => {});
+    keyboard(byDefault, 400);
+    expect(maxHeight(byDefault)).toBe(360); // maxHeight's 90% of the room
+
+    const half = mount(() => {}, undefined, { keyboardMaxHeight: '50%' });
+    keyboard(half, 400);
+    expect(maxHeight(half)).toBe(200);
+
+    const points = mount(() => {}, undefined, { keyboardMaxHeight: 300 });
+    keyboard(points, 250);
+    expect(maxHeight(points)).toBe(250); // never taller than the room
+
+    // A window the keyboard doesn't resize: the room is the screen less the keyboard.
+    const unresized = mount(() => {}, undefined, { keyboardMaxHeight: '50%' });
+    const show = Object.keys(listeners).find((k) => k.endsWith('Show'));
+    act(() => listeners[show!]({ endCoordinates: { height: 300 } }));
+    expect(maxHeight(unresized)).toBe(
+      (Dimensions.get('window').height - 300) / 2
+    );
+    jest.restoreAllMocks();
   });
 });
