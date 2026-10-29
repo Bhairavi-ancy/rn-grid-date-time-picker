@@ -372,6 +372,41 @@ describe('limits and opening month', () => {
     });
   });
 
+  it('dependsOnNow limits follow the clock while the sheet is open', () => {
+    jest.useFakeTimers();
+    try {
+      let clock = Date.UTC(2026, 9, 21, 6, 30);
+      const log = jest.fn();
+      const tree = mount(
+        <Screen
+          log={log}
+          type="datetime"
+          now={() => new Date(clock)}
+          getConstraints={(ctx) =>
+            createConstraints({
+              type: ctx.type,
+              timeZone: ctx.timeZone,
+              now: ctx.now,
+              min: { date: ctx.today, time: ctx.nowTime },
+              dependsOnNow: true,
+            })
+          }
+        />
+      );
+      open(tree);
+      day(tree, 2026, 10, 21);
+      // An hour later, the 06:30 picked on open is in the past.
+      clock += 60 * 60_000;
+      act(() => {
+        jest.advanceTimersByTime(60_000);
+      });
+      press(tree, 'dp-confirm');
+      expect(log).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('initialVisibleDate opens an empty calendar on that month, and the value wins', () => {
     const empty = mount(
       <Screen

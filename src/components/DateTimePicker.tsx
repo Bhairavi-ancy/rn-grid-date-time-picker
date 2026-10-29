@@ -457,6 +457,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   // Limits are worked out when the picker opens (the screen's own validation
   // after Confirm stays the final check).
   const weekdaysKey = disabledWeekdays?.join(',');
+  // Limits built with `dependsOnNow` ("from now on") are rebuilt every minute
+  // while the picker is open.
+  const [minuteTick, setMinuteTick] = useState(0);
   const constraints = useMemo(() => {
     const nowDate = now?.() ?? new Date();
     const limits = {
@@ -492,10 +495,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           holidays,
           disableHolidays,
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `isOpen` and `today` refresh the limits on open and at midnight; weekdays are compared by content
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `isOpen`, `today` and `minuteTick` refresh the limits on open, at midnight and each minute; weekdays are compared by content
   }, [
     isOpen,
     today,
+    minuteTick,
     type,
     zone,
     now,
@@ -509,6 +513,24 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     disableHolidays,
     getConstraints,
   ]);
+
+  const followsClock = isOpen && constraints.dependsOnNow;
+  useEffect(() => {
+    if (!followsClock) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = () => {
+      const ms = 60_000 - ((now?.() ?? new Date()).getTime() % 60_000);
+      timer = setTimeout(() => {
+        setMinuteTick((n) => n + 1);
+        arm();
+      }, ms);
+      // Under Node (e.g. Jest) the timer must not keep the process alive.
+      (timer as { unref?: () => void }).unref?.();
+    };
+    arm();
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- armed while open with a clock-bound limit
+  }, [followsClock]);
 
   // A typed field that doesn't parse blocks Confirm, per field: one end of a
   // range can't hide the other end's problem.
