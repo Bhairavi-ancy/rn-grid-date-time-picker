@@ -50,6 +50,26 @@ More in [Locale, RTL and Hijri](https://github.com/Bhairavi-ancy/rn-grid-date-ti
 
 <br clear="right" />
 
+## Make it yours
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/theme-blue-sharp.png" width="200" alt="Blue accent, square corners" />
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/theme-teal.png" width="200" alt="Teal accent, medium corners" />
+  <img src="https://raw.githubusercontent.com/Bhairavi-ancy/rn-grid-date-time-picker/main/docs/theme-coral-round.png" width="200" alt="Coral accent, round corners" />
+</p>
+
+One `theme` prop sets the colours, fonts, corners and sizes. Each of the sheets above is one line:
+
+```tsx
+const blue = { accent: '#2563EB', rangeFill: '#DBEAFE', radius: 4 };
+const teal = { accent: '#0F766E', rangeFill: '#CCFBF1', radius: 8 };
+const coral = { accent: '#D9434B', rangeFill: '#FDE2E2', radius: 16 };
+
+<DateTimePicker type="date" value={value} onChange={setValue} theme={teal} />
+```
+
+Every text can be changed with `strings`, every part has a style key in `styles`, and the field, sheet and day cells can be your own components. See [Theming, fonts and icons](https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/blob/main/docs/theming.md).
+
 ## Install
 
 ```sh
