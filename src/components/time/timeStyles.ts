@@ -23,13 +23,13 @@ const create = (t: ThemeTokens) =>
       fontSize: t.fontSizeLarge,
       color: t.heading,
     },
-    // Times read hh:mm in every language, so the boxes don't mirror in RTL.
     boxes: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 22,
-      direction: 'ltr',
     },
+    // The boxes follow the row's direction: right to left (the Hijri tab, or a
+    // right-to-left app), the hour sits on the right and AM / PM on the left.
     clock: { flexDirection: 'row', alignItems: 'center' },
     // Each box is 50 × 46 with a 1 pt border and radius 6.
     boxWrap: { width: 50 },
@@ -104,7 +104,6 @@ const create = (t: ThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'center',
-      direction: 'ltr',
     },
     wheelColumn: { width: 64, height: 200, overflow: 'hidden' },
     wheelHighlight: {

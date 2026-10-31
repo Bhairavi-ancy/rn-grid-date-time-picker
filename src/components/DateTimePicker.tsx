@@ -28,6 +28,7 @@ import {
 } from '../core/draft';
 import {
   hijriDateText,
+  hijriPeriods,
   isHijriSupported,
   resolveCalendarSystem,
   type CalendarSystem,
@@ -53,6 +54,7 @@ import type {
 import Calendar from './calendar/Calendar';
 import CalendarSwitch from './calendar/CalendarSwitch';
 import { localeNames } from './calendar/localeNames';
+import { RtlContext } from './theme/direction';
 import { NumeralsContext } from './theme/numerals';
 import { firstSelectedDay, type CalendarSelection } from './calendar/selection';
 import PickerContainer from './container/PickerContainer';
@@ -71,7 +73,11 @@ import { useOpenPicker } from './hooks/useOpenPicker';
 import { usePickerDraft } from './hooks/usePickerDraft';
 import { useTodayTick } from './hooks/useTodayTick';
 import TimeRows, { type PendingTimes } from './time/TimeRows';
-import { DEFAULT_STRINGS, resolveStrings } from './theme/defaultStrings';
+import {
+  DEFAULT_STRINGS,
+  compactStrings,
+  resolveStrings,
+} from './theme/defaultStrings';
 import { buildTokens } from './theme/tokens';
 import {
   DEFAULT_YEAR_RANGE,
@@ -86,6 +92,7 @@ const sameValue = (a: DateTimeValue, b: DateTimeValue): boolean =>
   (a.time?.minute ?? -1) === (b.time?.minute ?? -1);
 
 const ALL_SYSTEMS: CalendarSystem[] = ['gregory', 'hijri', 'dual'];
+const RTL = { direction: 'rtl' } as const;
 
 /** The same kind of selection with nothing in it. */
 const emptySelection = (sel: CalendarSelection): CalendarSelection =>
@@ -210,6 +217,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     theme,
     styles,
     strings: stringOverrides,
+    hijriStrings: hijriOverrides,
     testID,
   } = props;
 
@@ -294,6 +302,20 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     if (kind === 'latin') return latinDigits;
     return localeDigits(sys === 'hijri' ? hijriLocale : loc);
   };
+  /**
+   * The strings for one calendar. A Hijri one takes `hijriStrings` first, then
+   * AM / PM in `hijriLocale` (ص / م), then `strings`.
+   */
+  const hijriStrings = useMemo(
+    () => ({
+      ...strings,
+      ...hijriPeriods(hijriLocale),
+      ...compactStrings(hijriOverrides),
+    }),
+    [strings, hijriLocale, hijriOverrides]
+  );
+  const stringsFor = (sys: 'gregory' | 'hijri') =>
+    sys === 'hijri' ? hijriStrings : strings;
   const monthNames = useMemo(() => localeNames(loc).monthsLong, [loc]);
   /** A month or year pick shown as text: "March 2026" or "2026". */
   const periodText = (v: DateTimeValue | null): string => {
@@ -1249,6 +1271,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       : undefined;
   const savedDateText = dateTextFor(savedSystem);
   const draftDateText = dateTextFor(draftSystem);
+  const savedStrings = stringsFor(savedSystem);
+  const draftStrings = stringsFor(draftSystem);
+  // Error messages inside the picker follow the tab on screen; the on-screen
+  // field's keep `strings`.
+  const shownStrings = stringsFor(shownSystem);
 
   // What the on-screen field shows: the saved value, never the draft.
   const savedSingle = saved.mode === 'single' ? saved.slot.value : null;
@@ -1262,7 +1289,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           timeFormat,
           strings.rangeSeparator,
           savedDateText,
-          strings
+          savedStrings
         )
       : saved.mode === 'multiple'
         ? formatMultipleText(
@@ -1271,7 +1298,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             dateFormat,
             timeFormat,
             savedDateText,
-            strings
+            savedStrings
           )
         : precision !== 'day'
           ? periodText(savedSingle)
@@ -1332,7 +1359,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           dateFormat,
           timeFormat,
           savedDateText,
-          strings
+          savedStrings
         )
     ),
     disabled,
@@ -1360,7 +1387,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     draft.draft.mode === 'single' ? draft.draft.slot.value : null;
   // A time outside the limits is explained under the time row, not here.
   const sheetValueError =
-    sheetValue && dayOff(sheetValue.date) ? strings.errorNotAllowed : '';
+    sheetValue && dayOff(sheetValue.date) ? shownStrings.errorNotAllowed : '';
 
   let rangeError = '';
   if (d.mode === 'range' && d.from.value && d.to.value) {
@@ -1369,14 +1396,14 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       constraints.dayStatus(d.from.value.date).disabled ||
       constraints.dayStatus(d.to.value.date).disabled
     )
-      rangeError = strings.errorNotAllowed;
+      rangeError = shownStrings.errorNotAllowed;
     else if (previewIssue === 'RANGE_ORDER')
-      rangeError = strings.errorRangeOrder;
+      rangeError = shownStrings.errorRangeOrder;
     else if (previewIssue === 'RANGE_LENGTH')
       rangeError =
         range?.minDays !== undefined && length < range.minDays
-          ? strings.errorRangeTooShort(range.minDays)
-          : strings.errorRangeTooLong(range?.maxDays ?? length);
+          ? shownStrings.errorRangeTooShort(range.minDays)
+          : shownStrings.errorRangeTooLong(range?.maxDays ?? length);
   }
 
   const fieldCommon = {
@@ -1398,6 +1425,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     ) : (
       <ValueField
         {...fieldCommon}
+        strings={savedStrings}
+        errorStrings={strings}
         value={savedSingle}
         displayText={savedText}
         dateText={savedDateText}
@@ -1442,6 +1471,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     ) : mode === 'single' ? (
       <ValueField
         {...fieldCommon}
+        strings={draftStrings}
+        errorStrings={shownStrings}
         value={sheetValue}
         displayText={precision !== 'day' ? periodText(sheetValue) : undefined}
         dateText={draftDateText}
@@ -1459,6 +1490,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     ) : d.mode === 'range' ? (
       <RangeFields
         {...fieldCommon}
+        strings={draftStrings}
+        errorStrings={shownStrings}
         layout={rangeLayout}
         dateText={draftDateText}
         showIcon={sheetOptions?.fieldIcon}
@@ -1479,6 +1512,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     ) : d.mode === 'multiple' ? (
       <ValueField
         {...fieldCommon}
+        strings={draftStrings}
         value={null}
         displayText={formatMultipleText(
           draftValues,
@@ -1486,7 +1520,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           dateFormat,
           timeFormat,
           draftDateText,
-          strings
+          draftStrings
         )}
         placeholder={sheetOptions?.fieldPlaceholder}
         allowClear={allowClear}
@@ -1550,6 +1584,15 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         testID={testID ? `${testID}-dual-tabs` : undefined}
       />
     );
+  // The Hijri tab lays out its calendar and time rows right to left; the
+  // wrapper always renders, so a tab change doesn't remount the time boxes.
+  const hijriShown = shownSystem === 'hijri';
+  const mirrored = (node: React.ReactNode) =>
+    node == null ? null : (
+      <RtlContext.Provider value={hijriShown || null}>
+        <View style={hijriShown ? RTL : undefined}>{node}</View>
+      </RtlContext.Provider>
+    );
   // Another calendar opens on the days the last one showed, else on the
   // selection (shown or not), else where the picker would open.
   const calendarAnchor =
@@ -1561,38 +1604,40 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     <View style={folded ? FOLDED : undefined}>
       {calendarSwitchNode}
       {dualTabs}
-      <Calendar
-        key={shownSystem}
-        constraints={selectionShown ? calendarConstraints : constraints}
-        today={today}
-        initialVisibleDate={calendarAnchor}
-        selection={selectionShown ? selection : emptySelection(selection)}
-        onSelectDay={onSelectDayStable}
-        firstDayOfWeek={firstDayOfWeek}
-        showOutsideDays={showOutsideDays}
-        showHolidays={showHolidays}
-        yearRange={yearRange}
-        locale={shownSystem === 'hijri' ? hijriLocale : loc}
-        calendarSystem={shownSystem}
-        initialView={initialView}
-        precision={precision}
-        enableMonthSwipe={enableMonthSwipe}
-        showToday={showToday}
-        onVisibleMonthChange={handleVisibleMonth}
-        onAnchorChange={rememberAnchor}
-        renderDay={renderDay}
-        renderWeekday={renderWeekday}
-        renderMonthChip={renderMonthChip}
-        renderYearCell={renderYearCell}
-        renderMonthCell={renderMonthCell}
-        renderEmptyState={renderEmptyState}
-        icons={icons}
-        iconProps={iconProps}
-        tokens={tokens}
-        styles={styles}
-        strings={strings}
-        testID={testID}
-      />
+      {mirrored(
+        <Calendar
+          key={shownSystem}
+          constraints={selectionShown ? calendarConstraints : constraints}
+          today={today}
+          initialVisibleDate={calendarAnchor}
+          selection={selectionShown ? selection : emptySelection(selection)}
+          onSelectDay={onSelectDayStable}
+          firstDayOfWeek={firstDayOfWeek}
+          showOutsideDays={showOutsideDays}
+          showHolidays={showHolidays}
+          yearRange={yearRange}
+          locale={shownSystem === 'hijri' ? hijriLocale : loc}
+          calendarSystem={shownSystem}
+          initialView={initialView}
+          precision={precision}
+          enableMonthSwipe={enableMonthSwipe}
+          showToday={showToday}
+          onVisibleMonthChange={handleVisibleMonth}
+          onAnchorChange={rememberAnchor}
+          renderDay={renderDay}
+          renderWeekday={renderWeekday}
+          renderMonthChip={renderMonthChip}
+          renderYearCell={renderYearCell}
+          renderMonthCell={renderMonthCell}
+          renderEmptyState={renderEmptyState}
+          icons={icons}
+          iconProps={iconProps}
+          tokens={tokens}
+          styles={styles}
+          strings={stringsFor(shownSystem)}
+          testID={testID}
+        />
+      )}
     </View>
   );
 
@@ -1625,7 +1670,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onPendingChange={onRowPending}
         tokens={tokens}
         styles={styles}
-        strings={strings}
+        strings={stringsFor(shownSystem)}
         testID={testID}
       />
     );
@@ -1638,8 +1683,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       ? validation.message
       : null;
 
-  // The field and the time row write the date in the digits of the calendar
-  // it was picked in; the calendar uses its own.
+  // The field writes the date in the digits of the calendar it was picked in;
+  // the calendar and the time rows follow the tab that shows.
   const sheetContent = (
     <>
       <NumeralsContext.Provider value={digitsFor(draftSystem)}>
@@ -1648,8 +1693,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       <NumeralsContext.Provider value={digitsFor(shownSystem)}>
         {calendar}
       </NumeralsContext.Provider>
-      <NumeralsContext.Provider value={digitsFor(draftSystem)}>
-        {timeRow}
+      <NumeralsContext.Provider value={digitsFor(shownSystem)}>
+        {mirrored(timeRow)}
       </NumeralsContext.Provider>
       {validationMessage ? (
         <FieldMessages

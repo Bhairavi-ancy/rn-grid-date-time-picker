@@ -31,7 +31,7 @@ export {
   todayIn,
   weekdayOf,
 } from './core/calendarDate';
-export { hijriDateText } from './core/calendarSystem';
+export { hijriDateText, hijriPeriods } from './core/calendarSystem';
 export { arabicDigits } from './core/numerals';
 
 // Types
@@ -71,7 +71,7 @@ export type {
   SheetSize,
   Slot,
 } from './components/types';
-export type { CalendarSystem } from './core/calendarSystem';
+export type { CalendarSystem, Periods } from './core/calendarSystem';
 export type { Numerals } from './core/numerals';
 export type { PickerStrings } from './components/theme/defaultStrings';
 export type {

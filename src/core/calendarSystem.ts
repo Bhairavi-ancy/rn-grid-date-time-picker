@@ -255,6 +255,48 @@ const writeHijriDate = (d: CalendarDate, locale: string): string | null => {
   return `${h.day} ${hijriMonthNames(locale)[h.month - 1]} ${h.year}`;
 };
 
+export interface Periods {
+  am: string;
+  pm: string;
+}
+
+const ARABIC_PERIODS: Periods = { am: 'ص', pm: 'م' };
+const periodCache = new Map<string, Periods | null>();
+
+/**
+ * AM and PM in the Hijri locale's language, as Intl writes them ('ar-SA' →
+ * ص / م). An Arabic locale whose engine gives none, or Latin ones, gets ص / م;
+ * another locale gets null (the picker keeps strings.am / pm).
+ */
+export const hijriPeriods = (locale: string): Periods | null => {
+  if (!periodCache.has(locale)) periodCache.set(locale, readPeriods(locale));
+  return periodCache.get(locale)!;
+};
+
+const readPeriods = (locale: string): Periods | null => {
+  const arabic = /^ar\b/i.test(locale);
+  try {
+    const f = new Intl.DateTimeFormat(locale, {
+      timeZone: 'UTC',
+      hour: 'numeric',
+      hour12: true,
+    });
+    const period = (hour: number) =>
+      f
+        .formatToParts(utcDate(2026, 0, 1, hour))
+        // Some engines write the part type in lower case.
+        .find((p) => p.type.toLowerCase() === 'dayperiod')
+        ?.value.trim();
+    const am = period(9);
+    const pm = period(21);
+    if (am && pm && am !== pm && !(arabic && /[A-Za-z]/.test(am + pm)))
+      return { am, pm };
+  } catch {
+    // An engine without this locale falls through.
+  }
+  return arabic ? ARABIC_PERIODS : null;
+};
+
 /**
  * The system the picker uses: the requested one, Gregorian by default.
  * Anything Hijri falls back to Gregorian when unsupported.

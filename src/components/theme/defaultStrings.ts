@@ -124,9 +124,19 @@ export const DEFAULT_STRINGS: Required<PickerStrings> = {
   a11yRangeEnd: 'end of range',
 };
 
+/** The keys that have a value: one left `undefined` (or `null`) keeps what's under it. */
+export const compactStrings = (
+  overrides?: Partial<PickerStrings>
+): Partial<PickerStrings> =>
+  overrides
+    ? (Object.fromEntries(
+        Object.entries(overrides).filter(([, v]) => v != null)
+      ) as Partial<PickerStrings>)
+    : {};
+
 /** The English defaults with the caller's overrides on top. */
 export const resolveStrings = (
   overrides?: Partial<PickerStrings>
 ): Required<PickerStrings> => {
-  return { ...DEFAULT_STRINGS, ...overrides };
+  return { ...DEFAULT_STRINGS, ...compactStrings(overrides) };
 };

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { I18nManager, PanResponder, Text, View } from 'react-native';
+import { PanResponder, Text, View } from 'react-native';
 import type { Constraints } from '../../core/constraints';
 import { isSameDay } from '../../core/calendarDate';
 import { buildMonthGrid, weekdayOrder } from '../../core/monthGrid';
@@ -7,6 +7,7 @@ import type { CalendarDate, Weekday } from '../../core/types';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useIsRTL } from '../theme/direction';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildCalendarStyles } from './calendarStyles';
 import DayCell, { type DayCellState } from './DayCell';
@@ -84,6 +85,8 @@ const DayGrid: React.FC<DayGridProps> = ({
 
   const onSwipeRef = useRef(onSwipe);
   onSwipeRef.current = onSwipe;
+  const isRTLRef = useRef(false);
+  isRTLRef.current = useIsRTL();
   const pan = useMemo(
     () =>
       PanResponder.create({
@@ -97,7 +100,7 @@ const DayGrid: React.FC<DayGridProps> = ({
         // on the grid (PanResponder blocks native views by default).
         onShouldBlockNativeResponder: () => false,
         onPanResponderRelease: (_, g) => {
-          const step = swipeStep(g.dx, I18nManager.isRTL);
+          const step = swipeStep(g.dx, isRTLRef.current);
           if (step !== 0) onSwipeRef.current?.(step);
         },
       }),
