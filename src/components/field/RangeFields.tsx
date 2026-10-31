@@ -47,6 +47,8 @@ interface Props {
   tokens: ThemeTokens;
   styles?: PickerStyles;
   strings: PickerStrings;
+  /** The texts of the typed-input errors. Default `strings`. */
+  errorStrings?: PickerStrings;
   testID?: string;
 }
 
@@ -84,6 +86,7 @@ const RangeFields: React.FC<Props> = (props) => {
     tokens,
     styles,
     strings,
+    errorStrings,
     testID,
   } = props;
   const common = {
@@ -98,6 +101,7 @@ const RangeFields: React.FC<Props> = (props) => {
     tokens,
     styles,
     strings,
+    errorStrings,
     disabled,
   };
 

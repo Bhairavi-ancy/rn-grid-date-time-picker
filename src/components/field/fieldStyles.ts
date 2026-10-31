@@ -32,6 +32,10 @@ const create = (t: ThemeTokens) =>
       fontSize: t.fontSizeMedium,
       color: t.text,
     },
+    textScroll: { flex: 1 },
+    textScrollContent: { flexGrow: 1, alignItems: 'center' },
+    // In the scroll, or as a date set apart from its time, the text keeps its full width.
+    textScrolled: { flex: 0, flexShrink: 0 },
     placeholder: { color: t.placeholder },
     disabledText: { color: t.disabledText },
     icons: { flexDirection: 'row', alignItems: 'center', marginStart: 8 },
@@ -55,6 +59,8 @@ const create = (t: ThemeTokens) =>
       alignItems: 'center',
       flexWrap: 'nowrap',
     },
+    // After a date, the time sits in the middle of the space left before the icons.
+    segmentTime: { flexGrow: 1, justifyContent: 'center' },
     segment: {
       paddingVertical: 8,
       paddingHorizontal: 0,

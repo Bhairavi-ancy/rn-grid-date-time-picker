@@ -25,6 +25,11 @@ export const STYLE_KEYS = [
   'fieldText',
   /** The value's text while the field is disabled (the placeholder keeps its own colour). */
   'fieldTextDisabled',
+  /**
+   * Sets the date of a single date-time value apart from its time, e.g.
+   * `{ minWidth: '50%' }` starts the time at the middle of the field.
+   */
+  'fieldDateText',
   'fieldPlaceholder',
   'fieldSegment',
   'fieldSegmentFocused',
