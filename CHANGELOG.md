@@ -2,7 +2,9 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] - 2026-11-01
+
+1.2.0 lays out the Hijri tab right to left, gives it its own texts (`hijriStrings`), and lets a long field value scroll instead of ending in "…". No props or types were removed, but some defaults change what users see: check the Changed list if you use the Hijri or dual calendar (its layout, and AM / PM written ص / م), a right-to-left app (the time boxes mirror), or tests that match the field text or the layout.
 
 ### Added
 
@@ -119,5 +121,6 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
+[1.2.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.0
