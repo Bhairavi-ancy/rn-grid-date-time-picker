@@ -123,6 +123,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `theme` | `Partial<ThemeTokens>` | See [Theming](theming.md). |
 | `styles` | `PickerStyles` | A style for any part. |
 | `strings` | `Partial<PickerStrings>` | See [Strings / i18n](localization.md#strings--i18n). |
+| `hijriStrings` | `Partial<PickerStrings>` | The texts while the Hijri tab shows (e.g. Arabic): its calendar and time rows, the error messages inside the picker, and a date picked in it. A key left out keeps AM / PM in `hijriLocale` (ص / م), then `strings`. See [Texts on the Hijri tab](localization.md#hijri-texts). |
 | `testID` | `string` | The prefix for every part; see [Testing](testing.md#testing). |
 | `onVisibleMonthChange` | `(year, month) => void` | The Gregorian month of the first day shown. |
 | `onError` | `(code: PickerErrorCode, value) => void` | `'NOTHING_SELECTABLE'` once per open when no day can be picked. When Confirm is pressed with a time problem: `'INCOMPLETE'`, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'` or `'TIME_NOT_ALLOWED'`, with the saved value. `'VALIDATION'` when `validate` returns a message, with the value it was given. |

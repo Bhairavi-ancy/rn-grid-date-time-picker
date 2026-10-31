@@ -5,6 +5,7 @@ import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import * as calendarSystem from '../../core/calendarSystem';
 import * as calendarStyles from '../calendar/calendarStyles';
 import DateTimePicker from '../DateTimePicker';
+import { DEFAULT_STRINGS } from '../theme/defaultStrings';
 import type { DateTimePickerProps, PickerState } from '../types';
 
 // Tuesday 27 Oct 2026 = 16 Jumada I 1448.
@@ -692,5 +693,178 @@ describe('accessibility of custom parts', () => {
       .map((i) => i.props.accessibilityLabel as string)
       .filter((l) => /Hour/.test(l));
     expect(labels).toEqual(['Start time, Hour', 'End time, Hour']);
+  });
+});
+
+describe('the Hijri tab reads right to left', () => {
+  const datetime = {
+    type: 'datetime' as const,
+    timeFormat: '12h' as const,
+    calendarSystem: 'dual' as const,
+  };
+  const rtlViews = (tree: ReactTestRenderer) =>
+    tree.root.findAll(
+      (n) =>
+        n.type === View &&
+        StyleSheet.flatten(n.props.style)?.direction === 'rtl'
+    );
+  const has = (tree: ReactTestRenderer, id: string) =>
+    tree.root.findAll((n) => n.props.testID === id).length > 0;
+
+  it('mirrors the calendar and the time row, not the tabs', () => {
+    const tree = mount(datetime);
+    expect(rtlViews(tree)).toHaveLength(0);
+    expect(has(tree, 'dp-prev-left')).toBe(true);
+
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(rtlViews(tree)).toHaveLength(2);
+    expect(has(tree, 'dp-prev-right')).toBe(true);
+    expect(has(tree, 'dp-next-left')).toBe(true);
+    for (const view of rtlViews(tree))
+      expect(
+        view.findAll((n) => n.props.testID === 'dp-dual-tabs-hijri')
+      ).toHaveLength(0);
+
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(rtlViews(tree)).toHaveLength(0);
+  });
+
+  const arabic = { time: 'الوقت', am: 'ص', pm: 'م', today: 'اليوم' };
+  const hourBox = (tree: ReactTestRenderer) =>
+    tree.root
+      .findAllByType(TextInput)
+      .find((i) => i.props.testID === 'dp-time-hour')!;
+
+  it('the calendar and the time row use hijriStrings on the Hijri tab', () => {
+    const tree = mount({ ...datetime, showToday: true, hijriStrings: arabic });
+    act(() => hourBox(tree).props.onChangeText('09'));
+    expect(texts(tree)).toEqual(
+      expect.arrayContaining(['Time', 'AM', 'PM', 'Today'])
+    );
+    expect(hourBox(tree).props.value).toBe('09');
+
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(texts(tree)).toEqual(
+      expect.arrayContaining(['الوقت', 'ص', 'م', 'اليوم'])
+    );
+    expect(texts(tree)).not.toContain('AM');
+    expect(hourBox(tree).props.value).toBe('٠٩');
+    // The tabs keep `strings`.
+    expect(texts(tree)).toEqual(expect.arrayContaining(['Gregorian']));
+
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(texts(tree)).toEqual(expect.arrayContaining(['Time', 'AM']));
+  });
+
+  it('without hijriStrings the Hijri tab writes AM / PM in hijriLocale and keeps strings', () => {
+    const tree = mount({ ...datetime, strings: { pm: 'p.m.', time: 'Hour' } });
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(texts(tree)).toEqual(expect.arrayContaining(['Hour', 'ص', 'م']));
+    expect(texts(tree)).not.toContain('p.m.');
+
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(texts(tree)).toEqual(expect.arrayContaining(['Hour', 'AM', 'p.m.']));
+  });
+
+  it('an undefined key keeps the text under it', () => {
+    const tree = mount({
+      ...datetime,
+      strings: { time: undefined },
+      hijriStrings: { time: 'الوقت', am: undefined, pm: undefined },
+    });
+    expect(texts(tree)).toEqual(expect.arrayContaining(['Time', 'AM', 'PM']));
+
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(texts(tree)).toEqual(expect.arrayContaining(['الوقت', 'ص', 'م']));
+  });
+
+  it('the field writes a Hijri pick with AM / PM from hijriStrings', () => {
+    const field = (props: Partial<DateTimePickerProps>) => {
+      let state!: PickerState;
+      mount({
+        ...datetime,
+        calendarSystem: 'hijri',
+        presentation: 'sheet',
+        value: '2026-10-27T15:30:00.000Z',
+        renderField: (s) => {
+          state = s;
+          return null;
+        },
+        ...props,
+      });
+      return state.displayText;
+    };
+    expect(field({ hijriStrings: { pm: 'مساءً' } })).toMatch(/٠٣:٣٠ مساءً$/);
+    // Without hijriStrings: hijriLocale's AM / PM, not strings.
+    expect(field({ strings: { pm: 'p.m.' } })).toMatch(/٠٣:٣٠ م$/);
+  });
+});
+
+describe('DateTimePicker: error messages and the Hijri tab', () => {
+  const NOT_ALLOWED = 'غير متاح';
+  const INVALID = 'تاريخ غير صالح';
+  const hijriStrings = {
+    errorNotAllowed: NOT_ALLOWED,
+    errorInvalidDate: INVALID,
+  };
+  /** Types a dd/MM/yyyy date into a field's boxes. */
+  const typeDate = (tree: ReactTestRenderer, field: string, date: string) => {
+    const [day, month, year] = date.split('/');
+    const box = (key: string) =>
+      tree.root
+        .findAllByType(TextInput)
+        .find((i) => i.props.testID === `${field}-segment-${key}`)!;
+    act(() => box('day').props.onFocus());
+    act(() => box('day').props.onChangeText(day));
+    act(() => box('month').props.onChangeText(month));
+    act(() => box('year').props.onChangeText(year));
+  };
+  /** 31/02/2026: no such day. */
+  const typeInvalid = (tree: ReactTestRenderer, field: string) =>
+    typeDate(tree, field, '31/02/2026');
+
+  it('an error inside the picker follows the tab on screen', () => {
+    const tree = mount({
+      calendarSystem: 'dual',
+      allowTyping: true,
+      minDate: { year: 2026, month: 10, day: 25 },
+      hijriStrings,
+    });
+    typeDate(tree, 'dp-value', '20/10/2026');
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.errorNotAllowed);
+
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(texts(tree)).toContain(NOT_ALLOWED);
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorNotAllowed);
+
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.errorNotAllowed);
+  });
+
+  it("a typing error in the picker's field follows the tab on screen", () => {
+    const tree = mount({
+      calendarSystem: 'dual',
+      allowTyping: true,
+      hijriStrings,
+    });
+    press(tree, 'dp-dual-tabs-hijri');
+    typeInvalid(tree, 'dp-value');
+    expect(texts(tree)).toContain(INVALID);
+
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.errorInvalidDate);
+    expect(texts(tree)).not.toContain(INVALID);
+  });
+
+  it('the on-screen field keeps strings, whatever the calendar', () => {
+    const tree = mount({
+      calendarSystem: 'hijri',
+      presentation: 'sheet',
+      allowFieldTyping: true,
+      hijriStrings,
+    });
+    typeInvalid(tree, 'dp-trigger');
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.errorInvalidDate);
+    expect(texts(tree)).not.toContain(INVALID);
   });
 });

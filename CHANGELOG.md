@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `hijriStrings`: the texts while the Hijri tab shows (e.g. Arabic), for its calendar and time rows, the error messages inside the picker (under its field, the calendar and the time rows), and a date picked in it. The on-screen field's errors keep `strings`, and so do the title, Confirm, Reset and the tabs. A key left out keeps AM / PM in `hijriLocale` (ص / م), then `strings`.
+- `hijriPeriods(locale)`: AM / PM as the Hijri tab writes them, so an app's own text (filter chips, summaries) matches the field. Its return type is exported as `Periods`.
+- The `fieldDateText` style key sets the date of a single date-time value apart from its time in the field, e.g. `{ minWidth: '50%' }` starts the time at the middle of the field.
+
+### Changed
+
+- **A string set to `undefined` (or `null`) keeps its default**, in `strings` and `hijriStrings`, instead of showing nothing. An app can pass every key and leave the ones it has no text for undefined.
+- **The Hijri tab reads right to left.** While a Hijri calendar shows, the calendar (header, month chips, weekdays, days, the year and month grids) and the time rows are laid out right to left, with the arrows and the month swipe mirrored, whatever the app's direction. The Gregorian / Hijri tabs, the field and the buttons keep the app's direction.
+- **AM / PM on the Hijri tab are written in `hijriLocale`** (ص / م for Arabic), in the time rows, and in the field when the date was picked in Hijri. The time rows' digits now follow the tab that shows, not the calendar the date was picked in.
+- **In a right-to-left layout the time boxes mirror**: the hour sits on the right, then the minutes, with AM / PM on the left (the wheels too). In a left-to-right app that's the Hijri tab only.
+- **A value too long for the field scrolls sideways** instead of being cut off with "…"; a tap still opens the picker. Right-to-left text (a Hijri date) opens scrolled to its start.
+- **In a typed date-time field the time sits in the middle** of the space between the date and the icons, instead of right after the date.
+- **The year and month grids have no top padding**; the header's margin already spaces the first row.
+
+### Fixed
+
+- **On Android the field no longer swaps the last word of its value for "…"** when the line is measured a pixel short (most often right-to-left text, such as the end of a Hijri range).
+
 ## [1.1.0] - 2026-10-30
 
 1.1.0 reworks the Hijri calendar (Gregorian / Hijri tabs, a calendar switch, Arabic by default) and fixes issues found in real-device testing. It changes some 1.0.0 behaviour, listed below: most apps need no changes, but check this list if you use the Hijri or dual calendar, full `PickerStrings` / `ThemeTokens` objects, or tests that match `onChange` calls exactly.

@@ -1,8 +1,17 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { createElement } from 'react';
-import { Text, TextInput, View, type ViewProps } from 'react-native';
+import {
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  type ViewProps,
+} from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
-import ValueField, { type ValueFieldProps } from '../field/ValueField';
+import ValueField, {
+  startsRightToLeft,
+  type ValueFieldProps,
+} from '../field/ValueField';
 import { DEFAULT_STRINGS } from '../theme/defaultStrings';
 import { buildTokens } from '../theme/tokens';
 import type { InstructionRenderProps, LabelRenderProps } from '../types';
@@ -193,8 +202,88 @@ describe('ValueField: typed mode (date + time segments)', () => {
     expect(texts(tree)).toContain(strings.errorInvalidDate);
   });
 
+  it('writes the typing error with errorStrings when given', () => {
+    const tree = mount({
+      allowTyping: true,
+      errorStrings: { ...strings, errorInvalidDate: 'تاريخ غير صالح' },
+    });
+    const box = (key: string) =>
+      tree.root
+        .findAllByType(TextInput)
+        .find((i) => i.props.testID === `dp-segment-${key}`);
+    act(() => box('day')?.props.onFocus());
+    act(() => box('day')?.props.onChangeText('31'));
+    act(() => box('month')?.props.onChangeText('02'));
+    act(() => box('year')?.props.onChangeText('2026'));
+    expect(texts(tree)).toContain('تاريخ غير صالح');
+    expect(texts(tree)).not.toContain(strings.errorInvalidDate);
+  });
+
   it('is not typeable when disabled', () => {
     const tree = mount({ allowTyping: true, disabled: true });
     expect(tree.root.findAllByType(TextInput)).toHaveLength(0);
+  });
+});
+
+describe('ValueField: a long value', () => {
+  it('scrolls sideways once there is a value; the placeholder does not', () => {
+    expect(mount({}).root.findAllByType(ScrollView)).toHaveLength(0);
+    const filled = mount({
+      value: { date: { year: 2026, month: 10, day: 20 }, time: null },
+    });
+    const scroll = filled.root.findAllByType(ScrollView);
+    expect(scroll).toHaveLength(1);
+    expect(scroll[0]!.props).toMatchObject({
+      horizontal: true,
+      keyboardShouldPersistTaps: 'always',
+    });
+    expect(texts(filled)).toContain('20-10-2026');
+  });
+
+  it('with a fieldDateText style, a date-time shows its date and time apart', () => {
+    const value = {
+      date: { year: 2026, month: 10, day: 20 },
+      time: { hour: 21, minute: 30 },
+    };
+    const half = { minWidth: '50%' as const };
+    const split = mount({
+      type: 'datetime',
+      value,
+      styles: { fieldDateText: half },
+    });
+    expect(split.root.findAllByType(ScrollView)).toHaveLength(0);
+    expect(texts(split)).toEqual(['20-10-2026 ', '09:30 PM']);
+    const date = split.root.findAllByType(Text)[0]!;
+    expect(date.props.style).toContain(half);
+    // A date alone, a range's text or no style: one text, as before.
+    expect(
+      texts(
+        mount({
+          value: { ...value, time: null },
+          styles: { fieldDateText: half },
+        })
+      )
+    ).toEqual(['20-10-2026']);
+    expect(
+      texts(
+        mount({
+          type: 'datetime',
+          value,
+          displayText: 'a – b',
+          styles: { fieldDateText: half },
+        })
+      )
+    ).toEqual(['a – b']);
+    expect(texts(mount({ type: 'datetime', value }))).toEqual([
+      '20-10-2026 09:30 PM',
+    ]);
+  });
+
+  it('reads the direction from the first letter, not the digits', () => {
+    expect(startsRightToLeft('١٧ جمادى الأولى ١٤٤٨')).toBe(true);
+    expect(startsRightToLeft('16 جمادى الأولى 1448')).toBe(true);
+    expect(startsRightToLeft('20-10-2026 09:30 PM')).toBe(false);
+    expect(startsRightToLeft('16 Jumada I 1448 AH')).toBe(false);
+    expect(startsRightToLeft('٢٠-١٠-٢٠٢٦')).toBe(false);
   });
 });

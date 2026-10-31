@@ -36,6 +36,22 @@ export const formatTimeText = (
 /** Writes a value's date some other way, e.g. as a Hijri date. */
 export type DateTextFormatter = (value: DateTimeValue) => string;
 
+/** A value's date and time as two texts; the time is '' for a date or a value without one. */
+export const formatValueParts = (
+  value: DateTimeValue,
+  type: PickerType,
+  dateFormat: string,
+  timeFormat: TimeFormat,
+  dateText?: DateTextFormatter,
+  periods: PeriodLabels = DEFAULT_STRINGS
+): { date: string; time: string } => ({
+  date: dateText ? dateText(value) : formatDateText(value, dateFormat),
+  time:
+    type === 'datetime' && value.time
+      ? formatTimeText(value, timeFormat, periods)
+      : '',
+});
+
 export const formatValueText = (
   value: DateTimeValue | null,
   type: PickerType,
@@ -45,10 +61,15 @@ export const formatValueText = (
   periods: PeriodLabels = DEFAULT_STRINGS
 ): string => {
   if (!value) return '';
-  const date = dateText ? dateText(value) : formatDateText(value, dateFormat);
-  return type === 'datetime' && value.time
-    ? `${date}${periods.dateTimeSeparator ?? ' '}${formatTimeText(value, timeFormat, periods)}`
-    : date;
+  const { date, time } = formatValueParts(
+    value,
+    type,
+    dateFormat,
+    timeFormat,
+    dateText,
+    periods
+  );
+  return time ? `${date}${periods.dateTimeSeparator ?? ' '}${time}` : date;
 };
 
 /** '21-10-2026 – 25-10-2026'; just the start (with the dash) while the end is open. */

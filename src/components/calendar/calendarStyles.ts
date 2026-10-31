@@ -103,7 +103,8 @@ const create = (t: ThemeTokens) =>
     disabledText: { color: t.disabledText },
     holidayText: { color: t.holiday },
     pressed: { backgroundColor: t.rangeFill },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', paddingVertical: 8 },
+    // No top padding: the header's margin and the cell padding already space the first row.
+    grid: { flexDirection: 'row', flexWrap: 'wrap', paddingBottom: 8 },
     gridCell: { width: '33.33%', padding: 6 },
     gridButton: {
       minHeight: t.touchTarget,

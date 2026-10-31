@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  I18nManager,
   Pressable,
   ScrollView,
   Text,
@@ -18,6 +17,7 @@ import {
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { MAX_FONT_SCALE } from '../theme/a11y';
+import { useIsRTL } from '../theme/direction';
 import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { useReduceMotion } from '../hooks/useReduceMotion';
@@ -60,6 +60,7 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
   testID,
 }) => {
   const digits = useNumerals();
+  const isRTL = useIsRTL();
   const s = buildCalendarStyles(tokens);
   const ico = resolveIcons(icons);
   const arrow = (
@@ -69,7 +70,7 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
     label: string
   ) => {
     // Chevrons point in the reading direction; mirrored in right-to-left layouts.
-    const pointsLeft = (dir === 'prev') !== I18nManager.isRTL;
+    const pointsLeft = (dir === 'prev') !== isRTL;
     const chevron = pointsLeft ? 'chevronLeft' : 'chevronRight';
     return (
       <Pressable

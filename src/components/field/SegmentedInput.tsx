@@ -292,7 +292,7 @@ const SegmentedInput: React.FC<Props> = ({
         {dateSpecs.map((spec, i) => renderNumeric(spec, i))}
       </View>
       {timeSpecs.length ? (
-        <View style={s.segmentGroup}>
+        <View style={[s.segmentGroup, dateSpecs.length > 0 && s.segmentTime]}>
           {timeSpecs.map((spec, i) =>
             spec.key === 'period' ? renderPeriod() : renderNumeric(spec, i)
           )}

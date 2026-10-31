@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { SegmentEditorAction } from '../../core/segmentEditor';
 import type { ParsedSegments } from '../../core/segments';
 import type { DateTimeValue, PickerType, TimeFormat } from '../../core/types';
@@ -11,6 +11,7 @@ import {
   type IconSet,
 } from '../../icons';
 import { useTypedSegments } from '../hooks/useTypedSegments';
+import type { ScrollViewRef } from '../nativeTypes';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import { useNumerals } from '../theme/numerals';
@@ -18,6 +19,7 @@ import type { ThemeTokens } from '../theme/tokens';
 import type { InstructionRenderProps, LabelRenderProps } from '../types';
 import FieldMessages from './FieldMessages';
 import {
+  formatValueParts,
   formatValueText,
   placeholderText,
   segmentErrorText,
@@ -25,6 +27,16 @@ import {
 } from './fieldText';
 import { buildFieldStyles } from './fieldStyles';
 import SegmentedInput from './SegmentedInput';
+
+// Hebrew and Arabic letters; Arabic-Indic digits (٠–٩, ۰–۹) are left out, since
+// digits don't set the reading direction.
+const RTL_LETTER = '֐-׿؀-ٟ٪-ۯۺ-ࣿ';
+const FIRST_LETTER_RTL = new RegExp(
+  `^[^A-Za-zÀ-ɏ${RTL_LETTER}]*[${RTL_LETTER}]`
+);
+/** Whether a text reads right to left: its first letter is Hebrew or Arabic. */
+export const startsRightToLeft = (text: string): boolean =>
+  FIRST_LETTER_RTL.test(text);
 
 export interface ValueFieldProps {
   type: PickerType;
@@ -79,6 +91,8 @@ export interface ValueFieldProps {
   tokens: ThemeTokens;
   styles?: PickerStyles;
   strings: PickerStrings;
+  /** The texts of its typed-input errors. Default `strings`. */
+  errorStrings?: PickerStrings;
   testID?: string;
 }
 
@@ -160,10 +174,12 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     tokens,
     styles,
     strings,
+    errorStrings = strings,
     testID,
   } = props;
   const s = buildFieldStyles(tokens);
   const ico = resolveIcons(iconOverrides);
+  const scrollRef = useRef<ScrollViewRef>(null);
   const [lastParsed, setLastParsed] = useState<ParsedSegments | null>(null);
   const { state, dispatch, getState } = useTypedSegments(
     value,
@@ -205,13 +221,25 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
   const typing = !!allowTyping && editable;
   const typedError =
     typing && !state.focused && lastParsed && !lastParsed.isEmpty
-      ? segmentErrorText(lastParsed.errors, strings, yearRange)
+      ? segmentErrorText(lastParsed.errors, errorStrings, yearRange)
       : '';
   const error = typedError || errorMessage || '';
   const hasValue = typing ? !state.parsed.isEmpty : !!value || !!displayText;
   const text =
     displayText ??
     formatValueText(value, type, dateFormat, timeFormat, dateText, strings);
+  // With a fieldDateText style, a single date-time shows its date and time
+  // apart (no sideways scroll).
+  const valueParts =
+    styles?.fieldDateText && displayText === undefined && value
+      ? formatValueParts(value, type, dateFormat, timeFormat, dateText, strings)
+      : null;
+  const parts = valueParts?.time ? valueParts : null;
+  const valueStyle = [
+    s.text,
+    styles?.fieldText,
+    disabled && [s.disabledText, styles?.fieldTextDisabled],
+  ];
 
   const clear = () => {
     dispatch({ type: 'reset', value: null });
@@ -300,19 +328,59 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
       onPress={onPress}
       style={fieldStyle}
     >
-      <Text
-        numberOfLines={1}
-        style={[
-          s.text,
-          styles?.fieldText,
-          !text && [s.placeholder, styles?.fieldPlaceholder],
-          disabled && [s.disabledText, text ? styles?.fieldTextDisabled : null],
-        ]}
-      >
-        {digits(text) ||
-          placeholder ||
-          placeholderText(type, dateFormat, timeFormat, strings)}
-      </Text>
+      {parts ? (
+        <>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="clip"
+            style={[valueStyle, s.textScrolled, styles?.fieldDateText]}
+          >
+            {digits(`${parts.date}${strings.dateTimeSeparator ?? ' '}`)}
+          </Text>
+          <Text numberOfLines={1} ellipsizeMode="clip" style={valueStyle}>
+            {digits(parts.time)}
+          </Text>
+        </>
+      ) : text ? (
+        // A value too long for the box scrolls sideways; a tap still opens.
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          style={s.textScroll}
+          contentContainerStyle={s.textScrollContent}
+          // Right-to-left text (a Hijri date) starts at its right end.
+          onContentSizeChange={() => {
+            if (startsRightToLeft(text))
+              scrollRef.current?.scrollToEnd({ animated: false });
+          }}
+        >
+          <Text
+            numberOfLines={1}
+            // Android can measure a line a pixel short (right-to-left text
+            // most often) and would then swap its last word for "…".
+            ellipsizeMode="clip"
+            style={[valueStyle, s.textScrolled]}
+          >
+            {digits(text)}
+          </Text>
+        </ScrollView>
+      ) : (
+        <Text
+          numberOfLines={1}
+          style={[
+            s.text,
+            styles?.fieldText,
+            s.placeholder,
+            styles?.fieldPlaceholder,
+            disabled && s.disabledText,
+          ]}
+        >
+          {placeholder ||
+            placeholderText(type, dateFormat, timeFormat, strings)}
+        </Text>
+      )}
       {icons}
     </Pressable>
   );

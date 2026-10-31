@@ -391,6 +391,13 @@ export interface DateTimePickerProps {
   theme?: Partial<ThemeTokens>;
   styles?: PickerStyles;
   strings?: Partial<PickerStrings>;
+  /**
+   * The texts while the Hijri tab shows (e.g. Arabic), for its calendar and
+   * time rows, the error messages inside the picker, and a date picked in it
+   * (the on-screen field's errors keep `strings`). A key left out (or `undefined`)
+   * keeps AM / PM in `hijriLocale` (ص / م), then `strings`.
+   */
+  hijriStrings?: Partial<PickerStrings>;
   testID?: string;
 
   // events
