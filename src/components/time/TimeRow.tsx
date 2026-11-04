@@ -242,8 +242,11 @@ const TimeRow: React.FC<TimeRowProps> = ({
   let issue: TimeEntryIssue | null = effective.issue;
   if (effective.isEmpty) issue = time ? 'INCOMPLETE' : null;
   if (effective.time) issue = checkTime(effective.time, { minuteStep, bounds });
+  // A time set elsewhere reaches the boxes one render later (the effect
+  // above); until then the boxes are stale, so check that time instead.
+  const boxesStale = !focused && timeKey(time) !== lastKey.current;
   // The wheel always holds a complete time: only the limits and the step apply.
-  if (input === 'wheel')
+  if (input === 'wheel' || boxesStale)
     issue = time ? checkTime(time, { minuteStep, bounds }) : null;
 
   const pending =
