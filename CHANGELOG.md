@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-04
+
 ### Added
 
 - `timeRowDate`: each time row shows its picked day under its label (Start time / 10-03-2026), as the field writes it (Hijri text for a Hijri pick). Off by default. With `timeMode: 'perDate'` the day moves from after the label to under it.
@@ -16,6 +18,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- A repeated wall-clock time (the hour clocks fall back over) now always saves as its first occurrence. It used to depend on the zone's offset on the day the code ran, so the same value could save as a different instant depending on the date.
 - With `commitMode: 'instant'`, tapping a day no longer flashes "Enter a complete time" under its time row for one frame.
 
 ## [1.2.0] - 2026-11-01
