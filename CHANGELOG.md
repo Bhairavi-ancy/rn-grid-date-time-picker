@@ -14,6 +14,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - The colon between the time boxes no longer has a fixed 46 pt height, so a shorter `timeBox` makes the row shorter. The default look is unchanged.
 
+### Fixed
+
+- With `commitMode: 'instant'`, tapping a day no longer flashes "Enter a complete time" under its time row for one frame.
+
 ## [1.2.0] - 2026-11-01
 
 1.2.0 lays out the Hijri tab right to left, gives it its own texts (`hijriStrings`), and lets a long field value scroll instead of ending in "…". No props or types were removed, but some defaults change what users see: check the Changed list if you use the Hijri or dual calendar (its layout, and AM / PM written ص / م), a right-to-left app (the time boxes mirror), or tests that match the field text or the layout.

@@ -1,9 +1,16 @@
 import { DateTime } from 'luxon';
 import type { DateTimeValue } from './types';
 
-/** The Luxon DateTime for a date-time value in `zone` (seconds and ms zeroed). */
-export const toZonedDateTime = (value: DateTimeValue, zone: string): DateTime =>
-  DateTime.fromObject(
+/**
+ * The Luxon DateTime for a date-time value in `zone` (seconds and ms zeroed).
+ * A time that happens twice resolves to its first occurrence: Luxon alone picks
+ * by the zone's offset today, so the result would change with the season.
+ */
+export const toZonedDateTime = (
+  value: DateTimeValue,
+  zone: string
+): DateTime => {
+  const dt = DateTime.fromObject(
     {
       ...value.date,
       hour: value.time?.hour ?? 0,
@@ -13,6 +20,11 @@ export const toZonedDateTime = (value: DateTimeValue, zone: string): DateTime =>
     },
     { zone }
   );
+  if (!dt.isValid) return dt;
+  return dt
+    .getPossibleOffsets()
+    .reduce((first, d) => (d.toMillis() < first.toMillis() ? d : first), dt);
+};
 
 export type DstStatus = 'ok' | 'gap' | 'overlap';
 
