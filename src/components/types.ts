@@ -165,6 +165,20 @@ export interface LabelRenderProps {
   fieldTestID?: string;
 }
 
+/** What `renderTimeLabel` receives, for one time row. */
+export interface TimeLabelRenderProps {
+  /** The row's label from `strings`: 'Time', 'Start time' or 'End time'. */
+  label: string;
+  /** A single value's row, a range end, the multiple-mode shared row, or a day's own row (`timeMode: 'perDate'`). */
+  row: 'single' | 'from' | 'to' | 'shared' | 'day';
+  /** The row's picked day; null before it is picked, and for the shared row. */
+  date: CalendarDate | null;
+  /** That day as the field writes it; null when there is no day. Set whether or not `timeRowDate` is on. */
+  dateText: string | null;
+  /** The row's time, or null. */
+  time: Time | null;
+}
+
 /** What `renderInstruction` receives. */
 export interface InstructionRenderProps {
   instruction: string;
@@ -368,6 +382,14 @@ export interface DateTimePickerProps {
   minuteStep?: number;
   /** A newly picked day always gets this time (over a time typed first and over the current time). */
   newDayTime?: Time;
+  /**
+   * Shows each time row's picked day under its label ('Start time',
+   * 10-03-2026), as the field writes it. Nothing shows until the day is
+   * picked. Style it with `timeLabelDate`. Default false.
+   */
+  timeRowDate?: boolean;
+  /** Replaces a time row's label (and its date). The boxes and errors stay built in. */
+  renderTimeLabel?: (p: TimeLabelRenderProps) => React.ReactNode;
 
   // limits → greyed days and errors
   showHolidays?: boolean;

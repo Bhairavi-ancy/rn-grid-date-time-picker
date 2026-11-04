@@ -70,6 +70,7 @@ export type {
   SheetRenderProps,
   SheetSize,
   Slot,
+  TimeLabelRenderProps,
 } from './components/types';
 export type { CalendarSystem, Periods } from './core/calendarSystem';
 export type { Numerals } from './core/numerals';

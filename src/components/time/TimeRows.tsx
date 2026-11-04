@@ -5,10 +5,11 @@ import type { Draft, DraftTarget } from '../../core/draft';
 import type { TimeEntryIssue } from '../../core/timeEntry';
 import type { CalendarDate, Time, TimeFormat } from '../../core/types';
 import type { RangeEnd } from '../field/RangeFields';
-import { formatDateText } from '../field/fieldText';
+import { formatDateText, type DateTextFormatter } from '../field/fieldText';
 import type { PickerStrings } from '../theme/defaultStrings';
 import type { PickerStyles } from '../theme/styleKeys';
 import type { ThemeTokens } from '../theme/tokens';
+import type { TimeLabelRenderProps } from '../types';
 import TimeRow from './TimeRow';
 
 /** Times typed before their day is picked, per end ('shared' lives in the draft). */
@@ -37,6 +38,11 @@ interface Props {
   onSpinChange: (spinning: boolean) => void;
   /** A row's box gained or lost focus. */
   onFocusChange?: (rowKey: string, focused: boolean) => void;
+  /** Shows each row's day under its label. */
+  timeRowDate?: boolean;
+  renderTimeLabel?: (p: TimeLabelRenderProps) => React.ReactNode;
+  /** A day as the field writes it (the Hijri text for a Hijri pick); default `dateFormat`. */
+  dateText?: DateTextFormatter;
   /** A row's time that is typed but not saved yet (null once saved or gone). */
   onPendingChange?: (
     rowKey: string,
@@ -51,6 +57,7 @@ interface Props {
 
 interface RowSpec {
   key: string;
+  kind: TimeLabelRenderProps['row'];
   label: string;
   time: Time | null;
   day: CalendarDate | null;
@@ -85,6 +92,9 @@ const TimeRows: React.FC<Props> = (props) => {
     onSpinChange,
     onFocusChange,
     onPendingChange,
+    timeRowDate = false,
+    renderTimeLabel,
+    dateText,
     tokens,
     styles,
     strings,
@@ -98,6 +108,7 @@ const TimeRows: React.FC<Props> = (props) => {
   ): RowSpec => {
     return {
       key,
+      kind: key,
       label,
       time: value?.time ?? pending[key] ?? null,
       day: value?.date ?? null,
@@ -123,6 +134,7 @@ const TimeRows: React.FC<Props> = (props) => {
     rows = [
       {
         key: 'shared',
+        kind: 'shared',
         label: strings.time,
         time: draft.sharedTime,
         day: null,
@@ -142,7 +154,11 @@ const TimeRows: React.FC<Props> = (props) => {
       rows = [
         {
           key: `day-${slot.date.year}-${slot.date.month}-${slot.date.day}`,
-          label: `${strings.time} · ${formatDateText(slot, dateFormat)}`,
+          kind: 'day',
+          // With timeRowDate the day goes under the label instead.
+          label: timeRowDate
+            ? strings.time
+            : `${strings.time} · ${formatDateText(slot, dateFormat)}`,
           time: slot.time,
           day: slot.date,
           target: { day: slot.date },
@@ -200,6 +216,24 @@ const TimeRows: React.FC<Props> = (props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- reports changes only; the callback may be a new function on every render
   useEffect(() => onSpinChange(anySpinning), [anySpinning]);
 
+  /** A row's day as the field writes it, or null before it is picked. */
+  const dayText = (row: RowSpec): string | null => {
+    if (!row.day) return null;
+    const value = { date: row.day, time: row.time };
+    return dateText ? dateText(value) : formatDateText(value, dateFormat);
+  };
+  const labelRenderer = (row: RowSpec) =>
+    renderTimeLabel
+      ? () =>
+          renderTimeLabel({
+            label: row.label,
+            row: row.kind,
+            date: row.day,
+            dateText: dayText(row),
+            time: row.time,
+          })
+      : undefined;
+
   const single = rows.length === 1;
   return (
     <>
@@ -218,6 +252,8 @@ const TimeRows: React.FC<Props> = (props) => {
           minuteStep={minuteStep}
           bounds={row.day ? constraints.timeBounds(row.day) : null}
           label={row.label}
+          dateText={timeRowDate ? dayText(row) : null}
+          renderLabel={labelRenderer(row)}
           disabled={disabled}
           tokens={tokens}
           styles={styles}

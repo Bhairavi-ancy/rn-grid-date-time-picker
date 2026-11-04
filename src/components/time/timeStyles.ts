@@ -23,6 +23,15 @@ const create = (t: ThemeTokens) =>
       fontSize: t.fontSizeLarge,
       color: t.heading,
     },
+    // The label with the day under it (timeRowDate), or a renderTimeLabel label.
+    labelWrap: { flexShrink: 1, marginEnd: 12 },
+    labelInWrap: { marginEnd: 0 },
+    labelDate: {
+      marginTop: 2,
+      ...fontStyle(t, 'regular'),
+      fontSize: t.fontSizeSmall,
+      color: t.mutedText,
+    },
     boxes: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -62,9 +71,9 @@ const create = (t: ThemeTokens) =>
     },
     boxFocused: { borderColor: t.borderFocused },
     boxError: { borderColor: t.error },
+    // No height of its own, so `timeBox` sets the row's height.
     colonCell: {
       width: 24,
-      height: 46,
       alignItems: 'center',
       justifyContent: 'center',
     },

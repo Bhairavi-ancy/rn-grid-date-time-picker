@@ -57,6 +57,10 @@ export interface TimeRowProps {
   /** The day's limits (`Constraints.timeBounds`). */
   bounds?: TimeBounds | null;
   label: string;
+  /** The row's day, shown under the label (`timeRowDate`); null shows none. */
+  dateText?: string | null;
+  /** Replaces the label and its date (`renderTimeLabel`). */
+  renderLabel?: () => React.ReactNode;
   disabled?: boolean;
   tokens: ThemeTokens;
   styles?: PickerStyles;
@@ -75,6 +79,37 @@ const issueText = (
   if (issue === 'INVALID') return strings.errorInvalidTime;
   if (issue === 'OFF_STEP') return strings.errorMinuteStep(minuteStep);
   return strings.errorTimeNotAllowed;
+};
+
+/** The row's label: plain, with the day under it, or the app's own. */
+const TimeLabel: React.FC<
+  Pick<
+    TimeRowProps,
+    'label' | 'dateText' | 'renderLabel' | 'tokens' | 'styles' | 'testID'
+  >
+> = ({ label, dateText, renderLabel, tokens, styles, testID }) => {
+  const s = buildTimeStyles(tokens);
+  if (!renderLabel && !dateText)
+    return <Text style={[s.label, styles?.timeLabel]}>{label}</Text>;
+  return (
+    <View style={[s.labelWrap, styles?.timeLabelWrap]}>
+      {renderLabel ? (
+        renderLabel()
+      ) : (
+        <>
+          <Text style={[s.label, s.labelInWrap, styles?.timeLabel]}>
+            {label}
+          </Text>
+          <Text
+            style={[s.labelDate, styles?.timeLabelDate]}
+            testID={testID ? `${testID}-date` : undefined}
+          >
+            {dateText}
+          </Text>
+        </>
+      )}
+    </View>
+  );
 };
 
 /**
@@ -97,6 +132,8 @@ const TimeRow: React.FC<TimeRowProps> = ({
   minuteStep = 1,
   bounds,
   label,
+  dateText,
+  renderLabel,
   disabled,
   tokens,
   styles,
@@ -268,7 +305,14 @@ const TimeRow: React.FC<TimeRowProps> = ({
   return (
     <View style={s.wrapper} testID={testID}>
       <View style={[s.row, styles?.timeRow]}>
-        <Text style={[s.label, styles?.timeLabel]}>{label}</Text>
+        <TimeLabel
+          label={label}
+          dateText={dateText}
+          renderLabel={renderLabel}
+          tokens={tokens}
+          styles={styles}
+          testID={testID}
+        />
         {input === 'wheel' ? (
           <TimeWheel
             time={time}

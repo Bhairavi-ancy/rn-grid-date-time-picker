@@ -9,6 +9,7 @@ import type {
   InstructionRenderProps,
   LabelRenderProps,
   SheetRenderProps,
+  TimeLabelRenderProps,
 } from '../types';
 
 // Stand-ins for an app's own sheet, label and instruction, passed through the
@@ -553,5 +554,84 @@ describe('multiple', () => {
     expect(texts(tree)).toContain('20-10-2026, 25-10-2026');
     press(tree, 'dp-trigger-clear');
     expect(onChange).toHaveBeenCalledWith('');
+  });
+});
+
+describe('time row labels', () => {
+  const textOf = (tree: ReactTestRenderer, id: string) =>
+    [].concat(find(tree, id)?.props.children).join('');
+
+  it('timeRowDate: each range row shows its day under the label, once picked', () => {
+    const tree = mount({ mode: 'range', type: 'datetime', timeRowDate: true });
+    open(tree);
+    expect(exists(tree, 'dp-time-from-date')).toBe(false);
+    tap(tree, 20);
+    expect(textOf(tree, 'dp-time-from-date')).toBe('20-10-2026');
+    expect(exists(tree, 'dp-time-to-date')).toBe(false);
+    tap(tree, 25);
+    expect(textOf(tree, 'dp-time-to-date')).toBe('25-10-2026');
+    expect(texts(tree)).toContain('Start time');
+    expect(texts(tree)).toContain('End time');
+  });
+
+  it('timeRowDate: the single row too; off by default', () => {
+    const on = mount({ type: 'datetime', timeRowDate: true });
+    open(on);
+    tap(on, 20);
+    expect(textOf(on, 'dp-time-date')).toBe('20-10-2026');
+    const off = mount({ type: 'datetime' });
+    open(off);
+    tap(off, 20);
+    expect(exists(off, 'dp-time-date')).toBe(false);
+  });
+
+  it('timeRowDate: a per-date row moves its day under the label', () => {
+    const tree = mount({
+      mode: 'multiple',
+      type: 'datetime',
+      multiple: { timeMode: 'perDate' },
+      timeRowDate: true,
+    });
+    open(tree);
+    tap(tree, 20);
+    expect(texts(tree)).toContain('Time');
+    expect(textOf(tree, 'dp-time-date')).toBe('20-10-2026');
+  });
+
+  it('renderTimeLabel replaces the label and gets the row, day and time', () => {
+    const renderTimeLabel = jest.fn((p: TimeLabelRenderProps) => (
+      <Text
+        testID={`custom-${p.row}`}
+      >{`${p.label} / ${p.dateText ?? '-'}`}</Text>
+    ));
+    const tree = mount({
+      mode: 'range',
+      type: 'datetime',
+      timeFormat: '24h',
+      renderTimeLabel,
+    });
+    open(tree);
+    expect(textOf(tree, 'custom-from')).toBe('Start time / -');
+    tap(tree, 20);
+    typeBox(tree, 'dp-time-from-hour', '10');
+    typeBox(tree, 'dp-time-from-minute', '30');
+    act(() => box(tree, 'dp-time-from-minute')!.props.onBlur());
+    expect(textOf(tree, 'custom-from')).toBe('Start time / 20-10-2026');
+    expect(textOf(tree, 'custom-to')).toBe('End time / -');
+    expect(renderTimeLabel).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        row: 'to',
+        date: null,
+        dateText: null,
+      })
+    );
+    const fromCalls = renderTimeLabel.mock.calls.filter(
+      ([p]) => p.row === 'from'
+    );
+    expect(fromCalls[fromCalls.length - 1]![0]).toMatchObject({
+      date: { year: 2026, month: 10, day: 20 },
+      time: { hour: 10, minute: 30 },
+    });
+    expect(texts(tree)).not.toContain('Start time');
   });
 });
