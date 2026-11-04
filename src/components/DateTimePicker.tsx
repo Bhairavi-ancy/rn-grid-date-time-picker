@@ -204,6 +204,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     minuteStep: minuteStepProp = 1,
     timeInput = 'typed',
     newDayTime,
+    timeRowDate = false,
+    renderTimeLabel,
     holidays: holidaysProp,
     loadHolidays,
     disableHolidays,
@@ -1668,6 +1670,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onSpinChange={setWheelSpinning}
         onFocusChange={(row, f) => reportFocus(`time-${row}`, f)}
         onPendingChange={onRowPending}
+        timeRowDate={timeRowDate}
+        renderTimeLabel={renderTimeLabel}
+        dateText={draftDateText}
         tokens={tokens}
         styles={styles}
         strings={stringsFor(shownSystem)}

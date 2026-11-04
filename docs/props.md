@@ -64,6 +64,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
 | `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
 | `renderCalendarSwitch` | `(p: CalendarSwitchRenderProps) => ReactNode` | Replaces the calendar switch: draw `p.systems`, mark `p.selected`, call `p.onSelect(system)`. |
+| `renderTimeLabel` | `(p: TimeLabelRenderProps) => ReactNode` | Replaces a time row's label (and its date); the boxes, AM / PM and errors stay built in. `p` has `label`, `row` (`'single' \| 'from' \| 'to' \| 'shared' \| 'day'`), `date`, `dateText` and `time`. |
 | `renderTimeRow` | `(state: PickerState) => ReactNode` | Replaces the time row. Read `state.time` (ranges: `state.rangeTimes`) and change it with `state.setTime(time, end?)`, which works like the built-in row, including before a day is picked. |
 
 ## Calendar
@@ -100,6 +101,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `timeFormat` | `'12h' \| '24h'` | from `locale`, else `'12h'` | |
 | `minuteStep` | `number` | `1` | A step that divides the hour: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. Off-step minutes are flagged on Confirm, never rounded silently. |
 | `newDayTime` | `Time` | – | A day picked with no time yet gets this time; a time already set is kept. It wins over a time typed before the day and over the current time. |
+| `timeRowDate` | `boolean` | `false` | Shows each time row's picked day under its label (Start time / 10-03-2026), as the field writes it. Single, range and per-date rows; nothing shows until the day is picked. Style it with `timeLabelWrap` and `timeLabelDate`. |
 
 ## Limits
 

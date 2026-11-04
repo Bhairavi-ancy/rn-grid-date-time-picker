@@ -110,6 +110,10 @@ export const STYLE_KEYS = [
   // time
   'timeRow',
   'timeLabel',
+  /** Holds the label and its date (`timeRowDate`) or a `renderTimeLabel` label. */
+  'timeLabelWrap',
+  /** The picked day under a time row's label (`timeRowDate`). */
+  'timeLabelDate',
   'timeBox',
   'timeBoxFocused',
   'timeBoxError',
