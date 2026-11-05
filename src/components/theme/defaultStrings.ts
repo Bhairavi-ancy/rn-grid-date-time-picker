@@ -8,6 +8,7 @@ export interface PickerStrings {
   reset: string;
   clear: string;
   today: string;
+  /** No longer shown (the iOS number-pad bar is empty); kept so existing `strings` objects still type-check. */
   done: string;
   time: string;
   startTime: string;

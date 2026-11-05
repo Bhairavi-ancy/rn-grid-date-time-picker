@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
+import KeyboardAccessoryBar from '../field/KeyboardAccessoryBar';
 import type { TextInputRef } from '../nativeTypes';
 import type { TimeBounds } from '../../core/constraints';
 import type { Period } from '../../core/segments';
@@ -39,7 +40,7 @@ const PERIODS: Period[] = ['AM', 'PM'];
 
 /**
  * `[hh] : [mm] [AM | PM]`, or `[HH] : [mm]` in 24-hour. The boxes are plain
- * TextInputs; the row (TimeRow) owns their values. Number pad, with a Done bar
+ * TextInputs; the row (TimeRow) owns their values. Number pad, with a solid bar
  * on iOS. The AM/PM side that can't hold an allowed time is disabled.
  */
 const TypedTime: React.FC<Props> = ({
@@ -61,6 +62,7 @@ const TypedTime: React.FC<Props> = ({
   testID,
 }) => {
   const digits = useNumerals();
+  const barId = useId();
   const s = buildTimeStyles(tokens);
 
   const box = (key: TimeKey) => (
@@ -99,9 +101,8 @@ const TypedTime: React.FC<Props> = ({
             contextMenuHidden
             editable={!disabled}
             underlineColorAndroid="transparent"
-            // iOS adds a Done button above the number pad for each box.
-            returnKeyType="done"
-            inputAccessoryViewButtonLabel={strings.done}
+            // iOS: this box's own solid bar (below).
+            inputAccessoryViewID={`${barId}-${key}`}
             onChangeText={(text) => onChangeBox(key, text)}
             onFocus={() => onFocusBox(key)}
             onBlur={() => onBlurBox(key)}
@@ -110,6 +111,7 @@ const TypedTime: React.FC<Props> = ({
             }}
             style={[s.boxText, styles?.timeBoxText, s.boxInput]}
           />
+          <KeyboardAccessoryBar nativeID={`${barId}-${key}`} tokens={tokens} />
         </View>
       </View>
     </View>
