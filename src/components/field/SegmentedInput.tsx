@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useId, useMemo, useRef } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -20,6 +20,7 @@ import { MAX_FONT_SCALE } from '../theme/a11y';
 import { useNumerals } from '../theme/numerals';
 import type { ThemeTokens } from '../theme/tokens';
 import { buildFieldStyles } from './fieldStyles';
+import KeyboardAccessoryBar from './KeyboardAccessoryBar';
 
 interface Props {
   state: SegmentEditorState;
@@ -93,8 +94,8 @@ export const changeToActions = (
 
 /**
  * The typed field: one box per segment in locale order, plus an AM/PM switch for
- * 12-hour date-times. Number pad, with a "Done" bar on iOS (its number pad has no
- * return key).
+ * 12-hour date-times. Number pad, with an empty solid bar above it on iOS (so
+ * React Native adds no see-through Done bar).
  */
 const SegmentedInput: React.FC<Props> = ({
   state,
@@ -108,6 +109,7 @@ const SegmentedInput: React.FC<Props> = ({
   testID,
 }) => {
   const digits = useNumerals();
+  const barId = useId();
   // Each box's text as last rendered, and as it last reported. Fast input (a
   // hardware keyboard, autofill) sends the next character before React has
   // re-rendered, and the native box may ignore React's reset while it's
@@ -197,10 +199,9 @@ const SegmentedInput: React.FC<Props> = ({
           keyboardType="number-pad"
           editable={!disabled}
           contextMenuHidden
-          // iOS adds a Done button above the number pad for every box; it
-          // closes the keyboard (and blurs the box).
-          returnKeyType="done"
-          inputAccessoryViewButtonLabel={strings.done}
+          // iOS: this box's own solid bar (below), so React Native adds no
+          // see-through Done bar.
+          inputAccessoryViewID={`${barId}-${spec.key}`}
           onFocus={() => dispatch({ type: 'focus', key: spec.key })}
           onBlur={() => {
             if ((getState?.() ?? state).focused === spec.key)
@@ -227,6 +228,10 @@ const SegmentedInput: React.FC<Props> = ({
             styles?.fieldSegment,
             isFocused && [s.segmentFocused, styles?.fieldSegmentFocused],
           ]}
+        />
+        <KeyboardAccessoryBar
+          nativeID={`${barId}-${spec.key}`}
+          tokens={tokens}
         />
       </React.Fragment>
     );

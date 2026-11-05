@@ -3,13 +3,14 @@ import { AccessibilityInfo, TextInput } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import DateTimePicker from '../DateTimePicker';
 import FieldMessages from '../field/FieldMessages';
+import KeyboardAccessoryBar from '../field/KeyboardAccessoryBar';
 import { buildTokens } from '../theme/tokens';
 
 // The React Native Jest preset runs as iOS.
 const now = () => new Date(Date.UTC(2026, 9, 21, 6, 30));
 
 describe('iOS keyboard', () => {
-  it('every typed box gets its own Done button, labelled from strings.done', () => {
+  it('every typed box gets its own solid bar, not the see-through Done bar', () => {
     let tree!: ReactTestRenderer;
     act(() => {
       tree = renderer.create(
@@ -21,7 +22,6 @@ describe('iOS keyboard', () => {
           timeZone="UTC"
           allowTyping
           allowFieldTyping
-          strings={{ done: 'Fertig' }}
           testID="dp"
         />
       );
@@ -37,10 +37,17 @@ describe('iOS keyboard', () => {
     const boxes = tree.root.findAllByType(TextInput);
     // On-screen field, the field in the sheet, and the two time boxes.
     expect(boxes.length).toBeGreaterThanOrEqual(12);
+    // Our own solid bar per box, never React Native's see-through default
+    // (which a returnKeyType or button label would add).
+    const bars = tree.root.findAllByType(KeyboardAccessoryBar);
+    const ids = boxes.map((box) => box.props.inputAccessoryViewID);
+    expect(new Set(ids).size).toBe(boxes.length);
     for (const box of boxes) {
-      expect(box.props.returnKeyType).toBe('done');
-      expect(box.props.inputAccessoryViewButtonLabel).toBe('Fertig');
-      expect(box.props.inputAccessoryViewID).toBeUndefined();
+      expect(box.props.returnKeyType).toBeUndefined();
+      expect(box.props.inputAccessoryViewButtonLabel).toBeUndefined();
+      expect(
+        bars.some((b) => b.props.nativeID === box.props.inputAccessoryViewID)
+      ).toBe(true);
     }
   });
 });
