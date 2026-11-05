@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-11-05
+
 ### Fixed
 
 - iOS: the see-through Done bar above the number pad is replaced by an empty solid bar (`surface` background, `border` line, `touchTarget` tall). React Native's own bar is see-through on newer iOS, so a sheet resting on the keyboard showed the screen behind it. Each typed box has its own bar. The keyboard closes by tapping outside the box; `strings.done` is no longer shown. This uses `InputAccessoryView`, which React Native 0.88 marks as deprecated.
