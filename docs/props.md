@@ -11,7 +11,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `type` | `'date' \| 'datetime'` | required | |
 | `mode` | `'single' \| 'multiple' \| 'range'` | `'single'` | |
 | `value` | `PickerValue` | required | See [Values](values.md). |
-| `onChange` | `(value: PickerValue, info?: ChangeInfo) => void` | required | Once per Confirm (or per edit with `commitMode="instant"`, and per finished entry with `allowFieldTyping`), or with `''` on clear. When a Hijri calendar can show, `info.calendarSystem` (`'gregory'` or `'hijri'`) says which calendar the date was picked in. |
+| `onChange` | `(value: PickerValue, info?: ChangeInfo) => void` | required | Once per Confirm (or per edit with `commitMode="instant"`, and per finished entry with `allowFieldTyping`), or with `''` on clear. When a Hijri calendar can show, `info.calendarSystem` (`'gregory'` or `'hijri'`) says which calendar the date was picked in: the tab on screen when it was saved. |
 | `onBlur` | `() => void` | – | Right after every `onChange` that saves a value (Confirm, an `'instant'` edit, typing in the on-screen field), like a form field losing focus. Not on clear. |
 | `commitMode` | `'confirm' \| 'instant'` | `'confirm'` | `'instant'` saves every complete, allowed edit once (typing in the field above the calendar saves when focus leaves it or its last box fills), and × in that field clears the saved value. |
 | `valueFormat` | `'iso' \| 'utc-midnight' \| ValueAdapter` | `'iso'` | |
@@ -84,7 +84,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `calendarSwitch` | `boolean \| CalendarSystem[]` | `false`. A Gregorian / Hijri / Dual switch above the calendar; a list picks which ones and their order, e.g. `['hijri', 'gregory']` |
 | `onCalendarSystemChange` | `(system: CalendarSystem) => void` | – |
 | `hijriLocale` | BCP-47 tag | `'ar-SA'`: the language a Hijri calendar is written in, whatever `locale` is (month and weekday names, the Hijri date in the field, screen-reader labels) |
-| `dualDefaultTab` | `'gregory' \| 'hijri'` | `'gregory'`: the tab a dual calendar opens on, each time it opens |
+| `dualDefaultTab` | `'gregory' \| 'hijri'` | `'gregory'`: the tab a dual calendar opens on when it has no value. With a value it opens on the tab the value was saved with, which the picker remembers while mounted (a value from outside counts as saved with `dualDefaultTab`) |
 | `locale` | BCP-47 tag | the device locale |
 | `numerals` | `'latin' \| 'arabic' \| 'locale'` | `'arabic'` (١٢٣) for a Hijri calendar and a date picked in it, in any language; `'latin'` for a Gregorian one. `'locale'` uses the language's own digits (١٢٣ for `ar-SA`, ۱۲۳ for `fa-IR`, 123 for `en-US`). Values stay 0–9 |
 | `timeZone` | IANA zone | the device zone |

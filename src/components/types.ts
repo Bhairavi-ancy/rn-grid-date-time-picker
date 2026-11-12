@@ -156,7 +156,8 @@ export type SheetScrollProps = Omit<
 
 /**
  * The second argument of `onChange` when the picker can show a Hijri calendar:
- * the calendar the date was picked in. The value itself is always Gregorian.
+ * the calendar the date was picked in, which is the tab on screen when it was
+ * saved. The value itself is always Gregorian.
  * The picker remembers it while mounted; to show a stored value back the same
  * way later, store this too and pass it as `dualDefaultTab` (dual) or
  * `calendarSystem`.
@@ -365,9 +366,9 @@ export interface DateTimePickerProps {
   showToday?: boolean;
   /**
    * The calendar the grid uses: 'gregory', 'hijri' (Umm al-Qura), or 'dual':
-   * Gregorian and Hijri tabs, one calendar at a time. A day is shown selected
-   * only in the calendar it was picked in, and the field writes it in that
-   * calendar. With `calendarSwitch`, this is the one shown first. Default
+   * Gregorian and Hijri tabs, one calendar at a time. A selection shows in
+   * both tabs and is saved with the tab on screen, and the field writes it in
+   * that calendar. With `calendarSwitch`, this is the one shown first. Default
    * 'gregory'; anything Hijri falls back to 'gregory' when the platform has no
    * Hijri calendar.
    */
@@ -386,7 +387,12 @@ export interface DateTimePickerProps {
    * readers say. Default 'ar-SA' (Arabic).
    */
   hijriLocale?: string;
-  /** The tab a dual calendar opens on, each time it opens. Default 'gregory'. */
+  /**
+   * The tab a dual calendar opens on when it has no value. With a value, it
+   * opens on the tab that value was saved with (remembered while the picker is
+   * mounted; a value from outside counts as saved with this tab). Default
+   * 'gregory'.
+   */
   dualDefaultTab?: 'gregory' | 'hijri';
   /**
    * How the on-screen field writes the saved value. 'picked' (default): in the
