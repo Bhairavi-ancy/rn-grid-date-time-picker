@@ -1,8 +1,9 @@
 import type React from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+import type { ScrollViewProps, StyleProp, TextStyle } from 'react-native';
 import type { CalendarSystem } from '../core/calendarSystem';
 import type { Constraints, TimeBounds } from '../core/constraints';
 import type { Numerals } from '../core/numerals';
+import type { ScrollViewRef } from './nativeTypes';
 import type {
   CalendarDate,
   PickerType,
@@ -130,7 +131,28 @@ export interface SheetOptions {
   fieldPlaceholder?: string;
   /** The calendar icon at the end of that field, as on the on-screen field. Default false. */
   fieldIcon?: boolean;
+  /**
+   * Passed to the sheet body's ScrollView, over the picker's own defaults, e.g.
+   * `{ showsVerticalScrollIndicator: true, persistentScrollbar: true }` to keep
+   * the scrollbar showing on Android (iOS shows it only while scrolling).
+   * Applies to the built-in sheet and to `renderSheet`.
+   */
+  scrollProps?: SheetScrollProps;
+  /**
+   * Date-time sheets: once a calendar tap picks the date (a range's end, a
+   * multiple picker's first date), the body scrolls the time section into view
+   * when it doesn't show in full. true: just far enough to show it; 'end': to
+   * the end of the body; false: no scroll. Default true. Applies to the
+   * built-in sheet and to `renderSheet`.
+   */
+  scrollToTime?: boolean | 'end';
 }
+
+/** ScrollView props a sheet's body takes (`sheet.scrollProps`). */
+export type SheetScrollProps = Omit<
+  ScrollViewProps,
+  'children' | 'style' | 'testID'
+>;
 
 /**
  * The second argument of `onChange` when the picker can show a Hijri calendar:
@@ -243,6 +265,13 @@ export interface DateTimePickerProps {
 
   // presentation
   presentation?: 'sheet' | 'inline';
+  /**
+   * Inline date-time pickers: your ScrollView around the picker. Once a
+   * calendar tap picks the date, it scrolls the time section into view, as
+   * `sheet.scrollToTime: true` does in the sheet. Without it an inline picker
+   * never scrolls.
+   */
+  scrollToTimeRef?: React.RefObject<ScrollViewRef | null>;
   visible?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
@@ -359,6 +388,14 @@ export interface DateTimePickerProps {
   hijriLocale?: string;
   /** The tab a dual calendar opens on, each time it opens. Default 'gregory'. */
   dualDefaultTab?: 'gregory' | 'hijri';
+  /**
+   * How the on-screen field writes the saved value. 'picked' (default): in the
+   * calendar it was picked in, so a Hijri pick shows Hijri text, digits and
+   * AM / PM. 'gregory': always in `dateFormat`, with `strings` and the
+   * Gregorian digits. The field inside the sheet and the time rows still
+   * follow the tab.
+   */
+  fieldCalendar?: 'picked' | 'gregory';
   /** Replaces the built-in calendar switch. */
   renderCalendarSwitch?: (p: CalendarSwitchRenderProps) => React.ReactNode;
   /** Any BCP-47 tag; decides names, the date order and the clock. Default: the device locale. */
@@ -380,8 +417,13 @@ export interface DateTimePickerProps {
   /** Default: from `locale`, else '12h'. */
   timeFormat?: TimeFormat;
   minuteStep?: number;
-  /** A newly picked day always gets this time (over a time typed first and over the current time). */
-  newDayTime?: Time;
+  /**
+   * The time a newly picked day gets (a saved time is kept). 'now' (default):
+   * the current time. A `Time`: always that time, over a time typed first.
+   * 'empty': none; the time boxes stay empty and Confirm (and 'instant'
+   * saving) waits until the user enters the time.
+   */
+  newDayTime?: Time | 'now' | 'empty';
   /**
    * Shows each time row's picked day under its label ('Start time',
    * 10-03-2026), as the field writes it. Nothing shows until the day is

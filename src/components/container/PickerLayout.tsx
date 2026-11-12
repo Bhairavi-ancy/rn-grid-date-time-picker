@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import type { PickerState, Slot } from '../types';
+import type { ScrollViewRef } from '../nativeTypes';
+import type { PickerState, SheetScrollProps, Slot } from '../types';
 import type { PickerStyles } from '../theme/styleKeys';
 import { buildContainerStyles } from './containerStyles';
 
@@ -27,6 +28,10 @@ export interface PickerLayoutProps {
   fixedFooter?: boolean;
   /** The sheet has a fixed height: the body fills it. */
   fill?: boolean;
+  /** Sheet only: passed to the body's ScrollView over its defaults. */
+  scrollProps?: SheetScrollProps;
+  /** Sheet only: the body's ScrollView. */
+  scrollRef?: React.Ref<ScrollViewRef>;
 }
 
 const renderSlot = (
@@ -58,6 +63,8 @@ export const buildPickerLayout = ({
   fixedHeader = true,
   fixedFooter = true,
   fill,
+  scrollProps,
+  scrollRef,
 }: PickerLayoutProps): { body: React.ReactNode; footer: React.ReactNode } => {
   const s = buildContainerStyles(state.tokens);
 
@@ -129,12 +136,14 @@ export const buildPickerLayout = ({
       {headerScrolls ? null : headerNode}
       {scrollBody ? (
         <ScrollView
+          ref={scrollRef}
           testID={testID ? `${testID}-scroll` : undefined}
           style={s.scroll}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
           bounces={false}
           showsVerticalScrollIndicator={false}
+          {...scrollProps}
         >
           {headerScrolls ? headerNode : null}
           {content}

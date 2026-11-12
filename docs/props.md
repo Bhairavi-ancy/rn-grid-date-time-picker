@@ -23,11 +23,12 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | Prop | Type | Default | Notes |
 |---|---|---|---|
 | `presentation` | `'sheet' \| 'inline'` | `'sheet'` | |
+| `scrollToTimeRef` | `RefObject<ScrollView \| null>` | – | Inline date-time pickers: your ScrollView around the picker. Once a calendar tap picks the date, it scrolls the time section into view, as `sheet.scrollToTime` does in the sheet. Without it an inline picker never scrolls. See [Sheet layout](presentation.md#sheet-layout). |
 | `visible` | `boolean` | – | Controls the sheet; without it the picker opens itself. |
 | `onOpen` / `onClose` | `() => void` | – | `onClose` fires whenever the sheet closes: Close, the backdrop, Android back, and after Confirm. |
 | `onBeforeOpen` | `() => void` | – | Just before opening, e.g. to close your own dropdowns. |
 | `showField` | `boolean` | `true` | Hide the on-screen field (for example with `visible`). |
-| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `keyboardMaxHeight`, `bottomInset`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`. See [Sheet layout](presentation.md#sheet-layout). |
+| `sheet` | `SheetOptions` | – | `height`, `maxHeight`, `keyboardMaxHeight`, `bottomInset`, `fixedHeader`, `fixedFooter`, `showField`, `fieldPlaceholder`, `fieldIcon`, `scrollToTime`. See [Sheet layout](presentation.md#sheet-layout). |
 | `renderSheet` | `(p: SheetRenderProps) => ReactNode` | built-in sheet | See [Presentation](presentation.md). |
 
 ## Value field
@@ -100,7 +101,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `timeInput` | `'typed' \| 'wheel'` | `'typed'` | |
 | `timeFormat` | `'12h' \| '24h'` | from `locale`, else `'12h'` | |
 | `minuteStep` | `number` | `1` | A step that divides the hour: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. Off-step minutes are flagged on Confirm, never rounded silently. |
-| `newDayTime` | `Time` | – | A day picked with no time yet gets this time; a time already set is kept. It wins over a time typed before the day and over the current time. |
+| `newDayTime` | `Time \| 'now' \| 'empty'` | `'now'` | The time a day picked with no time yet gets; a time already set is kept. `'now'`: the current time. A `Time`: that time, over a time typed before the day. `'empty'`: none, so the time boxes stay empty and Confirm (and `'instant'` saving) waits until a time is entered. |
 | `timeRowDate` | `boolean` | `false` | Shows each time row's picked day under its label (Start time / 10-03-2026), as the field writes it. Single, range and per-date rows; nothing shows until the day is picked. Style it with `timeLabelWrap` and `timeLabelDate`. |
 
 ## Limits

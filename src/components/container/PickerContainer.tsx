@@ -36,6 +36,7 @@ const PickerContainer: React.FC<PickerContainerProps> = ({
     fixedHeader: sheet?.fixedHeader,
     fixedFooter: sheet?.fixedFooter,
     fill: !renderSheet && sheet?.height !== undefined,
+    scrollProps: sheet?.scrollProps,
   });
 
   if (presentation === 'inline') {

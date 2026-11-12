@@ -53,7 +53,8 @@ export interface DraftOptions {
   zone: string;
   /** Turns saved strings into values and back. */
   adapter: ValueAdapter;
-  defaultTime?: Time;
+  /** Time for a newly picked day when none is given; null leaves it empty. Default DEFAULT_TIME. */
+  defaultTime?: Time | null;
   multiple?: {
     timeMode?: 'shared' | 'perDate';
     maxSelections?: number;
@@ -157,7 +158,9 @@ const timeForNewDay = (
   newDayTime?: Time | null
 ): Time | null => {
   if (opts.type !== 'datetime') return null;
-  return existing ?? newDayTime ?? opts.defaultTime ?? DEFAULT_TIME;
+  const fallback =
+    opts.defaultTime === undefined ? DEFAULT_TIME : opts.defaultTime;
+  return existing ?? newDayTime ?? fallback;
 };
 
 const withDay = (

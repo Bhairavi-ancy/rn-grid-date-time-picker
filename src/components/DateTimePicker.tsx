@@ -70,6 +70,7 @@ import RangeFields, { type RangeEnd } from './field/RangeFields';
 import ValueField from './field/ValueField';
 import { useKeyboardFold } from './hooks/useKeyboardFold';
 import { useOpenPicker } from './hooks/useOpenPicker';
+import { useScrollToTime } from './hooks/useScrollToTime';
 import { usePickerDraft } from './hooks/usePickerDraft';
 import { useTodayTick } from './hooks/useTodayTick';
 import TimeRows, { type PendingTimes } from './time/TimeRows';
@@ -138,6 +139,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     multiple,
     range,
     presentation = 'sheet',
+    scrollToTimeRef,
     visible,
     onOpen,
     onClose,
@@ -188,6 +190,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     calendarSwitch,
     onCalendarSystemChange,
     dualDefaultTab = 'gregory',
+    fieldCalendar = 'picked',
     hijriLocale = 'ar-SA',
     renderCalendarSwitch,
     showToday = false,
@@ -432,12 +435,13 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
 
   const rangeLayout = range?.layout ?? 'singleField';
   const multipleTimeMode = multiple?.timeMode ?? 'shared';
+  const startsEmpty = newDayTime === 'empty';
   const draftOptions = useMemo((): DraftOptions => {
     return {
       type,
       zone,
       adapter,
-      defaultTime: DEFAULT_TIME,
+      defaultTime: startsEmpty ? null : DEFAULT_TIME,
       multiple: {
         timeMode: multiple?.timeMode,
         maxSelections: multiple?.maxSelections,
@@ -453,6 +457,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     type,
     zone,
     adapter,
+    startsEmpty,
     multiple?.timeMode,
     multiple?.maxSelections,
     range?.allowSameDay,
@@ -672,6 +677,28 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const previewIssue = validateDraft(preview, draftOptions);
 
   const d = draft.draft;
+  // Once a calendar tap picks the date (both ends of a range), the sheet (or
+  // the app's ScrollView around an inline picker) scrolls the time section
+  // into view.
+  const datePicked =
+    d.mode === 'single'
+      ? !!d.slot.value
+      : d.mode === 'range'
+        ? !!d.from.value && !!d.to.value
+        : d.slots.length > 0;
+  const {
+    scrollRef,
+    timeRef,
+    request: revealTime,
+  } = useScrollToTime(
+    type !== 'datetime'
+      ? false
+      : isInline
+        ? !!scrollToTimeRef
+        : (sheetOptions?.scrollToTime ?? true),
+    datePicked,
+    isInline ? scrollToTimeRef : undefined
+  );
   /** The values a draft would save, with a shared time applied. */
   const valuesOf = (dr: Draft): (DateTimeValue | null)[] => {
     if (dr.mode === 'single') return [dr.slot.value];
@@ -928,7 +955,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   }, [closePicker]);
 
   // A typed date with no time yet gets one the way a tapped day does: the fixed
-  // newDayTime, else a time already typed in the time row, else now.
+  // newDayTime, else a time already typed in the time row, else now (or none).
   const withFilledTime = (
     parsed: ParsedSegments,
     key: 'single' | RangeEnd
@@ -937,7 +964,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     (parsed.dateOnly
       ? {
           date: parsed.dateOnly,
-          time: fixedTime ?? pending[key] ?? nowTime(),
+          time: fixedTime ?? pending[key] ?? newTime(),
         }
       : null);
 
@@ -967,7 +994,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   };
 
   // A fixed time for every newly picked day (wins over a typed time and over "now").
-  const fixedTime = newDayTime ?? null;
+  const fixedTime = typeof newDayTime === 'object' ? newDayTime : null;
 
   // A day picked on an empty date-time starts at the current time, moved up to
   // the next allowed minute step. An existing time is kept.
@@ -978,6 +1005,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     const capped = Math.min(minutes, 23 * 60 + 60 - step);
     return { hour: Math.floor(capped / 60), minute: capped % 60 };
   }, [now, zone, minuteStep]);
+  /** A new day's time when nothing fixed or typed: now, or none with newDayTime 'empty'. */
+  const newTime = useCallback(
+    (): Time | null => (startsEmpty ? null : nowTime()),
+    [startsEmpty, nowTime]
+  );
 
   // A range end picked on the start's day starts an hour after the start (at
   // most the day's latest allowed time, or its last step), so the range isn't
@@ -987,10 +1019,10 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     from: DateTimeValue | null,
     day: CalendarDate,
     typed: Time | null | undefined
-  ): Time => {
+  ): Time | null => {
     if (!fixedTime && typed) return typed;
-    const time = fixedTime ?? nowTime();
-    if (!from?.time || !isSameDay(from.date, day)) return time;
+    const time = fixedTime ?? newTime();
+    if (!time || !from?.time || !isSameDay(from.date, day)) return time;
     const start = from.time.hour * 60 + from.time.minute;
     if (time.hour * 60 + time.minute > start) return time;
     // Within the day's allowed hours when it has them.
@@ -1018,6 +1050,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         draft.clear();
         resetSelectionUi();
       }
+      // A multiple picker scrolls for its first date only, so more can be picked.
+      if (cur.mode !== 'multiple' || cur.slots.length === 0) revealTime();
       if (cur.mode === 'range') {
         if (rangeLayout === 'fromTo') {
           setEndPicked(false);
@@ -1032,7 +1066,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             const end = moveNearest ? nearest : 'from';
             setTypingBlock('from', false);
             setTypingBlock('to', false);
-            draft.selectDay(day, fixedTime ?? times[end] ?? nowTime());
+            draft.selectDay(day, fixedTime ?? times[end] ?? newTime());
             setActiveEnd(moveNearest ? nearest : 'to');
             return;
           }
@@ -1051,7 +1085,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             end1,
             end1 === 'to'
               ? endTimeFor(cur.from.value, day, times.to)
-              : (fixedTime ?? times.from ?? nowTime())
+              : (fixedTime ?? times.from ?? newTime())
           );
           // The start tapped again where a range can't be one day deselects
           // it, so the next tap picks the start again.
@@ -1073,7 +1107,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           day,
           end === 'to' && !cur.to.value
             ? endTimeFor(cur.from.value, day, times.to)
-            : (fixedTime ?? times[end] ?? nowTime())
+            : (fixedTime ?? times[end] ?? newTime())
         );
         return;
       }
@@ -1087,18 +1121,18 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           setActiveDay(day);
           return;
         }
-        draft.selectDay(day, fixedTime ?? nowTime());
+        draft.selectDay(day, fixedTime ?? newTime());
         if (perDate) setActiveDay(picked ? null : day);
         return;
       }
       setTypingBlock('single', false);
-      draft.selectDay(day, fixedTime ?? times.single ?? nowTime());
+      draft.selectDay(day, fixedTime ?? times.single ?? newTime());
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- valuesOf reads only `d` and props listed here
     [
       d,
       draft,
-      nowTime,
+      newTime,
       rangeLayout,
       activeEnd,
       activeDay,
@@ -1115,6 +1149,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       draftOptions,
       minuteStep,
       constraints,
+      revealTime,
     ]
   );
 
@@ -1271,9 +1306,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       ? (v) =>
           hijriDateText(v.date, hijriLocale) ?? formatDateText(v, dateFormat)
       : undefined;
-  const savedDateText = dateTextFor(savedSystem);
+  // The calendar the on-screen field writes the saved value in.
+  const fieldSystem = fieldCalendar === 'gregory' ? 'gregory' : savedSystem;
+  const savedDateText = dateTextFor(fieldSystem);
   const draftDateText = dateTextFor(draftSystem);
-  const savedStrings = stringsFor(savedSystem);
+  const savedStrings = stringsFor(fieldSystem);
   const draftStrings = stringsFor(draftSystem);
   // Error messages inside the picker follow the tab on screen; the on-screen
   // field's keep `strings`.
@@ -1353,7 +1390,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     type,
     mode,
     value,
-    displayText: digitsFor(savedSystem)(
+    displayText: digitsFor(fieldSystem)(
       savedText ??
         formatValueText(
           savedSingle,
@@ -1698,9 +1735,18 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       <NumeralsContext.Provider value={digitsFor(shownSystem)}>
         {calendar}
       </NumeralsContext.Provider>
-      <NumeralsContext.Provider value={digitsFor(shownSystem)}>
-        {mirrored(timeRow)}
-      </NumeralsContext.Provider>
+      {timeRow == null ? null : (
+        // Measured for the scroll to the time (sheet.scrollToTime).
+        <View
+          ref={timeRef}
+          collapsable={false}
+          testID={testID ? `${testID}-time-section` : undefined}
+        >
+          <NumeralsContext.Provider value={digitsFor(shownSystem)}>
+            {mirrored(timeRow)}
+          </NumeralsContext.Provider>
+        </View>
+      )}
       {validationMessage ? (
         <FieldMessages
           error={validationMessage}
@@ -1716,7 +1762,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   );
 
   return (
-    <NumeralsContext.Provider value={digitsFor(savedSystem)}>
+    <NumeralsContext.Provider value={digitsFor(fieldSystem)}>
       {trigger}
       <PickerContainer
         presentation={presentation}
@@ -1724,6 +1770,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         onRequestClose={close}
         renderSheet={renderSheet}
         sheet={sheetOptions}
+        scrollRef={scrollRef}
         state={state}
         header={header}
         title={title ?? (isInline ? undefined : strings.titleDate)}

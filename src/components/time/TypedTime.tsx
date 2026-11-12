@@ -1,5 +1,5 @@
-import React, { useId } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import React, { useId, useRef } from 'react';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import KeyboardAccessoryBar from '../field/KeyboardAccessoryBar';
 import type { TextInputRef } from '../nativeTypes';
 import type { TimeBounds } from '../../core/constraints';
@@ -64,9 +64,25 @@ const TypedTime: React.FC<Props> = ({
   const digits = useNumerals();
   const barId = useId();
   const s = buildTimeStyles(tokens);
+  const inputs = useRef<Partial<Record<TimeKey, TextInputRef | null>>>({});
+
+  // Android: a TextInput keeps any drag that starts on it, so the sheet can't
+  // scroll from a box. The boxes ignore touches and their wrapper takes them:
+  // a drag scrolls the sheet, a tap focuses the box (and brings the keyboard
+  // back). None of this changes with focus: flipping a box's touch handling
+  // as it gained focus made Android pass focus on to the next box, round and
+  // round. The wrapper is never focusable itself.
+  const passTouches = Platform.OS === 'android' && !disabled;
 
   const box = (key: TimeKey) => (
-    <View style={s.boxWrap}>
+    <Pressable
+      style={s.boxWrap}
+      accessible={false}
+      focusable={false}
+      disabled={!passTouches}
+      onPress={() => inputs.current[key]?.focus()}
+      testID={testID ? `${testID}-${key}-wrap` : undefined}
+    >
       <View
         style={[
           s.boxContainer,
@@ -75,9 +91,12 @@ const TypedTime: React.FC<Props> = ({
           hasError && [s.boxError, styles?.timeBoxError],
         ]}
       >
-        <View style={s.boxInner}>
+        <View style={s.boxInner} pointerEvents={passTouches ? 'none' : 'auto'}>
           <TextInput
-            ref={(r) => setRef(key, r)}
+            ref={(r) => {
+              inputs.current[key] = r;
+              setRef(key, r);
+            }}
             testID={testID ? `${testID}-${key}` : undefined}
             accessibilityLabel={
               key === 'hour' ? strings.a11yHour : strings.a11yMinute
@@ -114,7 +133,7 @@ const TypedTime: React.FC<Props> = ({
           <KeyboardAccessoryBar nativeID={`${barId}-${key}`} tokens={tokens} />
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 
   return (

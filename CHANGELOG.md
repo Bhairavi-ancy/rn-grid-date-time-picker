@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `fieldCalendar` (`'picked'` | `'gregory'`, default `'picked'`): how the on-screen field writes the saved value. `'gregory'` keeps it in `dateFormat`, with `strings` AM / PM and Gregorian digits, even when the date was picked on the Hijri tab. The field inside the sheet and the time rows still follow the tab, and `onChange` still reports the calendar the date was picked in.
+- `sheet.scrollProps`: props for the sheet body's ScrollView, over the picker's own defaults, in the built-in sheet and with `renderSheet`. For example `{ showsVerticalScrollIndicator: true, persistentScrollbar: true }` keeps the scrollbar showing on Android; iOS shows it only while scrolling. Its type is exported as `SheetScrollProps`.
+- `newDayTime: 'empty'`: a newly picked day gets no time. The time boxes stay empty (both ends of a range, the shared time of multiple dates) and Confirm stays disabled, and `commitMode: 'instant'` saves nothing, until the user enters a time. An hour alone counts, as it already did (empty minutes are 00). A saved time is kept when another day is picked. `newDayTime: 'now'` is the default and keeps the current-time behaviour; a `Time` still fixes the time.
+- `sheet.scrollToTime` (`true` | `'end'` | `false`, default `true`): in a date-time sheet whose body scrolls, a calendar tap that picks the date now scrolls the time section into view when it's below the fold, so the time boxes show before they're tapped. Single mode scrolls on every tap, range mode once the end is picked, and multiple mode for the first date only, so more dates can be picked. `true` scrolls just far enough to show the time, `'end'` to the end of the body, `false` turns it off. Nothing moves when the time already shows in full. Built-in sheet and `renderSheet`.
+- `scrollToTimeRef`: the same scroll for an inline date-time picker. Pass the ScrollView the picker sits in, and a calendar tap that picks the date scrolls it just far enough to show the time section. Without it an inline picker doesn't scroll, as before.
+
+### Fixed
+
+- Android: a drag that starts on a time box now scrolls the sheet (or the screen around an inline picker). A TextInput keeps any drag that starts on it, so the body only scrolled from the calendar. The boxes ignore touches and a wrapper takes them; a tap still focuses the box, and a tap on the box being edited brings the keyboard back. Nothing about this changes when a box gains focus, because a change at that moment made Android move focus from box to box. iOS is unchanged.
+
 ## [1.2.2] - 2026-11-05
 
 ### Fixed
