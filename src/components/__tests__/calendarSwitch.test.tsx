@@ -183,7 +183,7 @@ describe('dual calendar', () => {
     expect(showsHijri(tree)).toBe(true);
   });
 
-  it('the selection shows only in the tab it was picked in; a pick in the other tab replaces it', () => {
+  it('the selection shows in both tabs; instant mode saves it again with the tab picked', () => {
     const onChange = jest.fn();
     const tree = mount({ calendarSystem: 'dual', onChange });
     tap(tree, 20);
@@ -193,27 +193,53 @@ describe('dual calendar', () => {
     });
 
     press(tree, 'dp-dual-tabs-hijri');
-    expect(isSelected(tree, 20)).toBe(false);
+    expect(isSelected(tree, 20)).toBe(true);
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-20', {
+      calendarSystem: 'hijri',
+    });
     tap(tree, 25);
     expect(isSelected(tree, 25)).toBe(true);
+    expect(isSelected(tree, 20)).toBe(false);
     expect(onChange).toHaveBeenLastCalledWith('2026-10-25', {
       calendarSystem: 'hijri',
     });
 
     press(tree, 'dp-dual-tabs-gregory');
-    expect(isSelected(tree, 20)).toBe(false);
-    expect(isSelected(tree, 25)).toBe(false);
+    expect(isSelected(tree, 25)).toBe(true);
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25', {
+      calendarSystem: 'gregory',
+    });
+    expect(onChange).toHaveBeenCalledTimes(4);
   });
 
-  it('a range started in one tab starts over when a day is tapped in the other', () => {
-    const tree = mount({ calendarSystem: 'dual', mode: 'range' });
+  it('Confirm saves with the tab on screen, whichever tab the days were picked in', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      calendarSystem: 'dual',
+      commitMode: 'confirm',
+      onChange,
+    });
+    tap(tree, 20);
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(onChange).not.toHaveBeenCalled();
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-20', {
+      calendarSystem: 'hijri',
+    });
+  });
+
+  it('a range started in one tab can end in the other', () => {
+    const onChange = jest.fn();
+    const tree = mount({ calendarSystem: 'dual', mode: 'range', onChange });
     tap(tree, 20);
     press(tree, 'dp-dual-tabs-hijri');
     tap(tree, 25);
-    tap(tree, 28);
+    expect(isSelected(tree, 20)).toBe(true);
     expect(isSelected(tree, 25)).toBe(true);
-    expect(isSelected(tree, 28)).toBe(true);
-    expect(isSelected(tree, 20)).toBe(false);
+    expect(onChange).toHaveBeenLastCalledWith(
+      { from: '2026-10-20', to: '2026-10-25' },
+      { calendarSystem: 'hijri' }
+    );
   });
 
   it('the other tab opens on the days the first one showed', () => {
@@ -258,11 +284,50 @@ describe('the calendar a date was picked in', () => {
     press(tree, 'dp-dual-tabs-gregory');
     tap(tree, 21);
     expect(state.displayText).toBe('21/10/2026');
-    // Reopened, it starts on the Hijri tab with nothing selected there.
+    // Reopened, it starts on the tab the value was saved with.
     act(() => state.close());
     act(() => state.open());
-    expect(isSelected(tree, 21)).toBe(false);
+    expect(checked(tree, 'dp-dual-tabs-gregory')).toEqual({ selected: true });
+    expect(isSelected(tree, 21)).toBe(true);
     expect(state.displayText).toBe('21/10/2026');
+  });
+
+  it('reopens on the tab the value was saved with; with no value, on dualDefaultTab', () => {
+    let state!: PickerState;
+    const Controlled = () => {
+      const [value, setValue] = useState('');
+      return (
+        <DateTimePicker
+          {...base}
+          presentation="sheet"
+          commitMode="confirm"
+          calendarSystem="dual"
+          value={value}
+          onChange={(v) => setValue(v as string)}
+          renderSheet={(p) => <View>{p.body}</View>}
+          renderField={(p) => {
+            state = p;
+            return null;
+          }}
+        />
+      );
+    };
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(<Controlled />);
+    });
+    act(() => state.open());
+    press(tree, 'dp-dual-tabs-hijri');
+    tap(tree, 20);
+    act(() => state.confirm());
+    act(() => state.open());
+    expect(checked(tree, 'dp-dual-tabs-hijri')).toEqual({ selected: true });
+    expect(isSelected(tree, 20)).toBe(true);
+
+    act(() => state.clear());
+    act(() => state.close());
+    act(() => state.open());
+    expect(checked(tree, 'dp-dual-tabs-gregory')).toEqual({ selected: true });
   });
 
   it('a value from outside counts as picked in the calendar the picker opens on', () => {
@@ -293,8 +358,8 @@ describe('the calendar a date was picked in', () => {
     press(tree, 'dp-dual-tabs-hijri');
     expect(texts(tree)).toContain('١٦');
     expect(texts(tree)).not.toContain('16');
-    // The Gregorian pick keeps its 0–9 text while the Hijri tab shows.
-    expect(field()).toBe('20/10/2026');
+    // The same day, written as the Hijri tab writes it.
+    expect(field()).toBe('٩ جمادى الأولى ١٤٤٨ هـ');
     tap(tree, 21);
     expect(field()).toBe('١٠ جمادى الأولى ١٤٤٨ هـ');
   });
@@ -467,7 +532,7 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     expect(ref.state!.displayText).toBe('20/10/2026');
   });
 
-  it('controlled switch: a range started in one calendar starts over in the other', () => {
+  it('controlled switch: a range started in one calendar can end in the other', () => {
     const onChange = jest.fn();
     const ref: { state?: PickerState } = {};
     let tree!: ReactTestRenderer;
@@ -488,12 +553,15 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     tap(tree, 20);
     press(tree, 'dp-calendar-switch-hijri');
     tap(tree, 25);
-    expect(ref.state!.canConfirm).toBe(false);
+    expect(ref.state!.canConfirm).toBe(true);
     act(() => ref.state!.confirm());
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenLastCalledWith(
+      { from: '2026-10-20', to: '2026-10-25' },
+      { calendarSystem: 'hijri' }
+    );
   });
 
-  it('a new calendarSystem prop while picking starts the selection over', () => {
+  it('a new calendarSystem prop while picking keeps the selection', () => {
     const onChange = jest.fn();
     const props = {
       ...base,
@@ -509,7 +577,10 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     );
     tap(tree, 25);
     press(tree, 'dp-confirm');
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenLastCalledWith(
+      { from: '2026-10-20', to: '2026-10-25' },
+      { calendarSystem: 'hijri' }
+    );
   });
 
   it('typing in the field keeps the calendar the saved date was picked in', () => {
@@ -623,7 +694,7 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     });
   });
 
-  it('typing keeps the calendar a selection was picked in', () => {
+  it('typing on the other tab edits the same selection', () => {
     const tree = mount({
       calendarSystem: 'dual',
       mode: 'range',
@@ -643,8 +714,9 @@ describe('the calendar a value counts as picked in (regressions)', () => {
     typeBox('dp-to-segment-day', '25');
     typeBox('dp-to-segment-month', '10');
     typeBox('dp-to-segment-year', '2026');
-    // Still a Gregorian selection: hidden in the Hijri tab, back in the Gregorian one.
-    expect(isSelected(tree, 25)).toBe(false);
+    // One selection, shown in both tabs.
+    expect(isSelected(tree, 20)).toBe(true);
+    expect(isSelected(tree, 25)).toBe(true);
     press(tree, 'dp-dual-tabs-gregory');
     expect(isSelected(tree, 20)).toBe(true);
     expect(isSelected(tree, 25)).toBe(true);

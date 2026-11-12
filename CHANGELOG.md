@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- **A dual calendar's selection shows in both tabs.** A day picked on the Gregorian tab is highlighted on the Hijri tab too, and the other way round, and a tap on either tab edits the same selection instead of starting over, so a range can start on one tab and end on the other. The selection is saved with the tab on screen: Confirm on the Hijri tab saves a Gregorian pick as Hijri (`info.calendarSystem: 'hijri'`), and the field writes it that way. With `commitMode="instant"`, a tab (or a calendar in the switch) the user picks saves the selection again with that calendar; the tab the picker opens on doesn't. The field inside the sheet now follows the tab too. A new `calendarSystem` prop no longer clears a selection in progress. Values stay Gregorian.
+- **A dual calendar reopens on the tab its value was saved with.** A date saved from the Hijri tab opens the picker on the Hijri tab next time, while the picker stays mounted. With no value it still opens on `dualDefaultTab`, and so does a value passed in from outside: to keep the tab after a remount, store `info.calendarSystem` and pass it as `dualDefaultTab`.
+
 ## [1.3.0] - 2026-11-12
 
 ### Added
