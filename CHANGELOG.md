@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-12
+
 ### Added
 
 - `fieldCalendar` (`'picked'` | `'gregory'`, default `'picked'`): how the on-screen field writes the saved value. `'gregory'` keeps it in `dateFormat`, with `strings` AM / PM and Gregorian digits, even when the date was picked on the Hijri tab. The field inside the sheet and the time rows still follow the tab, and `onChange` still reports the calendar the date was picked in.
