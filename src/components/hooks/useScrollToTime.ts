@@ -3,14 +3,19 @@ import {
   useEffect,
   useRef,
   useState,
-  type ComponentRef,
   type RefObject,
 } from 'react';
-import type { View } from 'react-native';
-import type { ScrollViewRef } from '../nativeTypes';
+import type { ScrollViewRef, ViewRef } from '../nativeTypes';
 import { useReduceMotion } from './useReduceMotion';
 
-type ViewRef = ComponentRef<typeof View>;
+export interface ScrollToTime {
+  /** The sheet body's ScrollView. */
+  scrollRef: RefObject<ScrollViewRef | null>;
+  /** The time section. */
+  timeRef: RefObject<ViewRef | null>;
+  /** Called from the calendar tap that picks the date. */
+  request: () => void;
+}
 
 /** Rounding in the measured positions, in points. */
 const SLACK = 1;
@@ -64,7 +69,7 @@ export const useScrollToTime = (
   mode: boolean | 'end',
   ready: boolean,
   outerRef?: RefObject<ScrollViewRef | null>
-) => {
+): ScrollToTime => {
   const scrollRef = useRef<ScrollViewRef>(null);
   const timeRef = useRef<ViewRef>(null);
   const reduceMotion = useReduceMotion();
