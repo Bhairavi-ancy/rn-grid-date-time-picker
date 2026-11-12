@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import {
   Dimensions,
   Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -1047,6 +1048,32 @@ describe('DateTimePicker: sheet size', () => {
     // Inline pickers sit in the caller's layout and don't scroll themselves.
     const inline = mount({ presentation: 'inline' });
     expect(exists(inline, 'dp-scroll')).toBe(false);
+  });
+
+  it('sheet.scrollProps reach the body ScrollView, built-in sheet and renderSheet alike', () => {
+    const bodyScroll = (tree: ReactTestRenderer) =>
+      tree.root
+        .findAllByType(ScrollView)
+        .find((n) => n.props.testID === 'dp-scroll')!;
+    const hidden = mount({});
+    openSheet(hidden);
+    expect(bodyScroll(hidden).props.showsVerticalScrollIndicator).toBe(false);
+    for (const custom of [true, false]) {
+      const tree = mount({
+        ...(custom ? null : { renderSheet: undefined }),
+        sheet: {
+          scrollProps: {
+            showsVerticalScrollIndicator: true,
+            persistentScrollbar: true,
+          },
+        },
+      });
+      openSheet(tree);
+      const sv = bodyScroll(tree);
+      expect(sv.props.showsVerticalScrollIndicator).toBe(true);
+      expect(sv.props.persistentScrollbar).toBe(true);
+      expect(sv.props.keyboardShouldPersistTaps).toBe('handled');
+    }
   });
 });
 

@@ -68,6 +68,7 @@ export type {
   PickerState,
   SheetOptions,
   SheetRenderProps,
+  SheetScrollProps,
   SheetSize,
   Slot,
   TimeLabelRenderProps,

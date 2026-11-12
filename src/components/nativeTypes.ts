@@ -1,5 +1,5 @@
 import type { ComponentRef } from 'react';
-import type { ScrollView, TextInput, TextInputProps } from 'react-native';
+import type { ScrollView, TextInput, TextInputProps, View } from 'react-native';
 
 /**
  * React Native types spelled so every supported version has them: 0.88 added
@@ -8,6 +8,7 @@ import type { ScrollView, TextInput, TextInputProps } from 'react-native';
  */
 export type TextInputRef = ComponentRef<typeof TextInput>;
 export type ScrollViewRef = ComponentRef<typeof ScrollView>;
+export type ViewRef = ComponentRef<typeof View>;
 export type KeyPressEvent = Parameters<
   NonNullable<TextInputProps['onKeyPress']>
 >[0];
