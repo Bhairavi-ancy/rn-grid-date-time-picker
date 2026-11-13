@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-13
+
 ### Added
 
 - `sheet.showNotAllowedError` (default `true`): `false` hides "This date isn't available" above the calendar when the picked date (or a range's end) is a disabled day, such as a saved value the rules no longer allow. Confirm stays off for that day either way.
@@ -174,6 +176,11 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
+[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.2.2...v1.3.0
+[1.2.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/releases/tag/v1.0.0
