@@ -53,6 +53,10 @@ interface Props {
   styles?: PickerStyles;
   strings: PickerStrings;
   testID?: string;
+  /** The first row sits right under the sheet title (the calendar is folded away). */
+  atTop?: boolean;
+  /** No line above any row (the keyboard is up). */
+  hideLines?: boolean;
 }
 
 interface RowSpec {
@@ -99,6 +103,8 @@ const TimeRows: React.FC<Props> = (props) => {
     styles,
     strings,
     testID,
+    atTop = false,
+    hideLines = false,
   } = props;
 
   const slotRow = (
@@ -237,9 +243,11 @@ const TimeRows: React.FC<Props> = (props) => {
   const single = rows.length === 1;
   return (
     <>
-      {rows.map((row) => (
+      {rows.map((row, index) => (
         <TimeRow
           key={row.key}
+          atTop={atTop && index === 0}
+          hideLine={hideLines}
           time={row.time}
           onTime={row.onTime}
           onIssueChange={issueFor(row.key)}

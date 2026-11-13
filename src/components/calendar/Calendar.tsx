@@ -70,6 +70,15 @@ export interface CalendarProps {
     month: number,
     state: { selected: boolean; disabled: boolean }
   ) => React.ReactNode;
+  /**
+   * Drawn over the month chip row's left or right edge while months are
+   * scrolled past it (a fade, say). It is pinned to that edge, takes no
+   * touches and sets its own width; `color` is the calendar background.
+   */
+  renderMonthChipFade?: (
+    side: 'left' | 'right',
+    color: string
+  ) => React.ReactNode;
   renderYearCell?: (item: PeriodItem) => React.ReactNode;
   renderMonthCell?: (item: PeriodItem) => React.ReactNode;
   renderEmptyState?: () => React.ReactNode;
@@ -137,6 +146,21 @@ const isYearOpen = (
   return false;
 };
 
+/** The first and last years with a selectable day, or null when there are none. */
+const openYearSpan = (
+  sys: MonthSystem,
+  constraints: Constraints,
+  years: { first: number; last: number }
+): { first: number; last: number } | null => {
+  let first = years.first;
+  while (first <= years.last && !isYearOpen(sys, constraints, first))
+    first += 1;
+  if (first > years.last) return null;
+  let last = years.last;
+  while (last > first && !isYearOpen(sys, constraints, last)) last -= 1;
+  return { first, last };
+};
+
 /**
  * Where the calendar opens: the value's month, else `initialVisibleDate`'s,
  * else today's; when that month has nothing selectable, the nearest one that does.
@@ -181,6 +205,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     renderDay,
     renderWeekday,
     renderMonthChip,
+    renderMonthChipFade,
     renderYearCell,
     renderMonthCell,
     renderEmptyState,
@@ -334,18 +359,25 @@ const Calendar: React.FC<CalendarProps> = (props) => {
       isYearOpen(sys, constraints, visible.year + 1),
     [visible.year, years.last, sys, constraints]
   );
+  // The year grid pages only while a page further on has a selectable year.
+  const openYears = useMemo(
+    () => (view === 'year' ? openYearSpan(sys, constraints, years) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the year range is compared by content
+    [view, sys, constraints, years.first, years.last]
+  );
 
   const header =
     view === 'year' ? (
       <CalendarHeader
         title={`${pageStart} – ${Math.min(pageStart + PAGE - 1, years.last)}`}
-        canPrev={pageStart > years.first}
-        canNext={pageStart + PAGE <= years.last}
+        canPrev={!!openYears && pageStart > openYears.first}
+        canNext={!!openYears && pageStart + PAGE <= openYears.last}
         onPrev={() => setPageStart((p) => Math.max(years.first, p - PAGE))}
         onNext={() => setPageStart((p) => p + PAGE)}
         onTitlePress={() => {
           if (precision !== 'year') setView(pickView);
         }}
+        titleDisabled={precision === 'year'}
         prevLabel={strings.a11yPreviousYear}
         nextLabel={strings.a11yNextYear}
         titleLabel={strings.a11yChooseYear}
@@ -461,6 +493,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
           isEnabled={(m) => !!monthEnabled.get(m)}
           onSelect={(month) => goTo({ ...visible, month })}
           renderMonthChip={renderMonthChip}
+          renderMonthChipFade={renderMonthChipFade}
           tokens={tokens}
           styles={styles}
           strings={strings}

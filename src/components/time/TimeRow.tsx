@@ -14,6 +14,7 @@ import {
   cleanBoxText,
   completeTimeEntry,
   formatTimeEntry,
+  parseTimeEntry,
   type TimeEntryIssue,
   type TimeEntryValues,
   type TimeKey,
@@ -30,7 +31,7 @@ import TimeWheel from './Wheel';
 export interface TimeRowProps {
   /** The draft's time for this slot (or the time typed before a day was picked). */
   time: Time | null;
-  /** A time was saved (focus left a box). It may still be off-step or outside the limits. */
+  /** A time was saved (focus left a box, or the minutes were filled). It may still be off-step or outside the limits. */
   onTime: (time: Time) => void;
   /**
    * The time the boxes would save right now, while it isn't saved yet (a box is
@@ -66,6 +67,10 @@ export interface TimeRowProps {
   styles?: PickerStyles;
   strings: PickerStrings;
   testID?: string;
+  /** The row sits right under the sheet title: no line or space above it. */
+  atTop?: boolean;
+  /** No line above the row, and no room for it (the keyboard is up). */
+  hideLine?: boolean;
 }
 
 const timeKey = (t: Time | null) => (t ? `${t.hour}:${t.minute}` : '');
@@ -117,7 +122,8 @@ const TimeLabel: React.FC<
  * normal inputs (free cursor, digits only, two at most) with three helpers:
  * two hour digits jump to the minutes, Backspace in an empty minute box goes
  * back to the hour, and leaving a box pads it ('9' → '09'; empty minutes → '00').
- * A time is saved when focus leaves a box, and shows in the value field too.
+ * A time is saved when focus leaves a box or the minutes get their second
+ * digit, and shows in the value field too.
  */
 const TimeRow: React.FC<TimeRowProps> = ({
   time,
@@ -139,6 +145,8 @@ const TimeRow: React.FC<TimeRowProps> = ({
   styles,
   strings,
   testID,
+  atTop = false,
+  hideLine = false,
 }) => {
   const s = buildTimeStyles(tokens);
   const [values, setValuesState] = useState<TimeEntryValues>(() =>
@@ -199,11 +207,15 @@ const TimeRow: React.FC<TimeRowProps> = ({
     const current = valuesRef.current;
     markEdited();
     const grew = (current[key] ?? '').length < 2 && text.length === 2;
-    setValues({ ...current, [key]: text });
+    const next = { ...current, [key]: text };
+    setValues(next);
     if (key === 'hour' && grew) {
       jumping.current = true;
       refs.current.minute?.focus();
     }
+    // Full minutes finish the time: save it now, so an 'instant' picker
+    // doesn't wait for focus to leave the box.
+    if (key === 'minute' && grew && next.hour) save(next, false);
   };
 
   const onBlurBox = (key: TimeKey) => {
@@ -214,10 +226,11 @@ const TimeRow: React.FC<TimeRowProps> = ({
       return;
     }
     if (key === 'hour' && jumping.current) {
-      // Moving on to the minutes: save the hour (minutes count as 00), keep mm empty.
+      // Moving on to the minutes: pad the hour, keep mm empty. Nothing is
+      // saved until the minutes have a value too.
       jumping.current = false;
       const done = completeTimeEntry(current, timeFormat);
-      save({ ...current, hour: done.values.hour }, false);
+      setValues({ ...current, hour: done.values.hour });
       return;
     }
     save(current, true);
@@ -237,8 +250,11 @@ const TimeRow: React.FC<TimeRowProps> = ({
     }
   };
 
-  // What Confirm would save, and why it can't (same rules as saving on leave).
-  const effective = completeTimeEntry(values, timeFormat).parsed;
+  // What Confirm would save, and why it can't. Empty minutes count as 00 only
+  // when focus leaves the box; until then a time needs both boxes filled.
+  const effective = values.minute
+    ? completeTimeEntry(values, timeFormat).parsed
+    : parseTimeEntry(values, timeFormat);
   let issue: TimeEntryIssue | null = effective.issue;
   if (effective.isEmpty) issue = time ? 'INCOMPLETE' : null;
   if (effective.time) issue = checkTime(effective.time, { minuteStep, bounds });
@@ -306,8 +322,8 @@ const TimeRow: React.FC<TimeRowProps> = ({
   );
 
   return (
-    <View style={s.wrapper} testID={testID}>
-      <View style={[s.row, styles?.timeRow]}>
+    <View style={[s.wrapper, atTop && s.wrapperAtTop]} testID={testID}>
+      <View style={[s.row, styles?.timeRow, (atTop || hideLine) && s.rowAtTop]}>
         <TimeLabel
           label={label}
           dateText={dateText}

@@ -64,10 +64,11 @@ describe("newDayTime 'empty'", () => {
     expect(box(tree, 'dp-time-hour')?.props.value).toBe('');
     expect(box(tree, 'dp-time-minute')?.props.value).toBe('');
     expect(confirmDisabled(tree)).toBe(true);
-    // An hour alone is a time: the minutes count as 00 (the row's usual rule).
+    // An hour alone isn't a time: Confirm waits for the minutes too.
     typeBox(tree, 'dp-time-hour', '14');
-    expect(confirmDisabled(tree)).toBe(false);
+    expect(confirmDisabled(tree)).toBe(true);
     typeBox(tree, 'dp-time-minute', '15');
+    expect(confirmDisabled(tree)).toBe(false);
     press(tree, 'dp-confirm');
     expect(onChange).toHaveBeenLastCalledWith('2026-10-25T14:15:00.000Z');
   });
@@ -96,7 +97,9 @@ describe("newDayTime 'empty'", () => {
     expect(confirmDisabled(tree)).toBe(true);
     expect(box(tree, 'dp-time-to-hour')?.props.value).toBe('');
     typeBox(tree, 'dp-time-to-hour', '11');
+    expect(confirmDisabled(tree)).toBe(true);
     typeBox(tree, 'dp-time-to-minute', '30');
+    expect(confirmDisabled(tree)).toBe(false);
     press(tree, 'dp-confirm');
     expect(onChange).toHaveBeenLastCalledWith({
       from: '2026-10-20T09:00:00.000Z',
@@ -111,9 +114,22 @@ describe("newDayTime 'empty'", () => {
     tap(tree, 25);
     expect(onChange).not.toHaveBeenCalled();
     typeBox(tree, 'dp-time-hour', '14');
-    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T14:00:00.000Z');
+    expect(onChange).not.toHaveBeenCalled();
     typeBox(tree, 'dp-time-minute', '15');
+    expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith('2026-10-25T14:15:00.000Z');
+  });
+
+  it('an hour left with empty minutes (focus moves away) still counts as :00', () => {
+    const onChange = jest.fn();
+    const tree = mount({ onChange });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    typeBox(tree, 'dp-time-hour', '9');
+    expect(box(tree, 'dp-time-minute')?.props.value).toBe('00');
+    expect(confirmDisabled(tree)).toBe(false);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T09:00:00.000Z');
   });
 
   it('multiple dates share one empty time until it is set', () => {
@@ -130,5 +146,74 @@ describe("newDayTime 'empty'", () => {
       '2026-10-20T08:45:00.000Z',
       '2026-10-22T08:45:00.000Z',
     ]);
+  });
+});
+
+describe('full minutes save the time while the box still has focus', () => {
+  // Typing only: focus stays in the box (no blur), as on a phone before the
+  // user taps anywhere else.
+  const typeOnly = (tree: ReactTestRenderer, id: string, text: string) => {
+    const input = box(tree, id);
+    if (!input) throw new Error(`no box ${id}`);
+    act(() => input.props.onFocus());
+    act(() => input.props.onChangeText(text));
+  };
+
+  it("commitMode 'instant' saves on the second minute digit, not the first", () => {
+    const onChange = jest.fn();
+    const tree = mount({ commitMode: 'instant', onChange });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    typeOnly(tree, 'dp-time-hour', '9');
+    typeOnly(tree, 'dp-time-minute', '3');
+    expect(onChange).not.toHaveBeenCalled();
+    typeOnly(tree, 'dp-time-minute', '30');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T09:30:00.000Z');
+    // Leaving the box afterwards doesn't save the same time again.
+    act(() => box(tree, 'dp-time-minute')?.props.onBlur());
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("commitMode 'instant' range: each end saves when its minutes are full", () => {
+    const onChange = jest.fn();
+    const tree = mount({ mode: 'range', commitMode: 'instant', onChange });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 20);
+    tap(tree, 22);
+    typeOnly(tree, 'dp-time-from-hour', '9');
+    typeOnly(tree, 'dp-time-from-minute', '15');
+    typeOnly(tree, 'dp-time-to-hour', '6');
+    expect(onChange).not.toHaveBeenCalled();
+    typeOnly(tree, 'dp-time-to-minute', '45');
+    expect(onChange).toHaveBeenLastCalledWith({
+      from: '2026-10-20T09:15:00.000Z',
+      to: '2026-10-22T06:45:00.000Z',
+    });
+  });
+
+  it('Confirm stays off while only the hour is typed', () => {
+    const tree = mount({});
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    typeOnly(tree, 'dp-time-hour', '9');
+    expect(confirmDisabled(tree)).toBe(true);
+    typeOnly(tree, 'dp-time-hour', '09');
+    act(() => box(tree, 'dp-time-hour')?.props.onBlur());
+    typeOnly(tree, 'dp-time-minute', '');
+    expect(confirmDisabled(tree)).toBe(true);
+    typeOnly(tree, 'dp-time-minute', '3');
+    expect(confirmDisabled(tree)).toBe(false);
+  });
+
+  it('Confirm saves the typed minutes without leaving the box', () => {
+    const onChange = jest.fn();
+    const tree = mount({ onChange });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    typeOnly(tree, 'dp-time-hour', '9');
+    typeOnly(tree, 'dp-time-minute', '30');
+    expect(confirmDisabled(tree)).toBe(false);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T09:30:00.000Z');
   });
 });
