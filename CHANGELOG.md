@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-11-13
+
+### Added
+
+- `renderMonthChipFade(side, color)`: drawn over the left or right edge of the month chip row while months are scrolled past that edge, a fade for example. It is pinned to the edge, takes no touches and sets its own width; `color` is the calendar background. Without it the row looks as before.
+
+### Fixed
+
+- The year grid's previous / next arrows now stop at the selectable years, not just the year range: an arrow pages only while a page further on has a year with a selectable day. With `precision: 'year'` the grid's title has no caret and isn't tappable, since there's no other view to open.
+- A typed time is saved as soon as the minutes get their second digit, so with `commitMode: 'instant'` it no longer waits for focus to leave the box. Jumping from the hour to the minutes no longer saves `HH:00` early, and Confirm stays off while only the hour is typed. An hour left with empty minutes (focus moves elsewhere) still counts as `:00`.
+- While the keyboard is up, the time rows drop the line above them. When the sheet hides its field (`sheet.showField: false`) and the keyboard folds the calendar away, the first time row sits right under the title.
+
 ## [1.3.1] - 2026-11-13
 
 ### Added
@@ -176,7 +188,8 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.2.1...v1.2.2
