@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import type { PickerValue } from '../../core/types';
+import { ChevronDownIcon } from '../../icons';
 import DateTimePicker from '../DateTimePicker';
 import { DEFAULT_TOKENS } from '../theme/tokens';
 import type { DateTimePickerProps, SheetRenderProps } from '../types';
@@ -69,6 +70,15 @@ describe('precision: year', () => {
     press(tree, 'dp-confirm');
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('2027-01-01T00:00:00.000Z');
+  });
+
+  it('the year grid title has no caret and is not tappable: there is nothing to open', () => {
+    const tree = mount({ precision: 'year' });
+    open(tree);
+    const title = find(tree, 'dp-title');
+    expect(title.props.disabled).toBe(true);
+    expect(title.props.accessibilityRole).toBe('text');
+    expect(title.findAllByType(ChevronDownIcon)).toHaveLength(0);
   });
 
   it('the field shows the year; reopening marks it picked and the current year', () => {

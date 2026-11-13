@@ -345,6 +345,15 @@ export interface DateTimePickerProps {
     month: number,
     state: { selected: boolean; disabled: boolean }
   ) => React.ReactNode;
+  /**
+   * Drawn over the month chip row's left or right edge while months are
+   * scrolled past it (a fade, say). It is pinned to that edge, takes no
+   * touches and sets its own width; `color` is the calendar background.
+   */
+  renderMonthChipFade?: (
+    side: 'left' | 'right',
+    color: string
+  ) => React.ReactNode;
   renderYearCell?: (item: PeriodItem) => React.ReactNode;
   renderMonthCell?: (item: PeriodItem) => React.ReactNode;
   renderEmptyState?: () => React.ReactNode;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -31,6 +31,8 @@ interface HeaderProps {
   onPrev: () => void;
   onNext: () => void;
   onTitlePress: () => void;
+  /** The title has nothing to open (a year-only pick): no caret, not tappable. */
+  titleDisabled?: boolean;
   prevLabel: string;
   nextLabel: string;
   titleLabel: string;
@@ -50,6 +52,7 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
   onPrev,
   onNext,
   onTitlePress,
+  titleDisabled,
   prevLabel,
   nextLabel,
   titleLabel,
@@ -107,8 +110,9 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
       {arrow('prev', canPrev, onPrev, prevLabel)}
       <Pressable
         testID={testID ? `${testID}-title` : undefined}
-        accessibilityRole="button"
-        accessibilityLabel={`${title}. ${titleLabel}`}
+        accessibilityRole={titleDisabled ? 'text' : 'button'}
+        accessibilityLabel={titleDisabled ? title : `${title}. ${titleLabel}`}
+        disabled={titleDisabled}
         onPress={onTitlePress}
         style={[s.yearButton, styles?.yearButton]}
       >
@@ -118,13 +122,15 @@ export const CalendarHeader: React.FC<HeaderProps> = ({
         >
           {digits(title)}
         </Text>
-        <View style={s.caret}>
-          {renderIcon(
-            ico.chevronDown,
-            { size: 24, color: tokens.accent },
-            iconProps?.chevronDown
-          )}
-        </View>
+        {titleDisabled ? null : (
+          <View style={s.caret}>
+            {renderIcon(
+              ico.chevronDown,
+              { size: 24, color: tokens.accent },
+              iconProps?.chevronDown
+            )}
+          </View>
+        )}
       </Pressable>
       {arrow('next', canNext, onNext, nextLabel)}
     </View>
@@ -141,11 +147,24 @@ interface ChipsProps {
     month: number,
     state: { selected: boolean; disabled: boolean }
   ) => React.ReactNode;
+  renderMonthChipFade?: (
+    side: 'left' | 'right',
+    color: string
+  ) => React.ReactNode;
   tokens: ThemeTokens;
   styles?: PickerStyles;
   strings: PickerStrings;
   testID?: string;
 }
+
+const FADE_EDGE = {
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  pointerEvents: 'none',
+} as const;
+const FADE_LEFT = { ...FADE_EDGE, left: 0 } as const;
+const FADE_RIGHT = { ...FADE_EDGE, right: 0 } as const;
 
 /** Scrolling row of month chips; months with no selectable day are greyed. */
 export const MonthChips: React.FC<ChipsProps> = ({
@@ -155,6 +174,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
   isEnabled,
   onSelect,
   renderMonthChip,
+  renderMonthChipFade,
   tokens,
   styles,
   strings,
@@ -162,6 +182,17 @@ export const MonthChips: React.FC<ChipsProps> = ({
 }) => {
   const s = buildCalendarStyles(tokens);
   const ref = useRef<ScrollViewRef>(null);
+  // Which edges have months scrolled past them, for renderMonthChipFade.
+  const offset = useRef(0);
+  const [hidden, setHidden] = useState({ left: false, right: false });
+  const syncEdges = () => {
+    if (!renderMonthChipFade) return;
+    const left = offset.current > 1;
+    const right = content.current - viewport.current - offset.current > 1;
+    setHidden((prev) =>
+      prev.left === left && prev.right === right ? prev : { left, right }
+    );
+  };
   const reduceMotion = useReduceMotion();
   // Chips are measured (long Hijri names and large text make them wider), and
   // the selected one is scrolled to the middle of the row.
@@ -182,7 +213,10 @@ export const MonthChips: React.FC<ChipsProps> = ({
   };
   const scrollToSelected = (animated: boolean) => {
     const x = selectedOffset();
-    if (x !== null) ref.current?.scrollTo({ x, animated });
+    if (x === null) return;
+    ref.current?.scrollTo({ x, animated });
+    offset.current = x;
+    syncEdges();
   };
   useEffect(() => {
     if (first.current) first.current = false;
@@ -196,7 +230,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
     if (month === selectedMonth) scrollToSelected(false);
   };
 
-  return (
+  const row = (
     <ScrollView
       ref={ref}
       horizontal
@@ -207,13 +241,17 @@ export const MonthChips: React.FC<ChipsProps> = ({
       onLayout={(e) => {
         viewport.current = e.nativeEvent.layout.width;
         scrollToSelected(false);
+        syncEdges();
       }}
       onContentSizeChange={(width) => {
         content.current = width;
         if (holding.current) scrollToSelected(false);
+        syncEdges();
       }}
       scrollEventThrottle={16}
       onScroll={(e) => {
+        offset.current = e.nativeEvent.contentOffset.x;
+        syncEdges();
         if (!holding.current) return;
         const x = selectedOffset();
         if (x !== null && Math.abs(e.nativeEvent.contentOffset.x - x) > 1)
@@ -274,5 +312,27 @@ export const MonthChips: React.FC<ChipsProps> = ({
         );
       })}
     </ScrollView>
+  );
+  if (!renderMonthChipFade) return row;
+  return (
+    <View>
+      {row}
+      {hidden.left ? (
+        <View
+          testID={testID ? `${testID}-chip-fade-left` : undefined}
+          style={FADE_LEFT}
+        >
+          {renderMonthChipFade('left', tokens.background)}
+        </View>
+      ) : null}
+      {hidden.right ? (
+        <View
+          testID={testID ? `${testID}-chip-fade-right` : undefined}
+          style={FADE_RIGHT}
+        >
+          {renderMonthChipFade('right', tokens.background)}
+        </View>
+      ) : null}
+    </View>
   );
 };

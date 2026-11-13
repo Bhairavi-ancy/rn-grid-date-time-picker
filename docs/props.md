@@ -62,6 +62,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `renderDay` | `(state: DayCellState, onPress: () => void) => ReactNode` | |
 | `renderWeekday` | `(weekday: Weekday, name: string) => ReactNode` | |
 | `renderMonthChip` | `(month: number, state: { selected; disabled }) => ReactNode` | |
+| `renderMonthChipFade` | `(side: 'left' \| 'right', color: string) => ReactNode` | Drawn over that edge of the month chip row while months are scrolled past it, e.g. a fade. Pinned to the edge, takes no touches, sets its own width. `color` is the calendar background. |
 | `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
 | `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
 | `renderCalendarSwitch` | `(p: CalendarSwitchRenderProps) => ReactNode` | Replaces the calendar switch: draw `p.systems`, mark `p.selected`, call `p.onSelect(system)`. |

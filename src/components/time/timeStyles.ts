@@ -16,6 +16,10 @@ const create = (t: ThemeTokens) =>
       borderTopColor: t.separator,
       backgroundColor: t.background,
     },
+    // The first row right under the sheet title (the keyboard folded the
+    // calendar away): no line or room above it, the header's padding is the gap.
+    wrapperAtTop: { marginTop: 0 },
+    rowAtTop: { paddingTop: 0, borderTopWidth: 0 },
     label: {
       flexShrink: 1,
       marginEnd: 12,

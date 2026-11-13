@@ -733,6 +733,39 @@ describe('DateTimePicker: time row', () => {
     now,
   };
 
+  it('the line above the time row goes while the keyboard is up, folded or not', () => {
+    const listeners: Record<string, () => void> = {};
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((
+      name: string,
+      cb: () => void
+    ) => {
+      listeners[name] = cb;
+      return { remove: () => {} };
+    }) as never);
+    const line = (tree: ReactTestRenderer) =>
+      find(tree, 'dp-time')
+        .findAll(
+          (n) =>
+            typeof n.type === 'string' &&
+            StyleSheet.flatten(n.props.style)?.borderTopColor !== undefined
+        )
+        .map((n) => StyleSheet.flatten(n.props.style).borderTopWidth)[0];
+    const keyboard = (edge: 'Show' | 'Hide') => {
+      const name = Object.keys(listeners).find((k) => k.endsWith(edge));
+      act(() => listeners[name!]!());
+    };
+    for (const hideCalendarOnKeyboard of [true, false]) {
+      const tree = mount({ ...dt, hideCalendarOnKeyboard });
+      openSheet(tree);
+      expect(line(tree)).toBe(1);
+      keyboard('Show');
+      expect(line(tree)).toBe(0);
+      keyboard('Hide');
+      expect(line(tree)).toBe(1);
+    }
+    jest.restoreAllMocks();
+  });
+
   it('a day tap on an empty value starts at the current time; the typed time is saved on Confirm (12h)', () => {
     const onChange = jest.fn();
     const tree = mount({ ...dt, onChange });

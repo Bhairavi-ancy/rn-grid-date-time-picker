@@ -167,6 +167,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     renderDay,
     renderWeekday,
     renderMonthChip,
+    renderMonthChipFade,
     renderYearCell,
     renderMonthCell,
     renderEmptyState,
@@ -410,7 +411,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     onClose,
   });
   const isOpen = isInline || sheetOpen;
-  const keyboardUp = useKeyboardFold(isOpen && hideCalendarOnKeyboard);
+  const keyboardShown = useKeyboardFold(isOpen);
+  const keyboardUp = keyboardShown && hideCalendarOnKeyboard;
   // The picker's own boxes that have focus. Inline, another field on the
   // screen can raise the keyboard, so the calendar folds only for these.
   const [focusedParts, setFocusedParts] = useState<Record<string, boolean>>({});
@@ -423,6 +425,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   );
   const ownFocus = Object.values(focusedParts).some(Boolean);
   const folded = keyboardUp && (!isInline || ownFocus);
+  // Folded with no field above it, the first time row sits right under the title.
+  const timeAtTop = folded && !isInline && sheetOptions?.showField === false;
 
   const rangeLayout = range?.layout ?? 'singleField';
   const multipleTimeMode = multiple?.timeMode ?? 'shared';
@@ -1628,6 +1632,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           renderDay={renderDay}
           renderWeekday={renderWeekday}
           renderMonthChip={renderMonthChip}
+          renderMonthChipFade={renderMonthChipFade}
           renderYearCell={renderYearCell}
           renderMonthCell={renderMonthCell}
           renderEmptyState={renderEmptyState}
@@ -1676,6 +1681,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         styles={styles}
         strings={stringsFor(shownSystem)}
         testID={testID}
+        atTop={timeAtTop}
+        hideLines={keyboardShown}
       />
     );
 

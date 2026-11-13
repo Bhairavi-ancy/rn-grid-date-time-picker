@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { Text } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import renderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import {
   createConstraints,
@@ -300,6 +300,33 @@ describe('Calendar: navigation', () => {
     expect(find(tree, 'cal-next').props.disabled).toBe(true);
   });
 
+  it('the year grid arrows stop at the selectable years, not just the year range', () => {
+    const tree = mount({
+      constraints: constraintsFor({
+        minDate: { year: 2025, month: 1, day: 1 },
+        maxDate: { year: 2027, month: 12, day: 31 },
+      }),
+    });
+    press(tree, 'cal-title');
+    expect(texts(tree)).toContain('2020 – 2031');
+    expect(find(tree, 'cal-prev').props.disabled).toBe(true);
+    expect(find(tree, 'cal-next').props.disabled).toBe(true);
+  });
+
+  it('the year grid pages toward selectable years and stops at the last page with one', () => {
+    const tree = mount({
+      constraints: constraintsFor({
+        minDate: { year: 2010, month: 6, day: 1 },
+      }),
+    });
+    press(tree, 'cal-title');
+    expect(find(tree, 'cal-next').props.disabled).toBe(false);
+    expect(find(tree, 'cal-prev').props.disabled).toBe(false);
+    press(tree, 'cal-prev');
+    expect(texts(tree)).toContain('2008 – 2019');
+    expect(find(tree, 'cal-prev').props.disabled).toBe(true);
+  });
+
   it('can open on the month grid', () => {
     const tree = mount({ initialView: 'month' });
     expect(texts(tree)).toEqual(
@@ -378,5 +405,57 @@ describe('Calendar: calendar systems', () => {
     expect(find(tree, 'cal-prev').props.disabled).toBe(true);
     expect(find(tree, 'cal-next').props.disabled).toBe(true);
     expect(find(tree, 'cal-chip-6').props.disabled).toBe(true);
+  });
+});
+
+describe('Calendar: month chip fade', () => {
+  const chipRow = (tree: ReactTestRenderer) =>
+    tree.root.findAll(
+      (n) =>
+        n.type === ScrollView &&
+        n.props.accessibilityLabel === strings.a11yChooseMonth
+    )[0];
+  const scrollRow = (
+    tree: ReactTestRenderer,
+    x: number,
+    view = 300,
+    content = 1000
+  ) => {
+    const row = chipRow(tree);
+    act(() => {
+      row.props.onLayout({ nativeEvent: { layout: { width: view } } });
+      row.props.onContentSizeChange(content, 40);
+      row.props.onScroll({ nativeEvent: { contentOffset: { x } } });
+    });
+  };
+  const fades = (tree: ReactTestRenderer) =>
+    ['left', 'right'].filter((side) => !!find(tree, `cal-chip-fade-${side}`));
+
+  it('shows a fade on each edge with months scrolled past it', () => {
+    const renderMonthChipFade = jest.fn(
+      (side: 'left' | 'right', color: string) => (
+        <Text>{`${side} ${color}`}</Text>
+      )
+    );
+    const tree = mount({ renderMonthChipFade });
+    scrollRow(tree, 0);
+    expect(fades(tree)).toEqual(['right']);
+    scrollRow(tree, 350);
+    expect(fades(tree)).toEqual(['left', 'right']);
+    scrollRow(tree, 700);
+    expect(fades(tree)).toEqual(['left']);
+    expect(renderMonthChipFade).toHaveBeenLastCalledWith(
+      'left',
+      tokens.background
+    );
+  });
+
+  it('no fade when every month fits, or without renderMonthChipFade', () => {
+    const fitting = mount({ renderMonthChipFade: () => <Text>fade</Text> });
+    scrollRow(fitting, 0, 1000, 1000);
+    expect(fades(fitting)).toEqual([]);
+    const plain = mount({});
+    scrollRow(plain, 350);
+    expect(fades(plain)).toEqual([]);
   });
 });
