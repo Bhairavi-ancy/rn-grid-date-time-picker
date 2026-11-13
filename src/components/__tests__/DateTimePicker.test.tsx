@@ -1259,6 +1259,34 @@ describe('DateTimePicker: sheet options', () => {
     expect(texts(tree)).toContain(DEFAULT_STRINGS.errorNotAllowed);
   });
 
+  it('showNotAllowedError false hides the disabled-day message, single and range', () => {
+    const single = mount({
+      sheet: { showField: false, showNotAllowedError: false },
+      value: '2026-10-21T00:00:00.000Z',
+      disabledWeekdays: [3],
+    });
+    openSheet(single);
+    expect(texts(single)).not.toContain(DEFAULT_STRINGS.errorNotAllowed);
+    const withField = mount({
+      sheet: { showNotAllowedError: false },
+      value: '2026-10-21T00:00:00.000Z',
+      disabledWeekdays: [3],
+    });
+    openSheet(withField);
+    expect(texts(withField)).not.toContain(DEFAULT_STRINGS.errorNotAllowed);
+    const range = mount({
+      mode: 'range',
+      sheet: { showNotAllowedError: false },
+      value: {
+        from: '2026-10-20T00:00:00.000Z',
+        to: '2026-10-22T00:00:00.000Z',
+      },
+      disabledWeekdays: [4],
+    });
+    openSheet(range);
+    expect(texts(range)).not.toContain(DEFAULT_STRINGS.errorNotAllowed);
+  });
+
   it('fieldPlaceholder and the placeholder strings reach the sheet field and time boxes', () => {
     const strings = {
       placeholderDay: 'JJ',

@@ -132,6 +132,13 @@ export interface SheetOptions {
   /** The calendar icon at the end of that field, as on the on-screen field. Default false. */
   fieldIcon?: boolean;
   /**
+   * "This date isn't available" above the calendar while the picked date (or a
+   * range's end) is a disabled day, e.g. a saved value the rules no longer
+   * allow. false hides it; Confirm stays off for that day. Default true;
+   * applies inline too.
+   */
+  showNotAllowedError?: boolean;
+  /**
    * Passed to the sheet body's ScrollView, over the picker's own defaults, e.g.
    * `{ showsVerticalScrollIndicator: true, persistentScrollbar: true }` to keep
    * the scrollbar showing on Android (iOS shows it only while scrolling).

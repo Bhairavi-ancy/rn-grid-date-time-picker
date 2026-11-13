@@ -21,6 +21,7 @@ import FieldMessages from './FieldMessages';
 import {
   formatValueParts,
   formatValueText,
+  emptyFieldParts,
   placeholderText,
   segmentErrorText,
   type DateTextFormatter,
@@ -240,6 +241,20 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
     styles?.fieldText,
     disabled && [s.disabledText, styles?.fieldTextDisabled],
   ];
+  // The empty field's placeholder sets its date apart from its time the same way.
+  const separator = strings.dateTimeSeparator ?? ' ';
+  const emptyParts =
+    styles?.fieldDateText && type === 'datetime'
+      ? emptyFieldParts(placeholder, type, dateFormat, timeFormat, strings)
+      : null;
+  const placeholderSplit = emptyParts?.time ? emptyParts : null;
+  const placeholderStyle = [
+    s.text,
+    styles?.fieldText,
+    s.placeholder,
+    styles?.fieldPlaceholder,
+    disabled && s.disabledText,
+  ];
 
   const clear = () => {
     dispatch({ type: 'reset', value: null });
@@ -335,7 +350,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
             ellipsizeMode="clip"
             style={[valueStyle, s.textScrolled, styles?.fieldDateText]}
           >
-            {digits(`${parts.date}${strings.dateTimeSeparator ?? ' '}`)}
+            {digits(`${parts.date}${separator}`)}
           </Text>
           <Text numberOfLines={1} ellipsizeMode="clip" style={valueStyle}>
             {digits(parts.time)}
@@ -366,17 +381,21 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
             {digits(text)}
           </Text>
         </ScrollView>
+      ) : placeholderSplit ? (
+        <>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="clip"
+            style={[placeholderStyle, s.textScrolled, styles?.fieldDateText]}
+          >
+            {`${placeholderSplit.date}${separator}`}
+          </Text>
+          <Text numberOfLines={1} ellipsizeMode="clip" style={placeholderStyle}>
+            {placeholderSplit.time}
+          </Text>
+        </>
       ) : (
-        <Text
-          numberOfLines={1}
-          style={[
-            s.text,
-            styles?.fieldText,
-            s.placeholder,
-            styles?.fieldPlaceholder,
-            disabled && s.disabledText,
-          ]}
-        >
+        <Text numberOfLines={1} style={placeholderStyle}>
           {placeholder ||
             placeholderText(type, dateFormat, timeFormat, strings)}
         </Text>

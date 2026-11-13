@@ -62,6 +62,7 @@ Everything inside the sheet can be set from props:
 | `showField` | `true` | The field above the calendar, which shows the picked date and takes typing with `allowTyping`. When it's hidden, its errors still show above the calendar. Applies inline too. |
 | `fieldPlaceholder` | from `dateFormat` | Placeholder of that field when it shows text. |
 | `fieldIcon` | `false` | The calendar icon at the end of that field, as on the on-screen field. |
+| `showNotAllowedError` | `true` | "This date isn't available" above the calendar while the picked date (or a range's end) is a disabled day, for example a saved value the rules no longer allow. `false` hides it. Confirm stays off for that day either way. Applies inline too. |
 | `scrollToTime` | `true` | Date-time pickers: once a calendar tap picks the date, the body scrolls the time section into view if it doesn't show in full. That's every tap in single mode, the tap that picks a range's end, and a multiple picker's first date (later taps leave the calendar in view). `true` scrolls just far enough to show the time, `'end'` to the end of the body, `false` not at all. Follows the system's reduce-motion setting. |
 
 ```tsx

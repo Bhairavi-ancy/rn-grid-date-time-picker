@@ -27,7 +27,9 @@ export const STYLE_KEYS = [
   'fieldTextDisabled',
   /**
    * Sets the date of a single date-time value apart from its time, e.g.
-   * `{ minWidth: '50%' }` starts the time at the middle of the field.
+   * `{ minWidth: '50%' }` starts the time at the middle of the field. The empty
+   * field's placeholder does the same: a passed `placeholder` is cut at the
+   * first `strings.dateTimeSeparator` when what follows is a time ('HH:MM').
    */
   'fieldDateText',
   'fieldPlaceholder',

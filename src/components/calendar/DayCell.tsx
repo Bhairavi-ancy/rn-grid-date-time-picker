@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { isSameDay } from '../../core/calendarDate';
 import type { CalendarDate } from '../../core/types';
 import type { PickerStyles } from '../theme/styleKeys';
@@ -35,9 +35,10 @@ interface Props extends DayCellState {
 }
 
 /**
- * One day: today ring, selected fill, range band, greyed (not pressable) when
- * disabled, holiday colour. Only primitive-ish props change between renders, so
- * memo keeps typing and taps from redrawing all 42 cells.
+ * One day: today ring (faded when today is disabled), selected fill,
+ * range band, greyed (not pressable) when disabled, holiday colour. Only
+ * primitive-ish props change between renders, so memo keeps typing and taps
+ * from redrawing all 42 cells.
  */
 const DayCell: React.FC<Props> = ({
   date,
@@ -72,6 +73,12 @@ const DayCell: React.FC<Props> = ({
         : rangeRole === 'end'
           ? s.fillEnd
           : null;
+  // The today ring. On a greyed today it's faded, in the day's shape.
+  const ring = isToday && !filled;
+  const fadedRing = ring && isDisabled;
+  const dayRadius = fadedRing
+    ? StyleSheet.flatten(styles?.day)?.borderRadius
+    : undefined;
 
   return (
     <View style={s.cellWrap}>
@@ -87,7 +94,7 @@ const DayCell: React.FC<Props> = ({
         style={({ pressed }) => [
           s.day,
           styles?.day,
-          isToday && !filled && [s.today, styles?.today],
+          ring && !isDisabled && [s.today, styles?.today],
           filled && [s.selected, styles?.selected],
           rangeRole === 'start' && styles?.rangeStart,
           rangeRole === 'middle' && styles?.rangeMiddle,
@@ -98,6 +105,18 @@ const DayCell: React.FC<Props> = ({
           pressed && !isDisabled && !filled && [s.pressed, styles?.dayPressed],
         ]}
       >
+        {fadedRing ? (
+          <View
+            pointerEvents="none"
+            testID={testID ? `${testID}-today-ring` : undefined}
+            style={[
+              s.today,
+              styles?.today,
+              s.todayDisabledRing,
+              dayRadius !== undefined && { borderRadius: dayRadius },
+            ]}
+          />
+        ) : null}
         <Text
           maxFontSizeMultiplier={MAX_FONT_SCALE}
           style={[
@@ -107,7 +126,7 @@ const DayCell: React.FC<Props> = ({
             isHoliday &&
               showHolidays &&
               !filled && [s.holidayText, styles?.holidayText],
-            isToday && !filled && styles?.todayText,
+            ring && styles?.todayText,
             isDisabled && [s.disabledText, styles?.disabledText],
             filled && [s.selectedText, styles?.selectedText],
           ]}

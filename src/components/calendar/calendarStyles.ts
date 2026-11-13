@@ -97,6 +97,17 @@ const create = (t: ThemeTokens) =>
       color: t.mutedText,
     },
     today: { borderWidth: 1, borderColor: t.accent },
+    // A greyed today: its accent ring, faded. A layer of its own, so the fade
+    // leaves the day number as grey as the other greyed days.
+    todayDisabledRing: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      borderRadius: t.radius,
+      opacity: 0.4,
+    },
     selected: { backgroundColor: t.accent },
     selectedText: { color: t.onAccent, ...fontStyle(t, 'semiBold') },
     outsideText: { color: t.outsideText ?? t.mutedText },

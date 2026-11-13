@@ -64,6 +64,62 @@ describe('DayGrid', () => {
     expect(dayText(20).color).not.toBe(DEFAULT_TOKENS.disabledText);
   });
 
+  it('a greyed today has a faded accent ring; an allowed today keeps the full one', () => {
+    const cellStyle = (tree: ReactTestRenderer, id: string) => {
+      // The Pressable: the first node with this testID that has a style.
+      const cell = tree.root.findAll(
+        (n) =>
+          n.props.testID === id &&
+          typeof n.type !== 'string' &&
+          n.props.style !== undefined
+      )[0]!;
+      const style = cell.props.style;
+      return StyleSheet.flatten(
+        typeof style === 'function' ? style({ pressed: false }) : style
+      );
+    };
+    const ringOf = (tree: ReactTestRenderer) =>
+      tree.root.findAll(
+        (n) =>
+          n.props.testID === 'g-day-2026-10-21-today-ring' &&
+          typeof n.type !== 'string'
+      );
+
+    const allowed = mount({});
+    expect(cellStyle(allowed, 'g-day-2026-10-21').borderColor).toBe(
+      DEFAULT_TOKENS.accent
+    );
+    expect(ringOf(allowed)).toHaveLength(0);
+
+    const greyed = mount({
+      constraints: createConstraints({
+        type: 'date',
+        timeZone: 'Asia/Kolkata',
+        now: NOW,
+        minDate: { year: 2026, month: 10, day: 25 },
+      }),
+      styles: { day: { borderRadius: 20 } },
+    });
+    // No accent ring on the day itself.
+    expect(cellStyle(greyed, 'g-day-2026-10-21').borderColor).toBeUndefined();
+    const ring = StyleSheet.flatten(ringOf(greyed)[0]!.props.style);
+    expect(ring).toMatchObject({
+      borderWidth: 1,
+      borderColor: DEFAULT_TOKENS.accent,
+      opacity: 0.4,
+      borderRadius: 20,
+    });
+    // The day number stays as grey as the other greyed days, not faded further.
+    const text = greyed.root.findAll(
+      (n) => n.props.testID === 'g-day-2026-10-21' && typeof n.type !== 'string'
+    )[0]!;
+    const textStyle = StyleSheet.flatten(
+      text.findAllByType(Text)[0]!.props.style
+    );
+    expect(textStyle.color).toBe(DEFAULT_TOKENS.disabledText);
+    expect(textStyle.opacity).toBeUndefined();
+  });
+
   it('a day of the month before is darker than a greyed one; outsideText follows mutedText', () => {
     const textOf = (tree: ReactTestRenderer, id: string) => {
       const cell = tree.root.findAll(

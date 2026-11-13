@@ -279,6 +279,46 @@ describe('ValueField: a long value', () => {
     ]);
   });
 
+  it('with a fieldDateText style, the empty date-time placeholder sets its date apart too', () => {
+    const half = { minWidth: '50%' as const };
+    const built = mount({ type: 'datetime', styles: { fieldDateText: half } });
+    expect(texts(built)).toEqual(['DD-MM-YYYY ', 'hh:mm AM']);
+    expect(built.root.findAllByType(Text)[0]!.props.style).toContain(half);
+    // One passed in is cut at the first date-time separator.
+    expect(
+      texts(
+        mount({
+          type: 'datetime',
+          placeholder: 'DD/MM/YYYY HH:MM',
+          styles: { fieldDateText: half },
+        })
+      )
+    ).toEqual(['DD/MM/YYYY ', 'HH:MM']);
+    // Wording, no separator, a date picker or no style: one text, as before.
+    expect(
+      texts(
+        mount({
+          type: 'datetime',
+          placeholder: 'Pick a time',
+          styles: { fieldDateText: half },
+        })
+      )
+    ).toEqual(['Pick a time']);
+    expect(
+      texts(
+        mount({
+          type: 'datetime',
+          placeholder: 'Select',
+          styles: { fieldDateText: half },
+        })
+      )
+    ).toEqual(['Select']);
+    expect(texts(mount({ styles: { fieldDateText: half } }))).toEqual([
+      'DD-MM-YYYY',
+    ]);
+    expect(texts(mount({ type: 'datetime' }))).toEqual(['DD-MM-YYYY hh:mm AM']);
+  });
+
   it('reads the direction from the first letter, not the digits', () => {
     expect(startsRightToLeft('١٧ جمادى الأولى ١٤٤٨')).toBe(true);
     expect(startsRightToLeft('16 جمادى الأولى 1448')).toBe(true);

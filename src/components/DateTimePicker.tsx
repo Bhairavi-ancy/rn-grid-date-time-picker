@@ -1379,8 +1379,12 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const sheetValue =
     draft.draft.mode === 'single' ? draft.draft.slot.value : null;
   // A time outside the limits is explained under the time row, not here.
+  const notAllowedError =
+    sheetOptions?.showNotAllowedError === false
+      ? ''
+      : shownStrings.errorNotAllowed;
   const sheetValueError =
-    sheetValue && dayOff(sheetValue.date) ? shownStrings.errorNotAllowed : '';
+    sheetValue && dayOff(sheetValue.date) ? notAllowedError : '';
 
   let rangeError = '';
   if (d.mode === 'range' && d.from.value && d.to.value) {
@@ -1389,7 +1393,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       constraints.dayStatus(d.from.value.date).disabled ||
       constraints.dayStatus(d.to.value.date).disabled
     )
-      rangeError = shownStrings.errorNotAllowed;
+      rangeError = notAllowedError;
     else if (previewIssue === 'RANGE_ORDER')
       rangeError = shownStrings.errorRangeOrder;
     else if (previewIssue === 'RANGE_LENGTH')

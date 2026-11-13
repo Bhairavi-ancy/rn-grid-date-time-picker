@@ -119,6 +119,27 @@ export const formatMultipleText = (
     )
     .join(', ');
 
+/** { date: 'DD-MM-YYYY', time: 'hh:mm AM' } (time '' unless datetime), from the placeholder strings. */
+export const placeholderParts = (
+  type: PickerType,
+  dateFormat: string,
+  timeFormat: TimeFormat,
+  strings: PickerStrings = DEFAULT_STRINGS
+): { date: string; time: string } => {
+  const parts: Record<string, string> = {
+    dd: strings.placeholderDay,
+    MM: strings.placeholderMonth,
+    yyyy: strings.placeholderYear,
+  };
+  const date = dateFormat.replace(/yyyy|MM|dd/g, (t) => parts[t] ?? t);
+  if (type !== 'datetime') return { date, time: '' };
+  const time =
+    timeFormat === '24h'
+      ? `${strings.placeholderHour24}:${strings.placeholderMinute}`
+      : `${strings.placeholderHour}:${strings.placeholderMinute} ${strings.am}`;
+  return { date, time };
+};
+
 /** 'DD-MM-YYYY' or 'DD-MM-YYYY hh:mm AM', from the placeholder strings. */
 export const placeholderText = (
   type: PickerType,
@@ -126,19 +147,41 @@ export const placeholderText = (
   timeFormat: TimeFormat,
   strings: PickerStrings = DEFAULT_STRINGS
 ): string => {
-  const parts: Record<string, string> = {
-    dd: strings.placeholderDay,
-    MM: strings.placeholderMonth,
-    yyyy: strings.placeholderYear,
-  };
-  const date = dateFormat.replace(/yyyy|MM|dd/g, (t) => parts[t] ?? t);
-  if (type !== 'datetime') return date;
-  const time =
-    timeFormat === '24h'
-      ? `${strings.placeholderHour24}:${strings.placeholderMinute}`
-      : `${strings.placeholderHour}:${strings.placeholderMinute} ${strings.am}`;
-  return `${date}${strings.dateTimeSeparator ?? ' '}${time}`;
+  const { date, time } = placeholderParts(
+    type,
+    dateFormat,
+    timeFormat,
+    strings
+  );
+  return time ? `${date}${strings.dateTimeSeparator ?? ' '}${time}` : date;
 };
+
+/**
+ * A placeholder passed in, cut at the first date-time separator into the
+ * date and the time ('DD/MM/YYYY HH:MM' -> 'DD/MM/YYYY', 'HH:MM'). Text
+ * whose second part isn't a time (no ':'), like 'Pick a time', stays whole.
+ */
+export const splitPlaceholder = (
+  text: string,
+  separator: string
+): { date: string; time: string } => {
+  const at = separator ? text.indexOf(separator) : -1;
+  const time = at > 0 ? text.slice(at + separator.length) : '';
+  if (!time.includes(':')) return { date: text, time: '' };
+  return { date: text.slice(0, at), time };
+};
+
+/** The empty field's placeholder (the one passed in, else the built one) as date and time. */
+export const emptyFieldParts = (
+  placeholder: string | undefined,
+  type: PickerType,
+  dateFormat: string,
+  timeFormat: TimeFormat,
+  strings: PickerStrings = DEFAULT_STRINGS
+): { date: string; time: string } =>
+  placeholder
+    ? splitPlaceholder(placeholder, strings.dateTimeSeparator ?? ' ')
+    : placeholderParts(type, dateFormat, timeFormat, strings);
 
 const TIME_KEYS = ['hour', 'minute', 'period'];
 

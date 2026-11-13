@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `sheet.showNotAllowedError` (default `true`): `false` hides "This date isn't available" above the calendar when the picked date (or a range's end) is a disabled day, such as a saved value the rules no longer allow. Confirm stays off for that day either way.
+
+### Fixed
+
+- A greyed (disabled) today no longer keeps the full accent ring. Its ring keeps the accent colour at 40% opacity, like the other greyed controls, and the day number stays as grey as the other greyed days. A custom `styles.today` (its border colour or width, for example) and the corner radius from `styles.day` still apply to that ring.
+- With a `fieldDateText` style, the empty date-time field's placeholder now sets its date apart from its time, like the value does, so `{ minWidth: '50%' }` starts the placeholder's time at the middle of the field too. A `placeholder` passed in is cut at the first `strings.dateTimeSeparator` when what follows is a time (`'DD/MM/YYYY HH:MM'`); wording such as `'Pick a time'` stays whole.
+
 ### Changed
 
 - **A dual calendar's selection shows in both tabs.** A day picked on the Gregorian tab is highlighted on the Hijri tab too, and the other way round, and a tap on either tab edits the same selection instead of starting over, so a range can start on one tab and end on the other. The selection is saved with the tab on screen: Confirm on the Hijri tab saves a Gregorian pick as Hijri (`info.calendarSystem: 'hijri'`), and the field writes it that way. With `commitMode="instant"`, a tab (or a calendar in the switch) the user picks saves the selection again with that calendar; the tab the picker opens on doesn't. The field inside the sheet now follows the tab too. A new `calendarSystem` prop no longer clears a selection in progress. Values stay Gregorian.
