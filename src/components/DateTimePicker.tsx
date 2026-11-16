@@ -1030,6 +1030,9 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             const end = moveNearest ? nearest : 'from';
             setTypingBlock('from', false);
             setTypingBlock('to', false);
+            // A new range keeps the old end time for the end picked next.
+            if (!moveNearest && d.to.value.time)
+              setPending('to', d.to.value.time);
             draft.selectDay(day, fixedTime ?? pending[end] ?? newTime());
             setActiveEnd(moveNearest ? nearest : 'to');
             return;
@@ -1067,6 +1070,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           (!!d.to.value && range?.reselect !== 'moveNearestEnd');
         const end: RangeEnd = startsOver ? 'from' : 'to';
         setTypingBlock('single', false);
+        // A new range keeps the old end time for the end picked next.
+        if (startsOver && d.to.value?.time) setPending('to', d.to.value.time);
         draft.selectDay(
           day,
           end === 'to' && !d.to.value
@@ -1100,6 +1105,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
       activeDay,
       fixedTime,
       pending,
+      setPending,
       range?.reselect,
       type,
       multipleTimeMode,

@@ -217,3 +217,59 @@ describe('full minutes save the time while the box still has focus', () => {
     expect(onChange).toHaveBeenLastCalledWith('2026-10-25T09:30:00.000Z');
   });
 });
+
+describe('a new range keeps the old end time', () => {
+  const saved = {
+    from: '2026-10-20T09:00:00.000Z',
+    to: '2026-10-22T18:00:00.000Z',
+  };
+
+  it('single field: start and end keep their times after a new start', () => {
+    const onChange = jest.fn();
+    const tree = mount({ mode: 'range', value: saved, onChange });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    // The end has no day yet, but its time row still shows the old time.
+    expect(box(tree, 'dp-time-to-hour')?.props.value).toBe('18');
+    tap(tree, 27);
+    expect(confirmDisabled(tree)).toBe(false);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith({
+      from: '2026-10-25T09:00:00.000Z',
+      to: '2026-10-27T18:00:00.000Z',
+    });
+  });
+
+  it('From/To layout: start and end keep their times after a new start', () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      mode: 'range',
+      range: { layout: 'fromTo' },
+      value: saved,
+      onChange,
+    });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    tap(tree, 27);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith({
+      from: '2026-10-25T09:00:00.000Z',
+      to: '2026-10-27T18:00:00.000Z',
+    });
+  });
+
+  it('a kept end time before the start on the same day blocks Confirm', () => {
+    const tree = mount({
+      mode: 'range',
+      value: {
+        from: '2026-10-20T09:00:00.000Z',
+        to: '2026-10-22T08:00:00.000Z',
+      },
+    });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    tap(tree, 25);
+    expect(box(tree, 'dp-time-to-hour')?.props.value).toBe('08');
+    expect(confirmDisabled(tree)).toBe(true);
+  });
+});
