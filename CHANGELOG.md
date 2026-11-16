@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-11-16
+
 ### Fixed
 
 - A day tapped after a full date-time range starts a new range without losing the end time: the start keeps its time, and the old end time stays in the To time row and is given to the next end picked. Before, the end time was cleared with the end date, and with `newDayTime: 'empty'` the new end had no time. If the kept end time ends up at or before the start on the same day, the usual "end must be after start" error shows and Confirm stays off. `range.reselect: 'moveNearestEnd'` is unchanged.
@@ -192,7 +194,8 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.2.2...v1.3.0
