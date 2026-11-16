@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- A day tapped after a full date-time range starts a new range without losing the end time: the start keeps its time, and the old end time stays in the To time row and is given to the next end picked. Before, the end time was cleared with the end date, and with `newDayTime: 'empty'` the new end had no time. If the kept end time ends up at or before the start on the same day, the usual "end must be after start" error shows and Confirm stays off. `range.reselect: 'moveNearestEnd'` is unchanged.
+
 ## [1.3.2] - 2026-11-13
 
 ### Added
