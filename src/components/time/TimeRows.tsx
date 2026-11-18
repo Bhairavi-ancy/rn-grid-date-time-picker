@@ -35,6 +35,8 @@ interface Props {
   onIssueChange: (issue: TimeEntryIssue | null) => void;
   /** See `TimeRow.issueCheck`. */
   issueCheck?: number;
+  /** See `TimeRow.showError`. */
+  showError?: boolean;
   onSpinChange: (spinning: boolean) => void;
   /** A row's box gained or lost focus. */
   onFocusChange?: (rowKey: string, focused: boolean) => void;
@@ -93,6 +95,7 @@ const TimeRows: React.FC<Props> = (props) => {
     disabled,
     onIssueChange,
     issueCheck,
+    showError,
     onSpinChange,
     onFocusChange,
     onPendingChange,
@@ -252,6 +255,7 @@ const TimeRows: React.FC<Props> = (props) => {
           onTime={row.onTime}
           onIssueChange={issueFor(row.key)}
           issueCheck={issueCheck}
+          showError={showError}
           onSpinChange={spinFor(row.key)}
           onFocusChange={(f) => onFocusChange?.(row.key, f)}
           onPendingChange={(t) => onPendingChange?.(row.key, row.target, t)}

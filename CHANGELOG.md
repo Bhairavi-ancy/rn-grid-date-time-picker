@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 
 - In a right-to-left app, iOS now lines up text the same way Android does. The field's value and placeholder, label, helper, instruction and error texts, the sheet title, and the time-row label and date all start at the right edge. Before, iOS placed text by its first letter, so Latin text such as the time part of a date-time value (`hh:mm AM`) sat at the left, next to the calendar icon. Left-to-right apps, and Android, are unchanged.
+- Confirm turns off when the time boxes are emptied or half filled, also after a saved time is cleared. Before, clearing a saved time left Confirm on, and pressing it only showed the "incomplete time" error. Confirm turns back on once the hour and at least one minute digit are typed, or when focus leaves a filled hour box (empty minutes become `00`). Times outside the limits or off the minute step are still reported when Confirm is pressed.
 
 ## [1.3.3] - 2026-11-16
 

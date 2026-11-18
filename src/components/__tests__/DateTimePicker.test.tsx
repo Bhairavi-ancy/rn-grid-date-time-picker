@@ -861,7 +861,7 @@ describe('DateTimePicker: time row', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
-  it('an unfinished time is flagged on Confirm, not on leaving the box', () => {
+  it('an unfinished time turns Confirm off, with no error on leaving the box', () => {
     const onChange = jest.fn();
     const tree = mount({ ...dt, onChange, value: '2026-10-25T04:30:00.000Z' });
     openSheet(tree);
@@ -869,9 +869,9 @@ describe('DateTimePicker: time row', () => {
     typeBox(tree, 'dp-time-hour', '');
     blurBox(tree, 'dp-time-hour');
     expect(texts(tree)).not.toContain(DEFAULT_STRINGS.errorIncompleteTime);
+    expect(find(tree, 'dp-confirm')?.props.disabled).toBe(true);
     press(tree, 'dp-confirm');
     expect(onChange).not.toHaveBeenCalled();
-    expect(texts(tree)).toContain(DEFAULT_STRINGS.errorIncompleteTime);
   });
 
   it("commitMode 'instant' shows time errors as they happen and never saves them", () => {

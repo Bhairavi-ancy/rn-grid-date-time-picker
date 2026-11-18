@@ -139,6 +139,13 @@ export interface SheetOptions {
    */
   showNotAllowedError?: boolean;
   /**
+   * The error text under a time row ("Enter a complete time", an invalid or
+   * out-of-limits time). false hides the text only: the boxes still turn red
+   * and Confirm stays off. To word it yourself, set `strings.errorIncompleteTime`
+   * and the other `error*` strings instead. Default true.
+   */
+  showTimeErrors?: boolean;
+  /**
    * Passed to the sheet body's ScrollView, over the picker's own defaults, e.g.
    * `{ showsVerticalScrollIndicator: true, persistentScrollbar: true }` to keep
    * the scrollbar showing on Android (iOS shows it only while scrolling).

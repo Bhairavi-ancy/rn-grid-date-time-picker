@@ -218,6 +218,49 @@ describe('full minutes save the time while the box still has focus', () => {
   });
 });
 
+describe('a saved time cleared from the boxes', () => {
+  const clearBoxes = (tree: ReactTestRenderer, prefix = 'dp-time') => {
+    typeOnly(tree, `${prefix}-hour`, '');
+    typeOnly(tree, `${prefix}-minute`, '');
+  };
+
+  it('Confirm turns off, and back on with the first minute digit', () => {
+    const onChange = jest.fn();
+    const tree = mount({ value: '2026-10-20T10:15:00.000Z', onChange });
+    press(tree, 'dp-trigger-field');
+    expect(confirmDisabled(tree)).toBe(false);
+    clearBoxes(tree);
+    expect(confirmDisabled(tree)).toBe(true);
+    // Leaving the empty boxes keeps Confirm off.
+    act(() => box(tree, 'dp-time-minute')?.props.onBlur());
+    expect(confirmDisabled(tree)).toBe(true);
+    // Minutes alone aren't a time.
+    typeOnly(tree, 'dp-time-minute', '3');
+    expect(confirmDisabled(tree)).toBe(true);
+    typeOnly(tree, 'dp-time-hour', '11');
+    expect(confirmDisabled(tree)).toBe(false);
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-20T11:03:00.000Z');
+  });
+
+  it('range: clearing one end turns Confirm off', () => {
+    const tree = mount({
+      mode: 'range',
+      value: {
+        from: '2026-10-20T09:00:00.000Z',
+        to: '2026-10-22T18:00:00.000Z',
+      },
+    });
+    press(tree, 'dp-trigger-field');
+    expect(confirmDisabled(tree)).toBe(false);
+    clearBoxes(tree, 'dp-time-to');
+    expect(confirmDisabled(tree)).toBe(true);
+    typeOnly(tree, 'dp-time-to-hour', '17');
+    typeOnly(tree, 'dp-time-to-minute', '4');
+    expect(confirmDisabled(tree)).toBe(false);
+  });
+});
+
 describe('a new range keeps the old end time', () => {
   const saved = {
     from: '2026-10-20T09:00:00.000Z',

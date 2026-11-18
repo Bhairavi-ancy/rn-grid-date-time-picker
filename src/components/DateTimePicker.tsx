@@ -717,7 +717,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         : constraints.dayStatus(date).disabled;
   const valueAllowed = (v: DateTimeValue): boolean =>
     precision === 'day' ? constraints.isValueAllowed(v) : !dayOff(v.date);
-  // Days that can't be picked block Confirm; a time outside the day's limits
+  // Days that can't be picked and time boxes left empty or half filled (a
+  // saved time cleared, too) block Confirm; a time outside the day's limits
   // is only checked when Confirm is pressed, like the other time problems.
   const datesAllowed = draftValues.every((v) => !v || !dayOff(v.date));
   const timesAllowed = draftValues.every((v) => !v || valueAllowed(v));
@@ -725,6 +726,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
   const canConfirm =
     !previewIssue &&
     datesAllowed &&
+    timeIssue !== 'INCOMPLETE' &&
     !typingBlocked &&
     !wheelSpinning &&
     !confirmDisabled;
@@ -1676,6 +1678,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         dateFormat={dateFormat}
         disabled={disabled || readOnly}
         onIssueChange={setTimeIssue}
+        showError={sheetOptions?.showTimeErrors !== false}
         issueCheck={commitMode === 'instant' ? undefined : timeCheck}
         onSpinChange={setWheelSpinning}
         onFocusChange={(row, f) => reportFocus(`time-${row}`, f)}
