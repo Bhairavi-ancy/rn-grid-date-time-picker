@@ -24,6 +24,7 @@ import {
   emptyFieldParts,
   placeholderText,
   segmentErrorText,
+  valueSeparator,
   type DateTextFormatter,
 } from './fieldText';
 import { buildFieldStyles } from './fieldStyles';
@@ -350,7 +351,7 @@ const ValueField: React.FC<ValueFieldProps> = (props) => {
             ellipsizeMode="clip"
             style={[valueStyle, s.textScrolled, styles?.fieldDateText]}
           >
-            {digits(`${parts.date}${separator}`)}
+            {digits(`${parts.date}${valueSeparator(strings)}`)}
           </Text>
           <Text numberOfLines={1} ellipsizeMode="clip" style={valueStyle}>
             {digits(parts.time)}

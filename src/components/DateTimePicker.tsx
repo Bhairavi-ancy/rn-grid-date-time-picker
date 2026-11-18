@@ -1312,7 +1312,8 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     precision === 'year'
       ? strings.placeholderYear
       : precision === 'month'
-        ? `${strings.placeholderMonth} ${strings.placeholderYear}`
+        ? // 'MM-YYYY', with the date format's own separator ('MM/YYYY' for 'dd/MM/yyyy').
+          `${strings.placeholderMonth}${dateFormat.replace(/dd|MM|yyyy/g, '').charAt(0) || '-'}${strings.placeholderYear}`
         : undefined;
 
   // The time a custom renderTimeRow edits, and how it sets it (the same
