@@ -367,7 +367,9 @@ const TimeRow: React.FC<TimeRowProps> = ({
         )}
       </View>
       <FieldMessages
-        error={shown && showError ? issueText(shown, strings, minuteStep) : undefined}
+        error={
+          shown && showError ? issueText(shown, strings, minuteStep) : undefined
+        }
         tokens={tokens}
         styles={styles}
         testID={testID}
