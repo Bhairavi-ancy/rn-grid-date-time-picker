@@ -1,4 +1,4 @@
-import React, { useId, useRef } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import KeyboardAccessoryBar from '../field/KeyboardAccessoryBar';
 import type { TextInputRef } from '../nativeTypes';
@@ -65,6 +65,10 @@ const TypedTime: React.FC<Props> = ({
   const barId = useId();
   const s = buildTimeStyles(tokens);
   const inputs = useRef<Partial<Record<TimeKey, TextInputRef | null>>>({});
+  // The box whose text is selected as a whole. selectTextOnFocus alone is lost
+  // when the hour box's blur fills the minutes with '00' while focus arrives,
+  // so the selection is also set once that update has landed.
+  const [selectAll, setSelectAll] = useState<TimeKey | null>(null);
 
   // Android: a TextInput keeps any drag that starts on it, so the sheet can't
   // scroll from a box. The boxes ignore touches and their wrapper takes them:
@@ -113,7 +117,7 @@ const TypedTime: React.FC<Props> = ({
             keyboardType="number-pad"
             maxLength={2}
             // A digit typed into a full box replaces it rather than being
-            // dropped (the row jumps into the minutes after the hour).
+            // dropped.
             selectTextOnFocus
             textAlign="center"
             maxFontSizeMultiplier={MAX_FONT_SCALE}
@@ -123,8 +127,26 @@ const TypedTime: React.FC<Props> = ({
             // iOS: this box's own solid bar (below).
             inputAccessoryViewID={`${barId}-${key}`}
             onChangeText={(text) => onChangeBox(key, text)}
-            onFocus={() => onFocusBox(key)}
-            onBlur={() => onBlurBox(key)}
+            selection={
+              selectAll === key
+                ? { start: 0, end: (values[key] ?? '').length }
+                : undefined
+            }
+            onSelectionChange={(e) => {
+              const { start, end } = e.nativeEvent.selection;
+              if (selectAll === key && !(start === 0 && end > 0))
+                setSelectAll(null);
+            }}
+            onFocus={() => {
+              onFocusBox(key);
+              setTimeout(() => {
+                if (inputs.current[key]?.isFocused()) setSelectAll(key);
+              }, 0);
+            }}
+            onBlur={() => {
+              setSelectAll(null);
+              onBlurBox(key);
+            }}
             onKeyPress={(e) => {
               if (e.nativeEvent.key === 'Backspace') onBackspace(key);
             }}

@@ -1015,7 +1015,7 @@ describe('DateTimePicker: editing a typed time', () => {
     expect(onChange).toHaveBeenCalledWith('2026-10-25T03:30:00.000Z'); // 09:00 IST
   });
 
-  it('two hour digits jump to the minutes; Backspace in an empty minute box goes back', () => {
+  it('a full hour stays in its box; Backspace in an empty minute box goes back', () => {
     const tree = mount(dt);
     openSheet(tree);
     const toMinute = spyFocus(tree, 'dp-time-minute');
@@ -1024,8 +1024,9 @@ describe('DateTimePicker: editing a typed time', () => {
     change(tree, 'dp-time-hour', '1');
     expect(toMinute).not.toHaveBeenCalled();
     change(tree, 'dp-time-hour', '11');
-    expect(toMinute).toHaveBeenCalledTimes(1);
-    // The jump saves the hour but leaves the minutes to type.
+    expect(toMinute).not.toHaveBeenCalled();
+    expect(box(tree, 'dp-time-hour').props.value).toBe('11');
+    // The user moves on to the minutes themselves.
     blur(tree, 'dp-time-hour');
     focus(tree, 'dp-time-minute');
     expect(box(tree, 'dp-time-minute').props.value).toBe('29');

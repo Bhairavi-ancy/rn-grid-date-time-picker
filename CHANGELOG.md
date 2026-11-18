@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- In a right-to-left app, iOS now lines up text the same way Android does. The field's value and placeholder, label, helper, instruction and error texts, the sheet title, and the time-row label and date all start at the right edge. Before, iOS placed text by its first letter, so Latin text such as the time part of a date-time value (`hh:mm AM`) sat at the left, next to the calendar icon. Left-to-right apps, and Android, are unchanged.
+
 ## [1.3.3] - 2026-11-16
 
 ### Fixed

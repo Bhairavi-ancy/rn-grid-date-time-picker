@@ -11,7 +11,7 @@ import type { TimeBounds } from '../../core/constraints';
 import type { Period } from '../../core/segments';
 import {
   checkTime,
-  cleanBoxText,
+  acceptBoxText,
   completeTimeEntry,
   formatTimeEntry,
   parseTimeEntry,
@@ -119,9 +119,10 @@ const TimeLabel: React.FC<
 
 /**
  * Label, the time boxes and the error below them. The boxes are
- * normal inputs (free cursor, digits only, two at most) with three helpers:
- * two hour digits jump to the minutes, Backspace in an empty minute box goes
- * back to the hour, and leaving a box pads it ('9' → '09'; empty minutes → '00').
+ * normal inputs (free cursor, digits only, two at most) with two helpers:
+ * Backspace in an empty minute box goes back to the hour, and leaving a box
+ * pads it ('9' → '09'; empty minutes → '00'). Focus stays in the hour box once
+ * it is full; the user moves to the minutes themselves.
  * A time is saved when focus leaves a box or the minutes get their second
  * digit, and shows in the value field too.
  */
@@ -160,8 +161,6 @@ const TimeRow: React.FC<TimeRowProps> = ({
   };
   const [focused, setFocused] = useState<TimeKey | null>(null);
   const refs = useRef<Partial<Record<TimeKey, TextInputRef | null>>>({});
-  // Set while we move focus hour → minute ourselves (the minutes aren't filled then).
-  const jumping = useRef(false);
   // Set while Backspace moves focus from an empty minute box back to the hour:
   // nothing is saved then, so the minutes don't fill in as '00'.
   const backingUp = useRef(false);
@@ -203,16 +202,18 @@ const TimeRow: React.FC<TimeRowProps> = ({
   };
 
   const onChangeBox = (key: TimeKey, raw: string) => {
-    const text = cleanBoxText(raw);
+    const text = acceptBoxText(raw, key, timeFormat);
     const current = valuesRef.current;
+    if (text === null) {
+      // Refused (e.g. 13 in a 12h hour, 60 in the minutes): re-render with
+      // the old value so the input drops the digit it already shows.
+      setValues({ ...current });
+      return;
+    }
     markEdited();
     const grew = (current[key] ?? '').length < 2 && text.length === 2;
     const next = { ...current, [key]: text };
     setValues(next);
-    if (key === 'hour' && grew) {
-      jumping.current = true;
-      refs.current.minute?.focus();
-    }
     // Full minutes finish the time: save it now, so an 'instant' picker
     // doesn't wait for focus to leave the box.
     if (key === 'minute' && grew && next.hour) save(next, false);
@@ -223,14 +224,6 @@ const TimeRow: React.FC<TimeRowProps> = ({
     const current = valuesRef.current;
     if (key === 'minute' && backingUp.current) {
       backingUp.current = false;
-      return;
-    }
-    if (key === 'hour' && jumping.current) {
-      // Moving on to the minutes: pad the hour, keep mm empty. Nothing is
-      // saved until the minutes have a value too.
-      jumping.current = false;
-      const done = completeTimeEntry(current, timeFormat);
-      setValues({ ...current, hour: done.values.hour });
       return;
     }
     save(current, true);
