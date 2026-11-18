@@ -47,6 +47,8 @@ export interface TimeRowProps {
    * typing. undefined: errors show as soon as they appear (instant commit).
    */
   issueCheck?: number;
+  /** false hides the error text; the boxes still show the error state. Default true. */
+  showError?: boolean;
   /** One of its boxes gained or lost focus. */
   onFocusChange?: (focused: boolean) => void;
   /** Wheel only: true while a column is still moving (Confirm waits). */
@@ -132,6 +134,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
   onPendingChange,
   onIssueChange,
   issueCheck,
+  showError = true,
   onFocusChange,
   onSpinChange,
   input = 'typed',
@@ -364,7 +367,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
         )}
       </View>
       <FieldMessages
-        error={shown ? issueText(shown, strings, minuteStep) : undefined}
+        error={shown && showError ? issueText(shown, strings, minuteStep) : undefined}
         tokens={tokens}
         styles={styles}
         testID={testID}
