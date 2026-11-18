@@ -17,8 +17,12 @@ export const formatDateText = (
 /** The AM / PM labels and the date-time separator, from `strings`. */
 export type PeriodLabels = Pick<
   PickerStrings,
-  'am' | 'pm' | 'dateTimeSeparator'
+  'am' | 'pm' | 'dateTimeSeparator' | 'valueDateTimeSeparator'
 >;
+
+/** Between the date and the time of a value: `valueDateTimeSeparator`, else `dateTimeSeparator`. */
+export const valueSeparator = (strings: PeriodLabels): string =>
+  strings.valueDateTimeSeparator ?? strings.dateTimeSeparator ?? ' ';
 
 /** '03:45 PM' (12-hour) or '15:45' (24-hour). Always shows AM/PM in 12-hour mode. */
 export const formatTimeText = (
@@ -69,7 +73,7 @@ export const formatValueText = (
     dateText,
     periods
   );
-  return time ? `${date}${periods.dateTimeSeparator ?? ' '}${time}` : date;
+  return time ? `${date}${valueSeparator(periods)}${time}` : date;
 };
 
 /** '21-10-2026 – 25-10-2026'; just the start (with the dash) while the end is open. */

@@ -4,8 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-18
+
+### Added
+
+- `sheet.showTimeErrors` (default `true`): `false` hides the error text under a time row ("Enter a complete time", an invalid or out-of-limits time). The boxes still turn red and Confirm stays off. To reword the text instead, set the `error*` strings.
+- `strings.valueDateTimeSeparator` (default: `dateTimeSeparator`): what goes between the date and the time of a chosen value, e.g. `', '` for `11-19-2026, 03:57 PM`. The placeholder keeps `dateTimeSeparator`, so it can stay a plain gap (with a `fieldDateText` style such as `{ minWidth: '50%' }` it starts the time at the middle of the field).
+
 ### Fixed
 
+- The empty field of a month picker (`precision="month"`) shows `MM-YYYY` instead of `MM YYYY`, with the date format's separator (`MM/YYYY` for `dd/MM/yyyy`).
 - In a right-to-left app, iOS now lines up text the same way Android does. The field's value and placeholder, label, helper, instruction and error texts, the sheet title, and the time-row label and date all start at the right edge. Before, iOS placed text by its first letter, so Latin text such as the time part of a date-time value (`hh:mm AM`) sat at the left, next to the calendar icon. Left-to-right apps, and Android, are unchanged.
 - Confirm turns off when the time boxes are emptied or half filled, also after a saved time is cleared. Before, clearing a saved time left Confirm on, and pressing it only showed the "incomplete time" error. Confirm turns back on once the hour and at least one minute digit are typed, or when focus leaves a filled hour box (empty minutes become `00`). Times outside the limits or off the minute step are still reported when Confirm is pressed.
 
@@ -199,7 +207,8 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.0...v1.3.1

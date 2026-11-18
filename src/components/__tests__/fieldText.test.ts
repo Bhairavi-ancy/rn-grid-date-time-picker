@@ -4,7 +4,7 @@ import {
   placeholderText,
   segmentErrorText,
 } from '../field/fieldText';
-import { DEFAULT_STRINGS } from '../theme/defaultStrings';
+import { DEFAULT_STRINGS, resolveStrings } from '../theme/defaultStrings';
 
 const strings = DEFAULT_STRINGS;
 const value = {
@@ -48,7 +48,7 @@ describe('fieldText', () => {
   });
 
   it('puts strings.dateTimeSeparator between the date and the time', () => {
-    const wide = { ...strings, dateTimeSeparator: '   ' };
+    const wide = resolveStrings({ dateTimeSeparator: '   ' });
     expect(
       formatValueText(value, 'datetime', 'dd-MM-yyyy', '12h', undefined, wide)
     ).toBe('21-10-2026   03:05 PM');
@@ -57,6 +57,16 @@ describe('fieldText', () => {
     ).toBe('21-10-2026');
     expect(placeholderText('datetime', 'dd-MM-yyyy', '24h', wide)).toBe(
       'DD-MM-YYYY   HH:mm'
+    );
+  });
+
+  it('puts strings.valueDateTimeSeparator in the value only, not the placeholder', () => {
+    const comma = resolveStrings({ valueDateTimeSeparator: ', ' });
+    expect(
+      formatValueText(value, 'datetime', 'dd-MM-yyyy', '12h', undefined, comma)
+    ).toBe('21-10-2026, 03:05 PM');
+    expect(placeholderText('datetime', 'dd-MM-yyyy', '12h', comma)).toBe(
+      'DD-MM-YYYY hh:mm AM'
     );
   });
 

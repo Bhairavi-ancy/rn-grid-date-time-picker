@@ -21,6 +21,12 @@ export interface PickerStrings {
   pm: string;
   /** Between the date and the time in the field text and its placeholder. */
   dateTimeSeparator?: string;
+  /**
+   * Between the date and the time of a chosen value, e.g. `', '` for
+   * '11-19-2026, 03:57 PM'. Default: whatever `dateTimeSeparator` is. The placeholder keeps
+   * `dateTimeSeparator`, so it can stay a plain gap.
+   */
+  valueDateTimeSeparator?: string;
   /** Placeholders of the typed date segments and time boxes, and of the empty field. */
   placeholderDay: string;
   placeholderMonth: string;
@@ -83,6 +89,7 @@ export const DEFAULT_STRINGS: Required<PickerStrings> = {
   rangeSeparator: ' – ',
   pm: 'PM',
   dateTimeSeparator: ' ',
+  valueDateTimeSeparator: ' ',
   placeholderDay: 'DD',
   placeholderMonth: 'MM',
   placeholderYear: 'YYYY',
@@ -139,5 +146,9 @@ export const compactStrings = (
 export const resolveStrings = (
   overrides?: Partial<PickerStrings>
 ): Required<PickerStrings> => {
-  return { ...DEFAULT_STRINGS, ...compactStrings(overrides) };
+  const merged = { ...DEFAULT_STRINGS, ...compactStrings(overrides) };
+  // Unset, the value's separator follows `dateTimeSeparator`.
+  if (overrides?.valueDateTimeSeparator === undefined)
+    merged.valueDateTimeSeparator = merged.dateTimeSeparator;
+  return merged;
 };
