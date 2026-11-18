@@ -128,6 +128,25 @@ export const cleanBoxText = (raw: string): string =>
   toLatinDigits(raw).replace(/\D/g, '').slice(0, 2);
 
 /**
+ * What a time box keeps of what was typed, given the format's limits (12h hour
+ * 01–12, 24h hour 00–23, minutes 00–59). A first digit no second digit could
+ * follow becomes a full entry ('7' → '07'); an entry past the limits is
+ * refused (null: the box keeps what it had).
+ */
+export const acceptBoxText = (
+  raw: string,
+  key: TimeKey,
+  timeFormat: TimeFormat
+): string | null => {
+  const text = cleanBoxText(raw);
+  if (!text) return text;
+  const { min, max } = timeSpecs(timeFormat)[key];
+  const n = Number(text);
+  if (text.length === 1) return n * 10 > max ? `0${text}` : text;
+  return n < min || n > max ? null : text;
+};
+
+/**
  * The boxes as they are saved when focus leaves them: a one-digit entry gets a
  * leading zero ('9' → '09'), and empty minutes count as '00' once an hour is in.
  * With no hour nothing is filled in (the time stays incomplete).

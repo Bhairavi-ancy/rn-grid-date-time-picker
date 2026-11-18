@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import {
+  acceptBoxText,
   checkTime,
   cleanBoxText,
   completeTimeEntry,
@@ -82,6 +83,40 @@ describe('timeEntry: parsing and limits', () => {
     );
     expect(isPeriodAllowed('PM', { max: { hour: 12, minute: 0 } })).toBe(true);
     expect(isPeriodAllowed('AM', null)).toBe(true);
+  });
+});
+
+describe('timeEntry: what a box accepts', () => {
+  it('12h hour: 01–12; a first digit 2–9 becomes 02–09', () => {
+    expect(acceptBoxText('1', 'hour', '12h')).toBe('1');
+    expect(acceptBoxText('0', 'hour', '12h')).toBe('0');
+    expect(acceptBoxText('7', 'hour', '12h')).toBe('07');
+    expect(acceptBoxText('12', 'hour', '12h')).toBe('12');
+    expect(acceptBoxText('09', 'hour', '12h')).toBe('09');
+    expect(acceptBoxText('13', 'hour', '12h')).toBeNull();
+    expect(acceptBoxText('00', 'hour', '12h')).toBeNull();
+  });
+
+  it('24h hour: 00–23; a first digit 3–9 becomes 03–09', () => {
+    expect(acceptBoxText('2', 'hour', '24h')).toBe('2');
+    expect(acceptBoxText('3', 'hour', '24h')).toBe('03');
+    expect(acceptBoxText('00', 'hour', '24h')).toBe('00');
+    expect(acceptBoxText('23', 'hour', '24h')).toBe('23');
+    expect(acceptBoxText('24', 'hour', '24h')).toBeNull();
+  });
+
+  it('minutes: 00–59 in both formats; a first digit 6–9 becomes 06–09', () => {
+    for (const format of ['12h', '24h'] as const) {
+      expect(acceptBoxText('5', 'minute', format)).toBe('5');
+      expect(acceptBoxText('7', 'minute', format)).toBe('07');
+      expect(acceptBoxText('59', 'minute', format)).toBe('59');
+      expect(acceptBoxText('60', 'minute', format)).toBeNull();
+    }
+  });
+
+  it('an emptied box stays empty; other scripts count', () => {
+    expect(acceptBoxText('', 'hour', '12h')).toBe('');
+    expect(acceptBoxText('۷', 'hour', '12h')).toBe('07');
   });
 });
 

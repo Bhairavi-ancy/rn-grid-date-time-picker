@@ -20,8 +20,10 @@ const create = (t: ThemeTokens) =>
     // calendar away): no line or room above it, the header's padding is the gap.
     wrapperAtTop: { marginTop: 0 },
     rowAtTop: { paddingTop: 0, borderTopWidth: 0 },
+    // 'left' = the start edge in RTL on iOS too (see fieldStyles).
     label: {
       flexShrink: 1,
+      textAlign: 'left',
       marginEnd: 12,
       ...fontStyle(t, 'semiBold'),
       fontSize: t.fontSizeLarge,
@@ -32,6 +34,7 @@ const create = (t: ThemeTokens) =>
     labelInWrap: { marginEnd: 0 },
     labelDate: {
       marginTop: 2,
+      textAlign: 'left',
       ...fontStyle(t, 'regular'),
       fontSize: t.fontSizeSmall,
       color: t.mutedText,

@@ -52,6 +52,13 @@ const typeBox = (tree: ReactTestRenderer, id: string, text: string) => {
   act(() => input.props.onChangeText(text));
   act(() => input.props.onBlur());
 };
+// Types without leaving the box (focus stays in it).
+const typeOnly = (tree: ReactTestRenderer, id: string, text: string) => {
+  const input = box(tree, id);
+  if (!input) throw new Error(`no box ${id}`);
+  act(() => input.props.onFocus());
+  act(() => input.props.onChangeText(text));
+};
 const confirmDisabled = (tree: ReactTestRenderer) =>
   !!find(tree, 'dp-confirm')?.props.disabled;
 
@@ -64,8 +71,9 @@ describe("newDayTime 'empty'", () => {
     expect(box(tree, 'dp-time-hour')?.props.value).toBe('');
     expect(box(tree, 'dp-time-minute')?.props.value).toBe('');
     expect(confirmDisabled(tree)).toBe(true);
-    // An hour alone isn't a time: Confirm waits for the minutes too.
-    typeBox(tree, 'dp-time-hour', '14');
+    // An hour alone, still being typed, isn't a time: Confirm waits for the
+    // minutes too.
+    typeOnly(tree, 'dp-time-hour', '14');
     expect(confirmDisabled(tree)).toBe(true);
     typeBox(tree, 'dp-time-minute', '15');
     expect(confirmDisabled(tree)).toBe(false);
@@ -96,7 +104,7 @@ describe("newDayTime 'empty'", () => {
     typeBox(tree, 'dp-time-from-minute', '00');
     expect(confirmDisabled(tree)).toBe(true);
     expect(box(tree, 'dp-time-to-hour')?.props.value).toBe('');
-    typeBox(tree, 'dp-time-to-hour', '11');
+    typeOnly(tree, 'dp-time-to-hour', '11');
     expect(confirmDisabled(tree)).toBe(true);
     typeBox(tree, 'dp-time-to-minute', '30');
     expect(confirmDisabled(tree)).toBe(false);
@@ -113,7 +121,7 @@ describe("newDayTime 'empty'", () => {
     press(tree, 'dp-trigger-field');
     tap(tree, 25);
     expect(onChange).not.toHaveBeenCalled();
-    typeBox(tree, 'dp-time-hour', '14');
+    typeOnly(tree, 'dp-time-hour', '14');
     expect(onChange).not.toHaveBeenCalled();
     typeBox(tree, 'dp-time-minute', '15');
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -125,11 +133,11 @@ describe("newDayTime 'empty'", () => {
     const tree = mount({ onChange });
     press(tree, 'dp-trigger-field');
     tap(tree, 25);
-    typeBox(tree, 'dp-time-hour', '9');
+    typeBox(tree, 'dp-time-hour', '1');
     expect(box(tree, 'dp-time-minute')?.props.value).toBe('00');
     expect(confirmDisabled(tree)).toBe(false);
     press(tree, 'dp-confirm');
-    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T09:00:00.000Z');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T01:00:00.000Z');
   });
 
   it('multiple dates share one empty time until it is set', () => {
@@ -152,12 +160,6 @@ describe("newDayTime 'empty'", () => {
 describe('full minutes save the time while the box still has focus', () => {
   // Typing only: focus stays in the box (no blur), as on a phone before the
   // user taps anywhere else.
-  const typeOnly = (tree: ReactTestRenderer, id: string, text: string) => {
-    const input = box(tree, id);
-    if (!input) throw new Error(`no box ${id}`);
-    act(() => input.props.onFocus());
-    act(() => input.props.onChangeText(text));
-  };
 
   it("commitMode 'instant' saves on the second minute digit, not the first", () => {
     const onChange = jest.fn();
@@ -195,11 +197,9 @@ describe('full minutes save the time while the box still has focus', () => {
     const tree = mount({});
     press(tree, 'dp-trigger-field');
     tap(tree, 25);
-    typeOnly(tree, 'dp-time-hour', '9');
+    typeOnly(tree, 'dp-time-hour', '1');
     expect(confirmDisabled(tree)).toBe(true);
-    typeOnly(tree, 'dp-time-hour', '09');
-    act(() => box(tree, 'dp-time-hour')?.props.onBlur());
-    typeOnly(tree, 'dp-time-minute', '');
+    typeOnly(tree, 'dp-time-hour', '10');
     expect(confirmDisabled(tree)).toBe(true);
     typeOnly(tree, 'dp-time-minute', '3');
     expect(confirmDisabled(tree)).toBe(false);

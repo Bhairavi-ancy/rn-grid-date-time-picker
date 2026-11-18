@@ -7,7 +7,12 @@ const create = (t: ThemeTokens) =>
   StyleSheet.create({
     wrapper: { width: '100%' },
     labelWrap: { marginBottom: 6 },
+    // Text that spans a width starts at the app's start edge. Left unset, iOS
+    // aligns by the text's first letter (Latin text sits left in an RTL app)
+    // while Android uses the layout direction; React Native turns 'left' into
+    // the start edge (the right in RTL) on both.
     label: {
+      textAlign: 'left',
       ...fontStyle(t, 'medium'),
       fontSize: t.fontSizeMedium,
       color: t.text,
@@ -28,6 +33,7 @@ const create = (t: ThemeTokens) =>
     fieldDisabled: { backgroundColor: t.disabledBackground },
     text: {
       flex: 1,
+      textAlign: 'left',
       ...fontStyle(t, 'regular'),
       fontSize: t.fontSizeMedium,
       color: t.text,
@@ -91,6 +97,7 @@ const create = (t: ThemeTokens) =>
     },
     message: {
       marginTop: 4,
+      textAlign: 'left',
       ...fontStyle(t, 'regular'),
       fontSize: t.fontSizeSmall,
     },

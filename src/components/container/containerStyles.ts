@@ -44,6 +44,8 @@ const create = (t: ThemeTokens) =>
     },
     title: {
       flex: 1,
+      // 'left' = the start edge in RTL on iOS too (see fieldStyles).
+      textAlign: 'left',
       ...fontStyle(t, 'semiBold'),
       fontSize: t.fontSizeLarge,
       color: t.text,
