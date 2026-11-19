@@ -47,7 +47,7 @@ export interface TimeRowProps {
    * typing. undefined: errors show as soon as they appear (instant commit).
    */
   issueCheck?: number;
-  /** false hides the error text; the boxes still show the error state. Default true. */
+  /** false hides the error text and the boxes' red border; Confirm still stays off. Default true. */
   showError?: boolean;
   /** One of its boxes gained or lost focus. */
   onFocusChange?: (focused: boolean) => void;
@@ -357,7 +357,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
             setRef={setRef}
             timeFormat={timeFormat}
             bounds={bounds}
-            hasError={!!shown}
+            hasError={!!shown && showError}
             disabled={disabled}
             tokens={tokens}
             styles={styles}

@@ -140,8 +140,8 @@ export interface SheetOptions {
   showNotAllowedError?: boolean;
   /**
    * The error text under a time row ("Enter a complete time", an invalid or
-   * out-of-limits time). false hides the text only: the boxes still turn red
-   * and Confirm stays off. To word it yourself, set `strings.errorIncompleteTime`
+   * out-of-limits time). false hides the text and the boxes' red border:
+   * Confirm only stays off. To word it yourself, set `strings.errorIncompleteTime`
    * and the other `error*` strings instead. Default true.
    */
   showTimeErrors?: boolean;

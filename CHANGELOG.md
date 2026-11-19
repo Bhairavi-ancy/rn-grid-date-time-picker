@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- `sheet.showTimeErrors={false}` now also keeps the time boxes from turning red. An unfinished, invalid or out-of-limits time only keeps Confirm off, with no text or red border. The default (`true`) is unchanged.
+
 ## [1.4.0] - 2026-11-18
 
 ### Added
