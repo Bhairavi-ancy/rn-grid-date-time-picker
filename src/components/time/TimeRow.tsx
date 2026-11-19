@@ -217,9 +217,10 @@ const TimeRow: React.FC<TimeRowProps> = ({
     const grew = (current[key] ?? '').length < 2 && text.length === 2;
     const next = { ...current, [key]: text };
     setValues(next);
-    // Full minutes finish the time: save it now, so an 'instant' picker
+    // A box that fills up and completes the time (minutes after the hour, or
+    // the hour after the minutes) saves it now, so an 'instant' picker
     // doesn't wait for focus to leave the box.
-    if (key === 'minute' && grew && next.hour) save(next, false);
+    if (grew && next.hour && next.minute) save(next, false);
   };
 
   const onBlurBox = (key: TimeKey) => {

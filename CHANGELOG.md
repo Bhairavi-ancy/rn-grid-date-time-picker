@@ -11,6 +11,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 
 - 12-hour time: leaving the hour box with only `0` in it no longer pads it to the invalid `00` (and fills the minutes with `00`); the box is cleared instead. Typing `00` was already refused.
+- A typed time is also saved as soon as the hour completes it. Minutes typed before the hour used to wait for focus to leave the box, so with `commitMode: 'instant'` the value (and a parent's Apply button) only updated once the keyboard closed. Typing the hour first is unchanged.
 
 ## [1.4.0] - 2026-11-18
 
