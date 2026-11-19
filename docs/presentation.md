@@ -100,7 +100,7 @@ With `allowTyping`, the field inside the sheet takes the date and time as segmen
 
 Date-time pickers show a time row under the calendar:
 
-- **Typed** (default): `[hh] : [mm] [AM | PM]`, or `[HH] : [mm]` in 24-hour. Two hour digits jump to the minutes. Empty minutes count as `00`. A time is saved when focus leaves a box, and Confirm also saves a time still being typed. The AM/PM side that can't hold an allowed time is disabled.
+- **Typed** (default): `[hh] : [mm] [AM | PM]`, or `[HH] : [mm]` in 24-hour. Two hour digits jump to the minutes. Minutes left empty count as `00`, but minutes you clear stay empty (the time is incomplete until you type them again). A time is saved when focus leaves a box, and Confirm also saves a time still being typed. The AM/PM side that can't hold an allowed time is disabled.
 - **Wheel** (`timeInput="wheel"`): hour, minute (by `minuteStep`) and AM/PM columns on native scroll views, with momentum and snapping. Rows outside the day's limits are dimmed and can't be stopped on. Confirm waits until the wheel settles.
 
 **Time checks happen on Confirm, not while typing.** Nothing is flagged as the user types, and Confirm stays enabled. Pressing it with an unfinished, impossible, off-step or out-of-limits time shows the error under the time row, calls `onError`, and saves nothing. Editing the time hides the error again until the next Confirm. With `commitMode="instant"` there's no Confirm, so errors show as they happen, and a time with a problem is never saved.

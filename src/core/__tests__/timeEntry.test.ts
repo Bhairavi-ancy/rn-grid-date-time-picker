@@ -180,4 +180,21 @@ describe('timeEntry: leaving a box', () => {
       minute: '00',
     });
   });
+
+  it('fillMinutes: false keeps cleared minutes empty, so the time stays incomplete', () => {
+    expect(
+      completeTimeEntry({ hour: '9', minute: '' }, '24h', {
+        fillMinutes: false,
+      })
+    ).toEqual({
+      values: { hour: '09', minute: '' },
+      parsed: { time: null, isEmpty: false, issue: 'INCOMPLETE' },
+    });
+    // Typed minutes are still padded.
+    expect(
+      completeTimeEntry({ hour: '9', minute: '5' }, '24h', {
+        fillMinutes: false,
+      }).values
+    ).toEqual({ hour: '09', minute: '05' });
+  });
 });

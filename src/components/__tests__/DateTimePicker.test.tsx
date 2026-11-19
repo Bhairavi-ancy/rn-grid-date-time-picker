@@ -999,7 +999,7 @@ describe('DateTimePicker: editing a typed time', () => {
     expect(onChange).toHaveBeenCalledWith('2026-10-25T05:15:00.000Z'); // 10:45 IST
   });
 
-  it('empty minutes count as 00, and a single digit is padded on leave', () => {
+  it('a single digit is padded on leave', () => {
     const onChange = jest.fn();
     const tree = mount({ ...dt, onChange });
     openSheet(tree);
@@ -1008,11 +1008,23 @@ describe('DateTimePicker: editing a typed time', () => {
     blur(tree, 'dp-time-hour');
     expect(box(tree, 'dp-time-hour').props.value).toBe('09');
     focus(tree, 'dp-time-minute');
+    change(tree, 'dp-time-minute', '5');
+    blur(tree, 'dp-time-minute');
+    expect(box(tree, 'dp-time-minute').props.value).toBe('05');
+    press(tree, 'dp-confirm');
+    expect(onChange).toHaveBeenCalledWith('2026-10-25T03:35:00.000Z'); // 09:05 IST
+  });
+
+  it('minutes the user clears stay empty on leave, and Confirm waits', () => {
+    const onChange = jest.fn();
+    const tree = mount({ ...dt, onChange });
+    openSheet(tree);
+    focus(tree, 'dp-time-minute');
     change(tree, 'dp-time-minute', '');
     blur(tree, 'dp-time-minute');
-    expect(box(tree, 'dp-time-minute').props.value).toBe('00');
-    press(tree, 'dp-confirm');
-    expect(onChange).toHaveBeenCalledWith('2026-10-25T03:30:00.000Z'); // 09:00 IST
+    expect(box(tree, 'dp-time-minute').props.value).toBe('');
+    expect(find(tree, 'dp-confirm').props.disabled).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('a full hour stays in its box; Backspace in an empty minute box goes back', () => {
