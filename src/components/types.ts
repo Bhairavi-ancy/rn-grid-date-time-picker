@@ -3,6 +3,7 @@ import type { ScrollViewProps, StyleProp, TextStyle } from 'react-native';
 import type { CalendarSystem } from '../core/calendarSystem';
 import type { Constraints, TimeBounds } from '../core/constraints';
 import type { Numerals } from '../core/numerals';
+import type { TimeEntryIssue } from '../core/timeEntry';
 import type { ScrollViewRef } from './nativeTypes';
 import type {
   CalendarDate,
@@ -71,6 +72,9 @@ export interface PickerState {
 
 /** A slot's content: a node, or a function of the picker's state. */
 export type Slot = React.ReactNode | ((state: PickerState) => React.ReactNode);
+
+/** A time box problem: left empty or half typed, invalid, off the minute step, or outside the limits. */
+export type TimeIssue = TimeEntryIssue;
 
 /**
  * What `onError` reports: `'VALIDATION'` (your `validate` returned a message),
@@ -496,6 +500,14 @@ export interface DateTimePickerProps {
   // events
   onVisibleMonthChange?: (year: number, month: number) => void;
   onError?: (code: PickerErrorCode, value: PickerValue) => void;
+  /**
+   * The time boxes' problem on mount and each time it changes (the first one,
+   * with two rows); null once they hold a good time, or while a new day has no
+   * time typed yet. With commitMode 'instant' a time with a problem is never
+   * saved, so `onChange` alone can't show it: use this to keep a button of
+   * your own (a filter's Apply) off.
+   */
+  onTimeIssueChange?: (issue: TimeIssue | null) => void;
   /**
    * Your own check, run when Confirm is pressed (or, with commitMode 'instant',
    * before each save) once the built-in checks pass. It gets the value about to
