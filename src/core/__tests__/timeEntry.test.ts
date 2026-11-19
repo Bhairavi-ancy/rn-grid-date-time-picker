@@ -155,10 +155,29 @@ describe('timeEntry: leaving a box', () => {
     );
   });
 
-  it('a padded hour out of range is invalid', () => {
+  it('drops a lone 0 in a 12-hour hour instead of padding it to 00', () => {
     expect(
-      completeTimeEntry({ hour: '0', minute: '10', period: 'AM' }, '12h').parsed
-        .issue
-    ).toBe('INVALID');
+      completeTimeEntry({ hour: '0', minute: '', period: 'AM' }, '12h')
+    ).toEqual({
+      values: { hour: '', minute: '', period: 'AM' },
+      parsed: { time: null, isEmpty: true, issue: null },
+    });
+    const withMinutes = completeTimeEntry(
+      { hour: '0', minute: '10', period: 'AM' },
+      '12h'
+    );
+    expect(withMinutes.values).toEqual({
+      hour: '',
+      minute: '10',
+      period: 'AM',
+    });
+    expect(withMinutes.parsed.issue).toBe('INCOMPLETE');
+  });
+
+  it('keeps a lone 0 in a 24-hour hour as 00', () => {
+    expect(completeTimeEntry({ hour: '0', minute: '' }, '24h').values).toEqual({
+      hour: '00',
+      minute: '00',
+    });
   });
 });

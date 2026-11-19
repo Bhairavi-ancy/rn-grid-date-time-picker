@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - `sheet.showTimeErrors={false}` now also keeps the time boxes from turning red. An unfinished, invalid or out-of-limits time only keeps Confirm off, with no text or red border. The default (`true`) is unchanged.
 
+### Fixed
+
+- 12-hour time: leaving the hour box with only `0` in it no longer pads it to the invalid `00` (and fills the minutes with `00`); the box is cleared instead. Typing `00` was already refused.
+
 ## [1.4.0] - 2026-11-18
 
 ### Added
