@@ -47,7 +47,7 @@ export interface TimeRowProps {
    * typing. undefined: errors show as soon as they appear (instant commit).
    */
   issueCheck?: number;
-  /** false hides the error text; the boxes still show the error state. Default true. */
+  /** false hides the error text and the boxes' red border; Confirm still stays off. Default true. */
   showError?: boolean;
   /** One of its boxes gained or lost focus. */
   onFocusChange?: (focused: boolean) => void;
@@ -167,6 +167,10 @@ const TimeRow: React.FC<TimeRowProps> = ({
   // Set while Backspace moves focus from an empty minute box back to the hour:
   // nothing is saved then, so the minutes don't fill in as '00'.
   const backingUp = useRef(false);
+  // Set when the user empties minutes that held a value: they stay empty when
+  // focus leaves (not filled as '00'), so the time stays incomplete until they
+  // are typed again or a time is set from outside.
+  const minutesCleared = useRef(false);
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
   const boxFocused = focused !== null;
@@ -189,13 +193,16 @@ const TimeRow: React.FC<TimeRowProps> = ({
     // Never overwrite a box being typed in (e.g. a day tapped mid-typing gets
     // 12:00 AM); what's typed is saved when focus leaves, or by Confirm.
     if (focused) return;
+    minutesCleared.current = false;
     setValues(formatTimeEntry(time, timeFormat));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the time changes from outside
   }, [time?.hour, time?.minute]);
 
   /** Saves what the boxes hold; `fill` also shows the padded / 00 values in them. */
   const save = (next: TimeEntryValues, fill: boolean) => {
-    const done = completeTimeEntry(next, timeFormat);
+    const done = completeTimeEntry(next, timeFormat, {
+      fillMinutes: !minutesCleared.current,
+    });
     setValues(fill ? done.values : next);
     const t = done.parsed.time;
     if (t && timeKey(t) !== lastKey.current) {
@@ -214,12 +221,14 @@ const TimeRow: React.FC<TimeRowProps> = ({
       return;
     }
     markEdited();
+    if (key === 'minute') minutesCleared.current = !text && !!current.minute;
     const grew = (current[key] ?? '').length < 2 && text.length === 2;
     const next = { ...current, [key]: text };
     setValues(next);
-    // Full minutes finish the time: save it now, so an 'instant' picker
+    // A box that fills up and completes the time (minutes after the hour, or
+    // the hour after the minutes) saves it now, so an 'instant' picker
     // doesn't wait for focus to leave the box.
-    if (key === 'minute' && grew && next.hour) save(next, false);
+    if (grew && next.hour && next.minute) save(next, false);
   };
 
   const onBlurBox = (key: TimeKey) => {
@@ -357,7 +366,7 @@ const TimeRow: React.FC<TimeRowProps> = ({
             setRef={setRef}
             timeFormat={timeFormat}
             bounds={bounds}
-            hasError={!!shown}
+            hasError={!!shown && showError}
             disabled={disabled}
             tokens={tokens}
             styles={styles}

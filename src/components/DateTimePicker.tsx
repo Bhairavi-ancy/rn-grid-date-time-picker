@@ -188,6 +188,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     showToday = false,
     showHolidays = true,
     onVisibleMonthChange,
+    onTimeIssueChange,
     onError,
     validate,
     yearRange: yearRangeProp = DEFAULT_YEAR_RANGE,
@@ -602,6 +603,11 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     []
   );
   const [timeIssue, setTimeIssue] = useState<TimeEntryIssue | null>(null);
+  const onTimeIssueRef = useRef(onTimeIssueChange);
+  onTimeIssueRef.current = onTimeIssueChange;
+  useEffect(() => {
+    onTimeIssueRef.current?.(timeIssue);
+  }, [timeIssue]);
   // Times are checked when Confirm is pressed, not while typing: each press
   // with a problem shows the time row's error.
   const [timeCheck, setTimeCheck] = useState(0);

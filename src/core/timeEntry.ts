@@ -149,17 +149,21 @@ export const acceptBoxText = (
 /**
  * The boxes as they are saved when focus leaves them: a one-digit entry gets a
  * leading zero ('9' → '09'), and empty minutes count as '00' once an hour is in.
- * With no hour nothing is filled in (the time stays incomplete).
+ * With no hour nothing is filled in (the time stays incomplete). A lone '0' in
+ * a 12-hour hour is dropped, not padded: '00' is refused there while typing, so
+ * leaving the box must not produce it either. `fillMinutes: false` keeps
+ * empty minutes empty (the user cleared them), so the time stays incomplete.
  */
 export const completeTimeEntry = (
   values: TimeEntryValues,
-  timeFormat: TimeFormat
+  timeFormat: TimeFormat,
+  { fillMinutes = true }: { fillMinutes?: boolean } = {}
 ): { values: TimeEntryValues; parsed: ParsedTime } => {
   const pad = (text?: string) =>
     text && text.length === 1 ? `0${text}` : (text ?? '');
-  const hour = pad(values.hour);
-  const done: TimeEntryValues = hour
-    ? { ...values, hour, minute: pad(values.minute) || '00' }
-    : { ...values, minute: pad(values.minute) };
+  const hour =
+    timeFormat === '12h' && values.hour === '0' ? '' : pad(values.hour);
+  const minute = pad(values.minute) || (hour && fillMinutes ? '00' : '');
+  const done: TimeEntryValues = { ...values, hour, minute };
   return { values: done, parsed: parseTimeEntry(done, timeFormat) };
 };

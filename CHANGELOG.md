@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `onTimeIssueChange(issue)` and the `TimeIssue` type: reports the time boxes' problem (`'INCOMPLETE'` when emptied or half typed, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'`, or `null`) each time it changes. With `commitMode: 'instant'` such a time is never saved, so a button of your own (e.g. a filter's Apply) couldn't tell from `onChange` alone.
+
+### Changed
+
+- `sheet.showTimeErrors={false}` now also keeps the time boxes from turning red. An unfinished, invalid or out-of-limits time only keeps Confirm off, with no text or red border. The default (`true`) is unchanged.
+
+### Fixed
+
+- Minutes you clear stay empty when focus leaves the box (for example, tapping the hour) instead of filling back in as `00`; the time is incomplete until they are typed again, so Confirm (and `onTimeIssueChange`) reports it and `commitMode: 'instant'` saves nothing. Minutes never typed still count as `00`.
+- 12-hour time: leaving the hour box with only `0` in it no longer pads it to the invalid `00` (and fills the minutes with `00`); the box is cleared instead. Typing `00` was already refused.
+- A typed time is also saved as soon as the hour completes it. Minutes typed before the hour used to wait for focus to leave the box, so with `commitMode: 'instant'` the value (and a parent's Apply button) only updated once the keyboard closed. Typing the hour first is unchanged.
+
 ## [1.4.0] - 2026-11-18
 
 ### Added

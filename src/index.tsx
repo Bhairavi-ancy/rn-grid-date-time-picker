@@ -71,6 +71,7 @@ export type {
   SheetScrollProps,
   SheetSize,
   Slot,
+  TimeIssue,
   TimeLabelRenderProps,
 } from './components/types';
 export type { CalendarSystem, Periods } from './core/calendarSystem';

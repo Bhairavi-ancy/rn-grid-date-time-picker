@@ -176,6 +176,21 @@ describe('full minutes save the time while the box still has focus', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
+  it("commitMode 'instant' saves when the hour completes minutes typed first", () => {
+    const onChange = jest.fn();
+    const tree = mount({ commitMode: 'instant', onChange });
+    press(tree, 'dp-trigger-field');
+    tap(tree, 25);
+    typeOnly(tree, 'dp-time-minute', '10');
+    expect(onChange).not.toHaveBeenCalled();
+    typeOnly(tree, 'dp-time-hour', '1');
+    expect(onChange).not.toHaveBeenCalled();
+    typeOnly(tree, 'dp-time-hour', '14');
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T14:10:00.000Z');
+    act(() => box(tree, 'dp-time-hour')?.props.onBlur());
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   it("commitMode 'instant' range: each end saves when its minutes are full", () => {
     const onChange = jest.fn();
     const tree = mount({ mode: 'range', commitMode: 'instant', onChange });
