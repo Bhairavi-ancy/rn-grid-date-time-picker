@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-20
+
 ### Added
 
 - `onTimeIssueChange(issue)` and the `TimeIssue` type: reports the time boxes' problem (`'INCOMPLETE'` when emptied or half typed, `'INVALID'`, `'OFF_STEP'`, `'BEFORE_MIN'`, `'AFTER_MAX'`, or `null`) each time it changes. With `commitMode: 'instant'` such a time is never saved, so a button of your own (e.g. a filter's Apply) couldn't tell from `onChange` alone.
