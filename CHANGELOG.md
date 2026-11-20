@@ -14,8 +14,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- The Confirm button follows the tab on screen: on the Hijri tab it takes `confirm` from `hijriStrings` (then `strings`), like the calendar, time rows and errors already did. It used to keep `strings.confirm` on both tabs.
 - Minutes you clear stay empty when focus leaves the box (for example, tapping the hour) instead of filling back in as `00`; the time is incomplete until they are typed again, so Confirm (and `onTimeIssueChange`) reports it and `commitMode: 'instant'` saves nothing. Minutes never typed still count as `00`.
 - 12-hour time: leaving the hour box with only `0` in it no longer pads it to the invalid `00` (and fills the minutes with `00`); the box is cleared instead. Typing `00` was already refused.
+- 12-hour time: tapping AM / PM while an hour or minute box still has focus now saves the time straight away, as leaving the box would (one minute digit counts as `0n`); the focused box keeps its text. It used to wait for focus to leave the box (or Confirm), so with `commitMode: 'instant'` a parent's Apply pressed with the keyboard still up saved the old period (e.g. AM instead of PM). With no hour typed (or cleared minutes) the tap only switches the period, as before.
 - A typed time is also saved as soon as the hour completes it. Minutes typed before the hour used to wait for focus to leave the box, so with `commitMode: 'instant'` the value (and a parent's Apply button) only updated once the keyboard closed. Typing the hour first is unchanged.
 
 ## [1.4.0] - 2026-11-18

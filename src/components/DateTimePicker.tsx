@@ -1760,7 +1760,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         bodyTop={bodyTop}
         bodyBottom={bodyBottom}
         footer={footer}
-        confirmLabel={strings.confirm}
+        confirmLabel={stringsFor(shownSystem).confirm}
         confirmDisabled={!canConfirm}
         onConfirm={confirm}
         styles={styles}

@@ -890,6 +890,67 @@ describe('DateTimePicker: time row', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("commitMode 'instant': AM/PM tapped while the minute box is still focused saves the new period", () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      ...dt,
+      onChange,
+      commitMode: 'instant',
+      newDayTime: 'empty',
+    });
+    openSheet(tree);
+    act(() => dayCell(tree, 2026, 10, 25).props.onPress());
+    // An empty time row starts on AM.
+    expect(find(tree, 'dp-time-am').props.accessibilityState.checked).toBe(
+      true
+    );
+    typeBox(tree, 'dp-time-hour', '09');
+    typeBox(tree, 'dp-time-minute', '30');
+    // 09:30 AM in India = 04:00 UTC, saved as the minutes fill up.
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T04:00:00.000Z');
+    // No blur: the keyboard stays up while PM is tapped.
+    press(tree, 'dp-time-pm');
+    // 09:30 PM in India = 16:00 UTC.
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T16:00:00.000Z');
+    expect(box(tree, 'dp-time-minute')?.props.value).toBe('30');
+  });
+
+  it("commitMode 'instant': AM/PM tapped with one minute digit typed saves it as leaving the box would", () => {
+    const onChange = jest.fn();
+    const tree = mount({
+      ...dt,
+      onChange,
+      commitMode: 'instant',
+      newDayTime: 'empty',
+    });
+    openSheet(tree);
+    act(() => dayCell(tree, 2026, 10, 25).props.onPress());
+    typeBox(tree, 'dp-time-hour', '02');
+    blurBox(tree, 'dp-time-hour');
+    // Leaving the hour saves 02:00 AM (20:30 UTC the day before).
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-24T20:30:00.000Z');
+    typeBox(tree, 'dp-time-minute', '2');
+    press(tree, 'dp-time-pm');
+    // 02:02 PM in India = 08:32 UTC; the focused box keeps what was typed.
+    expect(onChange).toHaveBeenLastCalledWith('2026-10-25T08:32:00.000Z');
+    expect(box(tree, 'dp-time-minute')?.props.value).toBe('2');
+  });
+
+  it('AM/PM tapped while the minutes are cleared only switches the period', () => {
+    const onChange = jest.fn();
+    const tree = mount({ ...dt, onChange, commitMode: 'instant' });
+    openSheet(tree);
+    act(() => dayCell(tree, 2026, 10, 25).props.onPress());
+    onChange.mockClear();
+    typeBox(tree, 'dp-time-minute', '');
+    typeBox(tree, 'dp-time-hour', '09');
+    press(tree, 'dp-time-am');
+    expect(onChange).not.toHaveBeenCalled();
+    expect(find(tree, 'dp-time-am').props.accessibilityState.checked).toBe(
+      true
+    );
+  });
+
   it('a date typed after the time row was filled takes that time, and Confirm saves it', () => {
     const onChange = jest.fn();
     const tree = mount({ ...dt, onChange });

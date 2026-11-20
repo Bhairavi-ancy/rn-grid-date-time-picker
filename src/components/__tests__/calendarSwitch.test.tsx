@@ -228,6 +228,21 @@ describe('dual calendar', () => {
     });
   });
 
+  it('the Confirm button takes its text from hijriStrings while the Hijri tab shows', () => {
+    const tree = mount({
+      calendarSystem: 'dual',
+      commitMode: 'confirm',
+      hijriStrings: { confirm: 'تأكيد' },
+    });
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.confirm);
+    expect(texts(tree)).not.toContain('تأكيد');
+    press(tree, 'dp-dual-tabs-hijri');
+    expect(texts(tree)).toContain('تأكيد');
+    expect(texts(tree)).not.toContain(DEFAULT_STRINGS.confirm);
+    press(tree, 'dp-dual-tabs-gregory');
+    expect(texts(tree)).toContain(DEFAULT_STRINGS.confirm);
+  });
+
   it('a range started in one tab can end in the other', () => {
     const onChange = jest.fn();
     const tree = mount({ calendarSystem: 'dual', mode: 'range', onChange });
