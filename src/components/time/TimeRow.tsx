@@ -244,8 +244,10 @@ const TimeRow: React.FC<TimeRowProps> = ({
   const onPeriod = (period: Period) => {
     markEdited();
     const next = { ...valuesRef.current, period };
-    if (focused) setValues(next);
-    else save(next, true);
+    // A tap on AM / PM finishes the typing: the time is saved as leaving the
+    // box would save it (an 'instant' picker has no Confirm), but a focused
+    // box keeps its text so typing can go on.
+    save(next, !focused);
   };
 
   const onBackspace = (key: TimeKey) => {

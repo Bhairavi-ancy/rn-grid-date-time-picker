@@ -163,8 +163,9 @@ const FADE_EDGE = {
   bottom: 0,
   pointerEvents: 'none',
 } as const;
-const FADE_LEFT = { ...FADE_EDGE, left: 0 } as const;
-const FADE_RIGHT = { ...FADE_EDGE, right: 0 } as const;
+// start/end, not left/right: React Native swaps left and right in RTL.
+const FADE_START = { ...FADE_EDGE, start: 0 } as const;
+const FADE_END = { ...FADE_EDGE, end: 0 } as const;
 
 /** Scrolling row of month chips; months with no selectable day are greyed. */
 export const MonthChips: React.FC<ChipsProps> = ({
@@ -181,6 +182,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
   testID,
 }) => {
   const s = buildCalendarStyles(tokens);
+  const isRTL = useIsRTL();
   const ref = useRef<ScrollViewRef>(null);
   // Which edges have months scrolled past them, for renderMonthChipFade.
   const offset = useRef(0);
@@ -320,7 +322,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
       {hidden.left ? (
         <View
           testID={testID ? `${testID}-chip-fade-left` : undefined}
-          style={FADE_LEFT}
+          style={isRTL ? FADE_END : FADE_START}
         >
           {renderMonthChipFade('left', tokens.background)}
         </View>
@@ -328,7 +330,7 @@ export const MonthChips: React.FC<ChipsProps> = ({
       {hidden.right ? (
         <View
           testID={testID ? `${testID}-chip-fade-right` : undefined}
-          style={FADE_RIGHT}
+          style={isRTL ? FADE_START : FADE_END}
         >
           {renderMonthChipFade('right', tokens.background)}
         </View>
