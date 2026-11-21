@@ -603,11 +603,6 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     []
   );
   const [timeIssue, setTimeIssue] = useState<TimeEntryIssue | null>(null);
-  const onTimeIssueRef = useRef(onTimeIssueChange);
-  onTimeIssueRef.current = onTimeIssueChange;
-  useEffect(() => {
-    onTimeIssueRef.current?.(timeIssue);
-  }, [timeIssue]);
   // Times are checked when Confirm is pressed, not while typing: each press
   // with a problem shows the time row's error.
   const [timeCheck, setTimeCheck] = useState(0);
@@ -713,6 +708,20 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     );
   };
   const draftValues = valuesOf(preview);
+  // Reported to the parent: the time boxes' problem, else INCOMPLETE while a
+  // date-time selection is started but can't be saved yet (a day with no time,
+  // or a range with one end missing). 'instant' saves nothing then, so a
+  // parent's own Apply would otherwise keep the last saved value.
+  const unfinished =
+    type === 'datetime' &&
+    previewIssue === 'INCOMPLETE' &&
+    draftValues.some((v) => v !== null);
+  const reportedIssue = timeIssue ?? (unfinished ? 'INCOMPLETE' : null);
+  const onTimeIssueRef = useRef(onTimeIssueChange);
+  onTimeIssueRef.current = onTimeIssueChange;
+  useEffect(() => {
+    onTimeIssueRef.current?.(reportedIssue);
+  }, [reportedIssue]);
   // A month or year pick stands for the whole period: it can be picked when any
   // day in it can (its saved first day may itself be outside the limits).
   const dayOff = (date: CalendarDate): boolean =>

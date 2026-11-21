@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- `onTimeIssueChange` (type `'datetime'`) also reports `'INCOMPLETE'` while a selection is started but not finished: a day picked with no time (for example after tapping a new day with `newDayTime: 'empty'`), or a range with one end, or one end's time, still missing. It used to report `null` then, so with `commitMode: 'instant'` a parent's own Apply stayed on with the last saved value. It is `null` again once every picked day has a good time; the time rows show no new error.
+
 ## [1.5.0] - 2026-11-20
 
 ### Added

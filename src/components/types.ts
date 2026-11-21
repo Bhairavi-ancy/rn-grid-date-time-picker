@@ -502,10 +502,12 @@ export interface DateTimePickerProps {
   onError?: (code: PickerErrorCode, value: PickerValue) => void;
   /**
    * The time boxes' problem on mount and each time it changes (the first one,
-   * with two rows); null once they hold a good time, or while a new day has no
-   * time typed yet. With commitMode 'instant' a time with a problem is never
-   * saved, so `onChange` alone can't show it: use this to keep a button of
-   * your own (a filter's Apply) off.
+   * with two rows). With type 'datetime' it is also 'INCOMPLETE' while a
+   * selection is started but not finished: a picked day with no time, or a
+   * range with one end (or one end's time) missing. null once every picked
+   * day has a good time, or while nothing is picked. With commitMode 'instant'
+   * such a selection is never saved, so `onChange` alone can't show it: use
+   * this to keep a button of your own (a filter's Apply) off.
    */
   onTimeIssueChange?: (issue: TimeIssue | null) => void;
   /**
