@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-11-22
+
 ### Added
 
 - `emptyState?: 'message' | 'locked'` (default `'message'`). With `'locked'`, a
@@ -246,7 +248,8 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.3...v1.4.0
