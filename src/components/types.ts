@@ -368,6 +368,12 @@ export interface DateTimePickerProps {
   renderYearCell?: (item: PeriodItem) => React.ReactNode;
   renderMonthCell?: (item: PeriodItem) => React.ReactNode;
   renderEmptyState?: () => React.ReactNode;
+  /**
+   * When no day can ever be picked: 'message' (default) shows the empty state
+   * (or `renderEmptyState`); 'locked' shows today's month with every day,
+   * month chip, the year title, the arrows and the time rows disabled.
+   */
+  emptyState?: 'message' | 'locked';
   renderTimeRow?: (state: PickerState) => React.ReactNode;
 
   // calendar

@@ -93,6 +93,7 @@ const TypedTime: React.FC<Props> = ({
           styles?.timeBox,
           focused === key && [s.boxFocused, styles?.timeBoxFocused],
           hasError && [s.boxError, styles?.timeBoxError],
+          disabled && s.optionDisabled,
         ]}
       >
         <View style={s.boxInner} pointerEvents={passTouches ? 'none' : 'auto'}>
@@ -198,7 +199,10 @@ const TypedTime: React.FC<Props> = ({
                   s.option,
                   styles?.ampmOption,
                   selected && [s.optionSelected, styles?.ampmOptionSelected],
-                  !allowed && [s.optionDisabled, styles?.ampmOptionDisabled],
+                  (!allowed || disabled) && [
+                    s.optionDisabled,
+                    styles?.ampmOptionDisabled,
+                  ],
                 ]}
               >
                 <Text

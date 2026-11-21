@@ -224,6 +224,47 @@ describe('Calendar: greyed days and limits', () => {
     expect(texts(tree)).toContain(DEFAULT_STRINGS.nothingSelectable);
   });
 
+  it("emptyState 'locked' shows today's month with everything disabled", () => {
+    const inverted = constraintsFor({
+      minDate: { year: 2026, month: 6, day: 22 },
+      maxDate: { year: 2026, month: 6, day: 12 },
+    });
+    const onSelectDay = jest.fn();
+    const tree = mount({
+      constraints: inverted,
+      emptyState: 'locked',
+      onSelectDay,
+      selection: { kind: 'single', day: { year: 2026, month: 6, day: 15 } },
+    });
+    expect(find(tree, 'cal-empty')).toBeUndefined();
+    expect(find(tree, 'cal-chip-10').props.accessibilityState.selected).toBe(
+      true
+    );
+    for (let m = 1; m <= 12; m += 1)
+      expect(find(tree, `cal-chip-${m}`).props.disabled).toBe(true);
+    for (let d = 1; d <= 31; d += 1)
+      expect(day(tree, 2026, 10, d).props.disabled).toBe(true);
+    expect(find(tree, 'cal-prev').props.disabled).toBe(true);
+    expect(find(tree, 'cal-next').props.disabled).toBe(true);
+    expect(find(tree, 'cal-title').props.disabled).toBe(true);
+    expect(find(tree, 'cal-today')).toBeUndefined();
+  });
+
+  it("emptyState 'locked' keeps the year grid when precision is 'year'", () => {
+    const inverted = constraintsFor({
+      minDate: { year: 2027, month: 1, day: 1 },
+      maxDate: { year: 2026, month: 1, day: 1 },
+    });
+    const tree = mount({
+      constraints: inverted,
+      emptyState: 'locked',
+      precision: 'year',
+    });
+    expect(find(tree, 'cal-empty')).toBeUndefined();
+    expect(find(tree, 'cal-prev').props.disabled).toBe(true);
+    expect(find(tree, 'cal-next').props.disabled).toBe(true);
+  });
+
   it('marks holidays and keeps them selectable when not blocked', () => {
     const c = constraintsFor({ holidays: ['2026-10-23'] });
     const tree = mount({ constraints: c });

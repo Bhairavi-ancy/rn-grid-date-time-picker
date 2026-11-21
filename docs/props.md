@@ -65,6 +65,7 @@ Every prop, grouped. The [README](../README.md#common-props) lists the common on
 | `renderMonthChipFade` | `(side: 'left' \| 'right', color: string) => ReactNode` | Drawn over that edge of the month chip row while months are scrolled past it, e.g. a fade. Pinned to the edge, takes no touches, sets its own width. `color` is the calendar background. |
 | `renderYearCell`, `renderMonthCell` | `(item: PeriodItem) => ReactNode` | |
 | `renderEmptyState` | `() => ReactNode` | Shown when no day can be picked. |
+| `emptyState` | `'message' \| 'locked'` | When no day can be picked: `'message'` (default) shows the empty state; `'locked'` shows today's month with every day, month chip, the year title, the arrows and the time rows disabled. |
 | `renderCalendarSwitch` | `(p: CalendarSwitchRenderProps) => ReactNode` | Replaces the calendar switch: draw `p.systems`, mark `p.selected`, call `p.onSelect(system)`. |
 | `renderTimeLabel` | `(p: TimeLabelRenderProps) => ReactNode` | Replaces a time row's label (and its date); the boxes, AM / PM and errors stay built in. `p` has `label`, `row` (`'single' \| 'from' \| 'to' \| 'shared' \| 'day'`), `date`, `dateText` and `time`. |
 | `renderTimeRow` | `(state: PickerState) => ReactNode` | Replaces the time row. Read `state.time` (ranges: `state.rangeTimes`) and change it with `state.setTime(time, end?)`, which works like the built-in row, including before a day is picked. |

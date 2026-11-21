@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `emptyState?: 'message' | 'locked'` (default `'message'`). With `'locked'`, a
+  calendar where no day can ever be picked (an inverted range, say) shows
+  today's month with every day and month chip disabled, the year title not
+  tappable, the ‹ › arrows off and month swipes blocked, instead of the
+  "No dates are available" text. Month / year precision keeps its own grid,
+  likewise locked. Date-time pickers also lock the time rows (boxes and
+  AM/PM).
+
+### Changed
+
+- Disabled time rows now look disabled: the time boxes and the AM/PM options
+  fade (opacity 0.4), as an AM/PM side outside the limits already did.
+
 ## [1.5.1] - 2026-11-21
 
 ### Fixed
