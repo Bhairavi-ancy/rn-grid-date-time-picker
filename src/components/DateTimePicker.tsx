@@ -171,6 +171,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     renderYearCell,
     renderMonthCell,
     renderEmptyState,
+    emptyState,
     renderTimeRow,
     firstDayOfWeek: firstDayProp,
     showOutsideDays = true,
@@ -1197,6 +1198,13 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
             joinConsecutive: multiple?.joinConsecutive,
           };
 
+  // emptyState 'locked' with no day to pick: the time rows lock with the calendar.
+  const lockedEmpty = useMemo(
+    () =>
+      emptyState === 'locked' && constraints.firstSelectable(today) === null,
+    [emptyState, constraints, today]
+  );
+
   // Tell the screen once per open when no day can be picked at all.
   const reportedEmpty = useRef(false);
   useEffect(() => {
@@ -1660,6 +1668,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           renderYearCell={renderYearCell}
           renderMonthCell={renderMonthCell}
           renderEmptyState={renderEmptyState}
+          emptyState={emptyState}
           icons={icons}
           iconProps={iconProps}
           tokens={tokens}
@@ -1692,7 +1701,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
         timeFormat={timeFormat}
         minuteStep={minuteStep}
         dateFormat={dateFormat}
-        disabled={disabled || readOnly}
+        disabled={disabled || readOnly || lockedEmpty}
         onIssueChange={setTimeIssue}
         showError={sheetOptions?.showTimeErrors !== false}
         issueCheck={commitMode === 'instant' ? undefined : timeCheck}

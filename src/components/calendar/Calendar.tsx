@@ -82,6 +82,12 @@ export interface CalendarProps {
   renderYearCell?: (item: PeriodItem) => React.ReactNode;
   renderMonthCell?: (item: PeriodItem) => React.ReactNode;
   renderEmptyState?: () => React.ReactNode;
+  /**
+   * When no day can ever be picked: 'message' (default) shows the empty state;
+   * 'locked' shows today's month with every day, month chip, the year title
+   * and the arrows disabled.
+   */
+  emptyState?: 'message' | 'locked';
   /** Replacements for the header's built-in chevrons. */
   icons?: Partial<IconSet>;
   iconProps?: Partial<Record<IconName, IconOptions>>;
@@ -169,11 +175,13 @@ const initialMonth = (props: CalendarProps, sys: MonthSystem): VisibleMonth => {
   const limits = monthLimits(sys, props.yearRange);
   const picked = firstSelectedDay(props.selection);
   const anchor = props.initialVisibleDate ?? props.today;
+  const first = props.constraints.firstSelectable(anchor);
+  if (props.emptyState === 'locked' && !first)
+    return clampMonth(sys.monthOf(props.today), limits);
   const start = sys.monthOf(picked ?? anchor);
   if (picked || isMonthOpen(sys, props.constraints, start)) {
     return clampMonth(start, limits);
   }
-  const first = props.constraints.firstSelectable(anchor);
   return clampMonth(first ? sys.monthOf(first) : start, limits);
 };
 
@@ -209,6 +217,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     renderYearCell,
     renderMonthCell,
     renderEmptyState,
+    emptyState = 'message',
     icons,
     iconProps,
     tokens,
@@ -297,15 +306,23 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     [sys, locale]
   );
 
+  const nothingSelectable = useMemo(
+    () => constraints.firstSelectable(today) === null,
+    [constraints, today]
+  );
+
+  const locked = nothingSelectable && emptyState === 'locked';
   const { min, max } = constraints.range;
   const prevMonth = sys.addMonths(visible, -1);
   const nextMonth = sys.addMonths(visible, 1);
   const prevEnd = addDays(sys.monthStart(visible), -1);
   const nextStart = sys.monthStart(nextMonth);
   const canPrevMonth =
+    !locked &&
     cmpMonth(prevMonth, limits.first) >= 0 &&
     (!min || compareCalendarDates(prevEnd, min.date) >= 0);
   const canNextMonth =
+    !locked &&
     cmpMonth(nextMonth, limits.last) <= 0 &&
     (!max || compareCalendarDates(nextStart, max.date) <= 0);
 
@@ -318,11 +335,6 @@ const Calendar: React.FC<CalendarProps> = (props) => {
       );
     return enabled;
   }, [constraints, visible.year, sys]);
-
-  const nothingSelectable = useMemo(
-    () => constraints.firstSelectable(today) === null,
-    [constraints, today]
-  );
 
   /** The same month in `year`, or the nearest month there with a selectable day. */
   const monthIn = (year: number): VisibleMonth => {
@@ -349,25 +361,29 @@ const Calendar: React.FC<CalendarProps> = (props) => {
   // ‹ › beside the year move a whole year; months change by swipe or chips.
   const canPrevYear = useMemo(
     () =>
+      !locked &&
       visible.year - 1 >= years.first &&
       isYearOpen(sys, constraints, visible.year - 1),
-    [visible.year, years.first, sys, constraints]
+    [locked, visible.year, years.first, sys, constraints]
   );
   const canNextYear = useMemo(
     () =>
+      !locked &&
       visible.year + 1 <= years.last &&
       isYearOpen(sys, constraints, visible.year + 1),
-    [visible.year, years.last, sys, constraints]
+    [locked, visible.year, years.last, sys, constraints]
   );
+  // Locked: the last step's grid stays on screen and nothing moves.
+  const shownView: CalendarView = locked ? pickView : view;
   // The year grid pages only while a page further on has a selectable year.
   const openYears = useMemo(
-    () => (view === 'year' ? openYearSpan(sys, constraints, years) : null),
+    () => (shownView === 'year' ? openYearSpan(sys, constraints, years) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the year range is compared by content
-    [view, sys, constraints, years.first, years.last]
+    [shownView, sys, constraints, years.first, years.last]
   );
 
   const header =
-    view === 'year' ? (
+    shownView === 'year' ? (
       <CalendarHeader
         title={`${pageStart} – ${Math.min(pageStart + PAGE - 1, years.last)}`}
         canPrev={!!openYears && pageStart > openYears.first}
@@ -398,6 +414,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
           setPageStart(visible.year - ((visible.year - years.first) % PAGE));
           setView('year');
         }}
+        titleDisabled={locked}
         prevLabel={strings.a11yPreviousYear}
         nextLabel={strings.a11yNextYear}
         titleLabel={strings.a11yChooseYear}
@@ -410,7 +427,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
     );
 
   let body: React.ReactNode;
-  if (nothingSelectable) {
+  if (nothingSelectable && !locked) {
     body = renderEmptyState ? (
       renderEmptyState()
     ) : (
@@ -426,7 +443,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
         </Text>
       </View>
     );
-  } else if (view === 'year') {
+  } else if (shownView === 'year') {
     const yearItems: PeriodItem[] = [];
     for (let y = pageStart; y < pageStart + PAGE && y <= years.last; y += 1) {
       yearItems.push({
@@ -449,7 +466,7 @@ const Calendar: React.FC<CalendarProps> = (props) => {
         testID={testID}
       />
     );
-  } else if (view === 'month') {
+  } else if (shownView === 'month') {
     const months: PeriodItem[] = names.monthsLong.map((label, i) => {
       return {
         value: i + 1,
