@@ -4,7 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
-### Changed
+## [1.5.1] - 2026-11-21
+
+### Fixed
 
 - `onTimeIssueChange` (type `'datetime'`) also reports `'INCOMPLETE'` while a selection is started but not finished: a day picked with no time (for example after tapping a new day with `newDayTime: 'empty'`), or a range with one end, or one end's time, still missing. It used to report `null` then, so with `commitMode: 'instant'` a parent's own Apply stayed on with the last saved value. It is `null` again once every picked day has a good time; the time rows show no new error.
 
@@ -229,7 +231,9 @@ Initial release.
 - `dateFormat` in any case (`'dd/mm/yyyy'`). A format the picker can't use warns in development and falls back to the locale order.
 - Accessibility labels and states, reduce-motion support, a font-scale cap and RTL mirroring. On iOS every typed box gets a Done button above the number pad, and errors are announced to VoiceOver.
 
-[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/Bhairavi-ancy/rn-grid-date-time-picker/compare/v1.3.1...v1.3.2
